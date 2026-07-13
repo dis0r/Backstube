@@ -128,12 +128,14 @@
             padding-bottom: 4px;
         }
 
+        /* Verbesserte Zeilen-Struktur gegen Verrutschen */
         .row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
             border-bottom: 1px solid #f2f2f7;
+            gap: 8px; /* Sorgt für Abstand zwischen Elementen */
         }
 
         .row:last-child {
@@ -162,18 +164,17 @@
             text-align: left;
             width: 100%;
         }
-
-        .swap-btn {
-            background: none;
-            border: none;
-            color: var(--baker-brown);
+        
+        /* Neues, natives Dropdown für die Mehlauswahl */
+        .flour-dropdown {
+            flex: 1; /* Nimmt sich den restlichen Platz */
             font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 2px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            padding: 6px;
+            background-color: #fff;
+            color: var(--baker-brown);
+            border: 1px solid #d1d1d6;
+            text-overflow: ellipsis; /* Schneidet zu lange Namen ab anstatt umzubrechen */
+            max-width: 65%; /* Schützt das Eingabefeld vor dem Rausgeschoben werden */
         }
 
         .delete-btn {
@@ -471,7 +472,7 @@
 
     function populateDropdowns() {
         const picker = document.getElementById('presetPicker');
-        picker.innerHTML = ingredientPresets.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        picker.innerHTML = ingredientPresets.map(p => `<option value="${p.name}">+ ${p.name}</option>`).join('');
     }
 
     function buildTemplateDropdown() {
@@ -551,7 +552,14 @@
         calculateEngine();
     }
 
-    // BÄCKER-MATHEMATIK ENGINE (VOLSTÄNDIG BILANZIERT)
+    // NATIVES DROP-DOWN HANDLER FÜR DIE MEHLSORTEN
+    function changeFlour(slotId, newName) {
+        customFlourNames[slotId] = newName;
+        weightOverrides = {}; // Setzt Gewicht-Overrides zurück, um die Bilanzen sicher auszugleichen
+        calculateEngine();
+    }
+
+    // BÄCKER-MATHEMATIK ENGINE
     function calculateEngine() {
         const targetHydration = parseFloat(document.getElementById('targetHydration').value) || 65;
         const targetWeight = parseFloat(document.getElementById('targetWeight').value) || 1000;
@@ -610,12 +618,12 @@
 
         let manualFlours = manualIngredients.filter(i => i.isFlour);
 
-        // KORREKTUR-BLOCK: Aufteilung des Sauerteiges in Mehl- und Wasseranteile
+        // Sauerteig splitten
         let actualSourdoughWeight = sourdoughWeight > 0 ? (weightOverrides["Sauerteig"] !== undefined ? weightOverrides["Sauerteig"] : Math.round(sourdoughWeight)) : 0;
         let sourdoughFlour = actualSourdoughWeight * 0.5;
         let sourdoughWater = actualSourdoughWeight * 0.5;
 
-        // Gesamtmehl beinhaltet nun das im Sauerteig gebundene Mehl
+        // Gesamtmehl berechnen
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0) + sourdoughFlour;
         let totalFlour = totalActiveFlour; 
 
@@ -665,19 +673,32 @@
             alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
         } else { alertsContainer.innerHTML = ""; }
 
-        // MEHL SEKTION RENDERN
-        let flourHtml = activeFlours.map(f => `
-            <div class="row">
-                <button class="swap-btn" onclick="swapFlourMenu('${f.id}')">🌾 ${f.name} 🔄</button>
-                <div><input type="number" value="${f.weight}" oninput="setOverride('${f.name}', this.value)"> g</div>
-            </div>
-        `).join('');
+        // MEHL SEKTION RENDERN (JETZT MIT NATIVEM DROPDOWN)
+        let flourHtml = activeFlours.map(f => {
+            // Dropdown-Optionen generieren
+            let optionsHtml = ingredientPresets.filter(p => p.isFlour).map(p => {
+                let isSelected = p.name === f.name ? 'selected' : '';
+                return `<option value="${p.name}" ${isSelected}>🌾 ${p.name}</option>`;
+            }).join('');
 
+            return `
+                <div class="row">
+                    <select class="flour-dropdown" onchange="changeFlour('${f.id}', this.value)">
+                        ${optionsHtml}
+                    </select>
+                    <div style="white-space: nowrap;">
+                        <input type="number" value="${f.weight}" oninput="setOverride('${f.name}', this.value)"> g
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Manuelle Mehle rendern (Optisch an das Dropdown angepasst)
         manualFlours.forEach(f => {
             flourHtml += `
                 <div class="row">
-                    <span>🌾 ${f.name}</span>
-                    <div>
+                    <div style="flex: 1; font-size: 14px; font-weight: 600; color: var(--baker-brown); padding-left: 6px;">🌾 ${f.name}</div>
+                    <div style="white-space: nowrap;">
                         <input type="number" value="${f.weight}" oninput="setManualWeight('${f.name}', this.value)"> g
                         <button class="delete-btn" onclick="deleteManual('${f.name}')">🗑️</button>
                     </div>
@@ -698,8 +719,8 @@
             let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent/100))}g Wasser`;
             remHtml += `
                 <div class="row">
-                    <div><div>${i.name}</div><div class="row-details">${subText}</div></div>
-                    <div>
+                    <div><div style="font-weight:600;">${i.name}</div><div class="row-details">${subText}</div></div>
+                    <div style="white-space: nowrap;">
                         <input type="number" value="${i.weight}" oninput="setManualWeight('${i.name}', this.value)"> g
                         <button class="delete-btn" onclick="deleteManual('${i.name}')">🗑️</button>
                     </div>
@@ -718,16 +739,6 @@
         calculateEngine();
     }
     function deleteManual(name) { manualIngredients = manualIngredients.filter(i => i.name !== name); calculateEngine(); }
-
-    function swapFlourMenu(slotId) {
-        let menuHtml = ingredientPresets.filter(p => p.isFlour).map(p => `• ${p.name}`).join('\n');
-        let choice = prompt(`Welches Mehl möchtest du einsetzen?\nKopiere den Namen exakt:\n\n${menuHtml}`);
-        if (choice && ingredientPresets.some(p => p.name === choice)) {
-            customFlourNames[slotId] = choice;
-            weightOverrides = {};
-            calculateEngine();
-        }
-    }
 
     function addManualIngredient() {
         const pName = document.getElementById('presetPicker').value;
@@ -838,9 +849,9 @@
                     <div style="font-weight:bold; font-size:14px;">${r.name}</div>
                     <div style="font-size:11px; color:#8e8e93;">Hydration: ${r.targetHydration}%</div>
                 </div>
-                <div>
+                <div style="white-space: nowrap;">
                     <button class="btn-plus" onclick="loadRecipe(${r.id})" style="padding:4px 10px; font-size:12px;">Laden</button>
-                    <button class="delete-btn" onclick="deleteRecipe(${r.id})" style="margin-left:8px;">🗑️</button>
+                    <button class="delete-btn" onclick="deleteRecipe(${r.id})">🗑️</button>
                 </div>
             </div>
         `).join('');
