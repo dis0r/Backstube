@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Back-Assistent Pro (v.0.1.1)</title>
+    <title>Back-Assistent Pro v0.1.2</title>
     <style>
         :root {
             --cream-bg: #faf9f5;
@@ -41,12 +41,27 @@
             padding-bottom: 40px;
         }
 
+        .header-area {
+            text-align: center;
+            margin: 6px 0;
+        }
+
         h1 {
             color: var(--baker-brown);
-            text-align: center;
             font-size: 24px;
-            margin: 6px 0;
+            margin: 0;
             font-weight: 800;
+        }
+
+        .version-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #8e8e93;
+            background: #e3e2dc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 4px;
         }
 
         /* Segmented Controls */
@@ -236,7 +251,11 @@
 <body>
 
 <div class="app-container">
-    <h1>Bäcker-Assistent Pro</h1>
+    <!-- TITELBEREICH MIT VERSIONIERUNG -->
+    <div class="header-area">
+        <h1>Back-Assistent Pro</h1>
+        <div class="version-badge">v0.1.2</div>
+    </div>
 
     <!-- CATEGORY PICKER -->
     <div class="segmented-control">
@@ -392,7 +411,7 @@
 </div>
 
 <script>
-    // PRESETS MATRIZEN
+    // PRESETS & SAUGKRAFT MATRIZEN
     const ingredientPresets = [
         { name: "Weizenmehl Type 550 / Tipo 00", waterContent: 0, isFlour: true, binding: 0.0 },
         { name: "Weizenmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.05 },
@@ -478,6 +497,7 @@
         picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
     }
 
+    // FIX: Aktualisiert beim Wechsel der Sektion nun auch direkt die Rezeptverwaltung
     function changeCategory(catId) {
         category = catId;
         document.getElementById('catBrot').className = catId === 0 ? 'active' : '';
@@ -494,6 +514,7 @@
 
         buildTemplateDropdown();
         applyTemplate();
+        renderSavedRecipes(); // Erzwingt das Neuzeichnen der gefilterten Liste
     }
 
     function changePhase(phaseId) {
@@ -556,7 +577,6 @@
         calculateEngine();
     }
 
-    // BÄCKER-MATHEMATIK ENGINE (MIT LOGIK-KORREKTUREN FÜR REINEN SAUERTEIG)
     function calculateEngine() {
         const targetHydration = parseFloat(document.getElementById('targetHydration').value) || 65;
         const targetWeight = parseFloat(document.getElementById('targetWeight').value) || 1000;
@@ -575,13 +595,12 @@
         let floursConfigs = [];
         let yeastPct = 0.02;
         let sourdoughWeight = 0.0;
-        let isPureSourdough = false; // Flag für die Gärzeitsteuerung
+        let isPureSourdough = false;
 
         if (category === 0) {
             switch(templateId) {
                 case "weiss_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
                 case "weiss_sauer": let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; isPureSourdough = true; break;
-                // LOGIK-UPDATE: Bauernbrot und Roggenmischbrot sind jetzt traditionelle reine Sauerteigbrote (ohne Bäckerhefe!)
                 case "bauernbrot": let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0; isPureSourdough = true; break;
                 case "roggenmisch": let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break;
                 case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
@@ -590,7 +609,6 @@
         } else if (category === 1) {
             switch(templateId) {
                 case "broetchen_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                // LOGIK-UPDATE: Auch die Sauerteig-Brötchen treiben rein natürlich
                 case "broetchen_sauer": let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0; isPureSourdough = true; break;
                 case "burger_buns": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
                 case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
@@ -608,7 +626,6 @@
             yeastPct = Math.max(0.05, yeastPctCalc) / 100;
         }
 
-        // Hefe-Umschalter ein- oder ausblenden
         document.getElementById('yeastToggleRow').style.display = yeastPct === 0 ? 'none' : 'flex';
 
         let activeFlours = [];
@@ -674,7 +691,7 @@
             alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
         } else { alertsContainer.innerHTML = ""; }
 
-        // MEHL SEKTION RENDERN
+        // MEHL RENDERN
         let flourHtml = activeFlours.map(f => {
             let optionsHtml = ingredientPresets.filter(p => p.isFlour).map(p => {
                 let isSelected = p.name === f.name ? 'selected' : '';
@@ -706,7 +723,7 @@
         });
         document.getElementById('flourContainer').innerHTML = flourHtml;
 
-        // RESTE SEKTION RENDERN
+        // RESTE RENDERN
         let remHtml = `<div class="row"><span>💧 Schüttwasser</span><div><input type="number" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"> g</div></div>`;
         if (actualSourdoughWeight > 0) {
             remHtml += `<div class="row"><span>🍇 Sauerteig</span><div><input type="number" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"> g</div></div>`;
@@ -730,7 +747,6 @@
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
-        // Weitergabe des Flags an Phase 2
         calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight, isPureSourdough);
     }
 
@@ -742,19 +758,6 @@
     }
     function deleteManual(name) { manualIngredients = manualIngredients.filter(i => i.name !== name); calculateEngine(); }
 
-    function addManualIngredient() {
-        const pName = document.getElementById('presetPicker').value;
-        const pWeight = parseFloat(document.getElementById('manualWeightInput').value);
-        if (!pWeight) return;
-        const preset = ingredientPresets.find(p => p.name === pName);
-        if (preset) {
-            manualIngredients.push({ name: preset.name, weight: pWeight, waterContent: preset.waterContent, isFlour: preset.isFlour, binding: preset.binding });
-            document.getElementById('manualWeightInput').value = "";
-            calculateEngine();
-        }
-    }
-
-    // PHASE 2 ENGINE (MIT DYNAMISCHEN ZEIT-KORREKTUREN FÜR REINEN SAUERTEIG)
     function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight, isPureSourdough) {
         const useFridge = document.getElementById('fridgeToggle').checked;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
@@ -763,7 +766,6 @@
         const preheated = document.getElementById('preheatToggle').checked;
 
         if (category === 0) {
-            // Brot-Gärzeiten
             if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "3 - 5 Std. bei Raumtemperatur (Dehnen/Falten)";
                 document.getElementById('outStueckgare').innerText = useFridge ? "1,5 Std. Akklimatisierung bei Raumtemp." : "2 - 3 Std. stabilisiert im Gärkorb";
@@ -772,7 +774,6 @@
                 document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
             }
         } else if (category === 1) {
-            // Brötchen-Gärzeiten
             if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. anspringen lassen" : "2,5 Std. bei Raumtemperatur";
                 document.getElementById('outStueckgare').innerText = useFridge ? "12-16 Std. fertig geformt im Kühlschrank" : "1,5 Std. geschliffen auf Blech";
@@ -781,7 +782,6 @@
                 document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
             }
         } else {
-            // Pizza-Gärzeiten
             let hours = parseFloat(document.getElementById('fermentHours').value) || 24;
             let stock = Math.max(1, Math.round(hours * 0.6));
             let stueck = Math.max(1, hours - stock);
@@ -852,14 +852,19 @@
         renderSavedRecipes();
     }
 
+    // KORREKTUR-BLOCK: Filtert Rezepte nun streng nach der gewählten Kategorie
     function renderSavedRecipes() {
         let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
+        
+        // Filtert die Liste nach dem aktiven Tab (0, 1 oder 2)
+        let filteredList = list.filter(r => r.category === category);
+        
         const container = document.getElementById('savedRecipesContainer');
-        if(list.length === 0) {
-            container.innerHTML = `<div style="font-size:12px; color:#999; font-style:italic;">Noch keine Rezepte gesichert.</div>`;
+        if(filteredList.length === 0) {
+            container.innerHTML = `<div style="font-size:12px; color:#999; font-style:italic;">Noch keine Rezepte in dieser Kategorie gesichert.</div>`;
             return;
         }
-        container.innerHTML = list.map(r => `
+        container.innerHTML = filteredList.map(r => `
             <div class="row">
                 <div>
                     <div style="font-weight:bold; font-size:14px;">${r.name}</div>
