@@ -1,4 +1,557 @@
-// MATHEMATIK CORE
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bäcker-Assistent Pro</title>
+    <style>
+        :root {
+            --cream-bg: #faf9f5;
+            --baker-brown: #73471e;
+            --card-white: #ffffff;
+            --gray-input: #f2f2f7;
+            --success-green: #2e7d32;
+            --warn-orange: #ef6c00;
+            --alert-red: #c62828;
+            --purple-pro: #6a1b9a;
+            --blue-water: #1565c0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--cream-bg);
+            color: #1c1c1e;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--baker-brown);
+            text-align: center;
+            font-size: 24px;
+            margin: 6px 0;
+            font-weight: 800;
+        }
+
+        /* Segmented Controls (Picker) */
+        .segmented-control {
+            display: flex;
+            background: #e3e2dc;
+            padding: 2px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+
+        .segmented-control button {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .segmented-control button.active {
+            background: var(--card-white);
+            color: #000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Dashboard Card */
+        .dashboard {
+            background: var(--card-white);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 2px solid rgba(115, 71, 30, 0.15);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hydration-display {
+            font-size: 38px;
+            font-weight: bold;
+        }
+
+        .ta-display {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            margin: 2px 0;
+        }
+
+        .consistency-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Sektionen & Listen */
+        .section {
+            background: var(--card-white);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--baker-brown);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #f2f2f7;
+            padding-bottom: 4px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .row-details {
+            font-size: 11px;
+            color: #8e8e93;
+            margin-top: 1px;
+        }
+
+        /* Eingabefelder & Buttons */
+        input[type="number"], input[type="text"], select {
+            font-size: 15px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #d1d1d6;
+            background: var(--gray-input);
+            font-weight: 600;
+            text-align: right;
+            width: 85px;
+        }
+
+        input[type="text"], select {
+            text-align: left;
+            width: 100%;
+        }
+
+        .swap-btn {
+            background: none;
+            border: none;
+            color: var(--baker-brown);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--alert-red);
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .btn-plus {
+            background: var(--baker-brown);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid var(--warn-orange);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* Modal Overlay für Profi-Tipps */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            justify-content: center; align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--baker-brown);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Bäcker-Assistent Pro</h1>
+
+    <!-- CATEGORY PICKER -->
+    <div class="segmented-control">
+        <button id="catBrot" class="active" onclick="changeCategory(0)">Brot</button>
+        <button id="catBroetchen" onclick="changeCategory(1)">Brötchen</button>
+        <button id="catPizza" onclick="changeCategory(2)">Pizza</button>
+    </div>
+
+    <!-- PHASE PICKER -->
+    <div class="segmented-control">
+        <button id="phaseTeig" class="active" onclick="changePhase(0)">🥣 1. Teig & Zutaten</button>
+        <button id="phaseBacken" onclick="changePhase(1)">🔥 2. Gare & Backen</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="dashboard" id="dashboardCard">
+        <div class="dashboard-header">
+            <div>
+                <div style="font-size: 11px; color: #8e8e93; display: flex; align-items: center; gap: 4px;">
+                    Teig-Konsistenz 
+                    <span onclick="triggerProTip()" style="cursor:pointer; color:var(--baker-brown); font-weight:bold;">ℹ️</span>
+                </div>
+                <div class="hydration-display" id="currentHydration">65.0 %</div>
+                <div class="ta-display" id="currentTA">TA: 165</div>
+                <div class="consistency-text" id="consistencyText">Optimaler Brotteig</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 11px; color: #8e8e93; margin-bottom: 4px;">Ziel-Hydration</div>
+                <input type="number" id="targetHydration" value="65" min="50" max="100" style="text-align: center; width: 70px;" oninput="updateInputs()">
+            </div>
+        </div>
+        <div id="dashboardAlerts" style="margin-top: 8px;"></div>
+    </div>
+
+    <!-- PHASE 1: TEIG & ZUTATEN -->
+    <div id="phase1Views">
+        <div class="section">
+            <div class="section-title">Rezept-Konfigurator</div>
+            <div class="row">
+                <label for="templatePicker">Rezept-Vorlage:</label>
+                <select id="templatePicker" onchange="applyTemplate()"></select>
+            </div>
+            <div class="row">
+                <label id="weightLabel" for="targetWeight">Zielgewicht (g):</label>
+                <input type="number" id="targetWeight" value="1000" step="50" oninput="updateInputs()">
+            </div>
+            <div class="row">
+                <label for="dryYeastToggle">Trockenhefe verwenden?</label>
+                <input type="checkbox" id="dryYeastToggle" onchange="updateInputs()" style="transform: scale(1.2);">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Rezept in Backstube speichern</div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left;">
+                <button class="btn-plus" onclick="saveCurrentRecipe()">💾</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🌾 Mehl in der Rührschüssel</div>
+            <div id="flourContainer"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">💧 Flüssigkeit, Triebmittel & Extras</div>
+            <div id="remainingContainer"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Zutat in die Schüssel werfen</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <select id="presetPicker" style="flex: 2; text-align: left;"></select>
+                <input type="number" id="manualWeightInput" placeholder="Gramm" style="flex: 1; width: auto;">
+                <button class="btn-plus" onclick="addManualIngredient()">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 2: GARE & BACKEN -->
+    <div id="phase2Views" style="display: none;">
+        <div class="section">
+            <div class="section-title">Gär- & Ofenparameter</div>
+            <div class="row">
+                <label for="fridgeToggle">Im Kühlschrank (5°C) reifen lassen?</label>
+                <input type="checkbox" id="fridgeToggle" onchange="updateInputs()" style="transform: scale(1.2);">
+            </div>
+            <div class="row pizza-only">
+                <label for="fermentHours">Gehzeit Gesamt (Std):</label>
+                <input type="number" id="fermentHours" value="24" min="1" max="72" oninput="updateInputs()">
+            </div>
+            <div class="row pizza-only no-fridge">
+                <label for="roomTemp">Raum-Temperatur (°C):</label>
+                <input type="number" id="roomTemp" value="21" min="16" max="30" oninput="updateInputs()">
+            </div>
+            <div class="row pizza-only">
+                <label for="ovenType">Ofentyp:</label>
+                <select id="ovenType" onchange="updateInputs()">
+                    <option value="0">Haushaltsbackofen</option>
+                    <option value="1">Pizzaofen (400°C+)</option>
+                </select>
+            </div>
+            <div class="row normal-oven">
+                <label for="heatingType">Heizart:</label>
+                <select id="heatingType" onchange="updateInputs()">
+                    <option value="0">Ober-/Unterhitze</option>
+                    <option value="1">Umluft / Heißluft</option>
+                </select>
+            </div>
+            <div class="row normal-oven">
+                <label for="vesselType">Back-Behältnis:</label>
+                <select id="vesselType" onchange="updateInputs()">
+                    <option value="0">Freigeschoben (Stein/Blech)</option>
+                    <option value="1">In Backform / Pfanne</option>
+                </select>
+            </div>
+            <div class="row normal-oven">
+                <label for="preheatToggle">Backofen vollständig vorgeheizt?</label>
+                <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()" style="transform: scale(1.2);">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Zubereitungs-Fahrplan</div>
+            <div style="padding: 4px 0 12px 0; border-bottom: 1px solid #eee;">
+                <div style="font-weight: bold; font-size: 14px; color: var(--baker-brown); margin-bottom: 6px;">Gärzeiten</div>
+                <div class="row"><span style="font-size:13px; color:#666;">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
+                <div class="row"><span style="font-size:13px; color:#666;">Stückgare (Formruhe):</span><span id="outStueckgare" style="font-weight:600;">-</span></div>
+            </div>
+            <div style="padding: 12px 0 4px 0;">
+                <div style="font-weight: bold; font-size: 14px; color: var(--baker-brown); margin-bottom: 6px;">Backanleitung</div>
+                <div class="row"><span style="font-size:13px; color:#666;">Back-Temperatur:</span><span id="outTemp" style="font-weight:600;">-</span></div>
+                <div class="row"><span style="font-size:13px; color:#666;">Empfohlene Backzeit:</span><span id="outTime" style="font-weight:600;">-</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REZEPT VERWALTUNG -->
+    <div class="section">
+        <div class="section-title">Eigene Rezepte in der Backstube</div>
+        <div id="savedRecipesContainer"></div>
+    </div>
+</div>
+
+<!-- MODAL OVERLAY FÜR PROFI-TIPPS -->
+<div class="modal" id="proTipModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">💡 Bäckermeister Profi-Tipp</div>
+        <p id="proTipText" style="font-size: 14px; color: #333; line-height: 1.5; margin: 14px 0;"></p>
+        <button class="btn-plus" onclick="closeModal()" style="width:100%;">Verstanden!</button>
+    </div>
+</div>
+
+<script>
+    // PRESETS & SAUGKRAFT MATRIZEN
+    const ingredientPresets = [
+        { name: "Weizenmehl Type 550 / Tipo 00", waterContent: 0, isFlour: true, binding: 0.0 },
+        { name: "Weizenmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.05 },
+        { name: "Weizenvollkornmehl", waterContent: 0, isFlour: true, binding: 0.12 },
+        { name: "Dinkelmehl Type 630", waterContent: 0, isFlour: true, binding: 0.01 },
+        { name: "Dinkelvollkornmehl", waterContent: 0, isFlour: true, binding: 0.11 },
+        { name: "Roggenmehl Type 1150", waterContent: 0, isFlour: true, binding: 0.08 },
+        { name: "Roggenvollkornmehl", waterContent: 0, isFlour: true, binding: 0.15 },
+        { name: "Sauerteig", waterContent: 50, isFlour: false, binding: 0 },
+        { name: "Joghurt (3,5% Fett)", waterContent: 85, isFlour: false, binding: 0 },
+        { name: "Skyr", waterContent: 80, isFlour: false, binding: 0 },
+        { name: "Vollmilch", waterContent: 90, isFlour: false, binding: 0 },
+        { name: "Ei (Größe M)", waterContent: 75, isFlour: false, binding: 0 },
+        { name: "Olivenöl", waterContent: 0, isFlour: false, binding: 0 },
+        { name: "Butter", waterContent: 15, isFlour: false, binding: 0 },
+        { name: "Zucker", waterContent: 0, isFlour: false, binding: 0 },
+        { name: "Sonnenblumenkerne", waterContent: 0, isFlour: false, binding: 0.5 },
+        { name: "Leinsamenschrot", waterContent: 0, isFlour: false, binding: 3.5 },
+        { name: "Chia Samen", waterContent: 0, isFlour: false, binding: 7.0 },
+        { name: "Flohsamenschalen", waterContent: 0, isFlour: false, binding: 10.0 },
+        { name: "Karotten (gerieben)", waterContent: 88, isFlour: false, binding: 0 },
+        { name: "Röstzwiebeln", waterContent: 2, isFlour: false, binding: 0.05 }
+    ];
+
+    const templates = {
+        0: [
+            { id: "weiss_hefe", name: "Weißbrot (Hefe)", hydr: 65, extras: [] },
+            { id: "weiss_sauer", name: "Weißbrot (Sauerteig)", hydr: 68, extras: [] },
+            { id: "bauernbrot", name: "Bauernbrot (Weizen/Roggen)", hydr: 70, extras: [] },
+            { id: "roggenmisch", name: "Roggenmischbrot (Sauerteig)", hydr: 75, extras: [] },
+            { id: "dinkel_vollkorn", name: "Dinkel-Vollkornbrot", hydr: 72, extras: [] },
+            { id: "baguette", name: "Baguette (Poolish)", hydr: 68, extras: [] }
+        ],
+        1: [
+            { id: "broetchen_hefe", name: "Klassische Brötchen (Hefe)", hydr: 60, extras: [] },
+            { id: "broetchen_sauer", name: "Sauerteig-Brötchen", hydr: 65, extras: [] },
+            { id: "burger_buns", name: "Burger Buns (Brioche-Style)", hydr: 62, extras: [
+                { name: "Butter", factor: 6 },
+                { name: "Zucker", factor: 3 },
+                { name: "Vollmilch", factor: 45 }
+            ] },
+            { id: "laugen", name: "Laugengebäck (Fest)", hydr: 55, extras: [] },
+            { id: "dinkel_broetchen", name: "Dinkel-Brötchen", hydr: 65, extras: [] },
+            { id: "ciabatta", name: "Ciabatta-Brötchen (Weich)", hydr: 80, extras: [] }
+        ],
+        2: [
+            { id: "napoli", name: "Neapolitanisch (Pizzaofen)", hydr: 62, extras: [] },
+            { id: "newyork", name: "New York Style (Haushaltsofen)", hydr: 65, extras: [
+                { name: "Olivenöl", factor: 6 },
+                { name: "Zucker", factor: 3 }
+            ] },
+            { id: "pan", name: "Pfannenpizza / Detroit", hydr: 70, extras: [
+                { name: "Olivenöl", factor: 12 }
+            ] },
+            { id: "teglia", name: "Römische Blechpizza (Teglia)", hydr: 75, extras: [
+                { name: "Olivenöl", factor: 8 }
+            ] }
+        ]
+    };
+
+    // REAKTIVER LIVE-ZUSTAND
+    let category = 0;
+    let phase = 0;
+    let manualIngredients = [];
+    let weightOverrides = {};
+    let customFlourNames = { mehl_1: "", mehl_2: "" };
+    let isLoadingRecipe = false;
+
+    window.onload = function() {
+        populateDropdowns();
+        buildTemplateDropdown();
+        applyTemplate();
+        renderSavedRecipes();
+    };
+
+    function populateDropdowns() {
+        const picker = document.getElementById('presetPicker');
+        picker.innerHTML = ingredientPresets.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    }
+
+    function buildTemplateDropdown() {
+        const picker = document.getElementById('templatePicker');
+        picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+
+    function changeCategory(catId) {
+        category = catId;
+        document.getElementById('catBrot').className = catId === 0 ? 'active' : '';
+        document.getElementById('catBroetchen').className = catId === 1 ? 'active' : '';
+        document.getElementById('catPizza').className = catId === 2 ? 'active' : '';
+        
+        const weightLabel = document.getElementById('weightLabel');
+        const targetWeight = document.getElementById('targetWeight');
+        if (catId === 0) { weightLabel.innerText = "Zielgewicht (g):"; targetWeight.value = 1000; }
+        else if (catId === 1) { weightLabel.innerText = "Anzahl Brötchen:"; targetWeight.value = 10; }
+        else { weightLabel.innerText = "Anzahl Pizzen:"; targetWeight.value = 3; }
+
+        document.querySelectorAll('.pizza-only').forEach(el => el.style.display = catId === 2 ? 'flex' : 'none');
+
+        buildTemplateDropdown();
+        applyTemplate();
+    }
+
+    function changePhase(phaseId) {
+        phase = phaseId;
+        document.getElementById('phaseTeig').className = phaseId === 0 ? 'active' : '';
+        document.getElementById('phaseBacken').className = phaseId === 1 ? 'active' : '';
+        document.getElementById('phase1Views').style.display = phaseId === 0 ? 'block' : 'none';
+        document.getElementById('phase2Views').style.display = phaseId === 1 ? 'block' : 'none';
+        calculateEngine();
+    }
+
+    function applyTemplate() {
+        if (isLoadingRecipe) return;
+        const templateId = document.getElementById('templatePicker').value;
+        const currentTemplate = templates[category].find(t => t.id === templateId);
+        
+        weightOverrides = {};
+        customFlourNames = { mehl_1: "", mehl_2: "" };
+        manualIngredients = [];
+
+        if (currentTemplate) {
+            document.getElementById('targetHydration').value = currentTemplate.hydr;
+            
+            const countFactor = parseFloat(document.getElementById('targetWeight').value) || 1;
+            currentTemplate.extras.forEach(ext => {
+                const presetData = ingredientPresets.find(p => p.name === ext.name);
+                if (presetData) {
+                    manualIngredients.push({
+                        name: ext.name,
+                        weight: ext.factor * countFactor,
+                        waterContent: presetData.waterContent,
+                        isFlour: presetData.isFlour,
+                        binding: presetData.binding
+                    });
+                }
+            });
+        }
+        calculateEngine();
+    }
+
+    function updateInputs() {
+        if(!isLoadingRecipe) {
+            const templateId = document.getElementById('templatePicker').value;
+            const currentTemplate = templates[category].find(t => t.id === templateId);
+            const countFactor = parseFloat(document.getElementById('targetWeight').value) || 1;
+            
+            if(currentTemplate) {
+                currentTemplate.extras.forEach(ext => {
+                    let ing = manualIngredients.find(i => i.name === ext.name);
+                    if(ing) ing.weight = ext.factor * countFactor;
+                });
+            }
+        }
+        calculateEngine();
+    }
+
+    // BÄCKER-MATHEMATIK ENGINE (VOLSTÄNDIG BILANZIERT)
     function calculateEngine() {
         const targetHydration = parseFloat(document.getElementById('targetHydration').value) || 65;
         const targetWeight = parseFloat(document.getElementById('targetWeight').value) || 1000;
@@ -57,35 +610,35 @@
 
         let manualFlours = manualIngredients.filter(i => i.isFlour);
 
-        // KORREKTUR: Sauerteig wird präzise in Mehl und Wasser zerlegt
+        // KORREKTUR-BLOCK: Aufteilung des Sauerteiges in Mehl- und Wasseranteile
         let actualSourdoughWeight = sourdoughWeight > 0 ? (weightOverrides["Sauerteig"] !== undefined ? weightOverrides["Sauerteig"] : Math.round(sourdoughWeight)) : 0;
         let sourdoughFlour = actualSourdoughWeight * 0.5;
         let sourdoughWater = actualSourdoughWeight * 0.5;
 
-        // Das Mehl aus dem Sauerteig wird nun korrekt zum Gesamtmehl der Schüssel addiert!
+        // Gesamtmehl beinhaltet nun das im Sauerteig gebundene Mehl
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0) + sourdoughFlour;
+        let totalFlour = totalActiveFlour; 
 
-        let targetWaterTotal = totalActiveFlour * factorH2O;
+        let targetWaterTotal = totalFlour * factorH2O;
         let baseBoundWater = activeFlours.reduce((sum, f) => sum + (f.weight * f.binding), 0);
         let manualBoundWater = manualIngredients.reduce((sum, i) => sum + (i.weight * i.binding), 0);
         
         let requiredTotalWater = targetWaterTotal + baseBoundWater + manualBoundWater;
         let manualWetWater = manualIngredients.reduce((sum, i) => sum + (i.weight * (i.waterContent / 100)), 0);
 
-        // Schüttwasser-Kalkulation: Wasser aus dem Sauerteig wird abgezogen
         let calculatedTapWater = Math.max(0, requiredTotalWater - manualWetWater - sourdoughWater);
         let finalTapWater = weightOverrides["Schüttwasser"] !== undefined ? weightOverrides["Schüttwasser"] : Math.round(calculatedTapWater);
 
-        let freshYeastWeight = totalActiveFlour * yeastPct;
+        let freshYeastWeight = totalFlour * yeastPct;
         let finalYeastWeight = useDryYeast ? (freshYeastWeight / 3.0) : freshYeastWeight;
         let yeastName = useDryYeast ? "Trockenhefe" : "Frischhefe";
         let finalYeast = weightOverrides[yeastName] !== undefined ? weightOverrides[yeastName] : parseFloat(finalYeastWeight.toFixed(2));
-        let finalSalt = (totalActiveFlour * 0.02).toFixed(1);
+        let finalSalt = (totalFlour * 0.02).toFixed(1);
 
         let totalWaterWeight = finalTapWater + manualWetWater + sourdoughWater;
         let totalBoundWaterWeight = baseBoundWater + manualBoundWater;
-        let currentHydr = totalActiveFlour > 0 ? ((totalWaterWeight - totalBoundWaterWeight) / totalActiveFlour) * 100 : 0;
-        let ta = totalActiveFlour > 0 ? Math.round(((totalActiveFlour + totalWaterWeight) / totalActiveFlour) * 100) : 0;
+        let currentHydr = totalFlour > 0 ? ((totalWaterWeight - totalBoundWaterWeight) / totalFlour) * 100 : 0;
+        let ta = totalFlour > 0 ? Math.round(((totalFlour + totalWaterWeight) / totalFlour) * 100) : 0;
 
         document.getElementById('currentHydration').innerText = currentHydr.toFixed(1) + " %";
         document.getElementById('currentTA').innerText = "TA: " + ta;
@@ -107,13 +660,12 @@
         const alertsContainer = document.getElementById('dashboardAlerts');
         let idealFlour = targetRohTeig / (1.0 + factorH2O + 0.02);
         
-        // Die Mangel-Anzeige gleicht nun totalActiveFlour (inkl. Sauerteig-Mehl) mit idealFlour ab
-        if (totalActiveFlour < idealFlour - 5) {
-            let missing = Math.round(idealFlour - totalActiveFlour);
+        if (totalFlour < idealFlour - 5) {
+            let missing = Math.round(idealFlour - totalFlour);
             alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
         } else { alertsContainer.innerHTML = ""; }
 
-        // MEHL RENDERN
+        // MEHL SEKTION RENDERN
         let flourHtml = activeFlours.map(f => `
             <div class="row">
                 <button class="swap-btn" onclick="swapFlourMenu('${f.id}')">🌾 ${f.name} 🔄</button>
@@ -134,13 +686,13 @@
         });
         document.getElementById('flourContainer').innerHTML = flourHtml;
 
-        // REST RENDERN
+        // RESTE SEKTION RENDERN
         let remHtml = `<div class="row"><span>💧 Schüttwasser</span><div><input type="number" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"> g</div></div>`;
         if (actualSourdoughWeight > 0) {
             remHtml += `<div class="row"><span>🍇 Sauerteig</span><div><input type="number" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"> g</div></div>`;
         }
         remHtml += `<div class="row"><span>🧫 ${yeastName}</span><div><input type="number" value="${finalYeast}" step="0.05" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
-        remHtml += `<div class="row"><span>=== Salz (2%) ===</span><strong>${finalSalt} g</strong></div>`;
+        remHtml += `<div class="row"><span>🧂 Salz (2%)</span><strong>${finalSalt} g</strong></div>`;
 
         manualIngredients.filter(i => !i.isFlour).forEach(i => {
             let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent/100))}g Wasser`;
@@ -158,3 +710,166 @@
 
         calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight);
     }
+
+    function setOverride(name, val) { weightOverrides[name] = parseFloat(val) || 0; calculateEngine(); }
+    function setManualWeight(name, val) { 
+        let ing = manualIngredients.find(i => i.name === name);
+        if(ing) ing.weight = parseFloat(val) || 0;
+        calculateEngine();
+    }
+    function deleteManual(name) { manualIngredients = manualIngredients.filter(i => i.name !== name); calculateEngine(); }
+
+    function swapFlourMenu(slotId) {
+        let menuHtml = ingredientPresets.filter(p => p.isFlour).map(p => `• ${p.name}`).join('\n');
+        let choice = prompt(`Welches Mehl möchtest du einsetzen?\nKopiere den Namen exakt:\n\n${menuHtml}`);
+        if (choice && ingredientPresets.some(p => p.name === choice)) {
+            customFlourNames[slotId] = choice;
+            weightOverrides = {};
+            calculateEngine();
+        }
+    }
+
+    function addManualIngredient() {
+        const pName = document.getElementById('presetPicker').value;
+        const pWeight = parseFloat(document.getElementById('manualWeightInput').value);
+        if (!pWeight) return;
+        const preset = ingredientPresets.find(p => p.name === pName);
+        if (preset) {
+            manualIngredients.push({ name: preset.name, weight: pWeight, waterContent: preset.waterContent, isFlour: preset.isFlour, binding: preset.binding });
+            document.getElementById('manualWeightInput').value = "";
+            calculateEngine();
+        }
+    }
+
+    function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight) {
+        const useFridge = document.getElementById('fridgeToggle').checked;
+        const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
+        const heatingType = parseInt(document.getElementById('heatingType')?.value || 0);
+        const vesselType = parseInt(document.getElementById('vesselType')?.value || 0);
+        const preheated = document.getElementById('preheatToggle').checked;
+
+        if (category === 0) {
+            document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "2 - 3 Std. bei Raumtemperatur";
+            document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
+        } else if (category === 1) {
+            document.getElementById('outStockgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1,5 Std. bei Raumtemperatur";
+            document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
+        } else {
+            let hours = parseFloat(document.getElementById('fermentHours').value) || 24;
+            let stock = Math.max(1, Math.round(hours * 0.6));
+            let stueck = Math.max(1, hours - stock);
+            let loc = useFridge ? "Kühlschrank" : "Raumtemp.";
+            document.getElementById('outStockgare').innerText = `${stock} Std. (${loc})`;
+            document.getElementById('outStueckgare').innerText = `${stueck} Std. (Raumtemperatur)`;
+        }
+
+        if (category === 2 && ovenType === 1) {
+            document.getElementById('outTemp').innerText = "400°C+ im Pizzaofen";
+            document.getElementById('outTime').innerText = "90 - 120 Sekunden";
+            document.querySelectorAll('.normal-oven').forEach(e => e.style.display = 'none');
+            return;
+        }
+        
+        document.querySelectorAll('.normal-oven').forEach(e => e.style.display = phase === 1 ? 'flex' : 'none');
+        if(category === 2) {
+            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = (phase === 1 && !useFridge) ? 'flex' : 'none');
+        } else {
+            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = 'none');
+        }
+
+        var targetTemp = category === 2 ? 250 : 230;
+        var targetTime = 20;
+
+        if (category === 0) {
+            targetTemp = 240;
+            targetTime = targetWeight <= 600 ? 35 : (targetWeight <= 1200 ? 50 : 70);
+        }
+        if (heatingType === 1) targetTemp -= 20;
+        if (vesselType === 1) targetTime += 5;
+        if (!preheated) targetTime += 20;
+
+        let hMode = heatingType === 0 ? "Ober-/Unterhitze" : "Umluft";
+        let vMode = vesselType === 0 ? "Freigeschoben" : "In Form/Pfanne";
+        document.getElementById('outTemp').innerText = `${targetTemp}°C (${hMode})`;
+        document.getElementById('outTime').innerText = `${targetTime} Min. (${vMode})`;
+    }
+
+    function triggerProTip() {
+        const templateId = document.getElementById('templatePicker').value;
+        let text = "";
+        if (category === 2) text = "PRO-TIPP: BASSINAGE (Wasserrückhalt)\nBei Pizzateigen mit hoher Hydration solltest du beim Kneten ca. 10-15% des Schüttwassers zurückhalten. Knete den Teig erst komplett aus, bis er stabil ist, und lass dann das restliche Wasser tröpfchenweise einfließen. Das garantiert ein stabiles Glutengerüst, ohne dass der Teig zerfließt!";
+        else if (category === 1) text = "PRO-TIPP: BRÖTCHEN-SCHLEIFEN\nFür eine perfekte, glatte Oberfläche und einen kräftigen Ofentrieb musst du die Teiglinge mit leichtem Druck auf einer mehlfreien Arbeitsfläche kreisförmig unter deiner hohlen Hand 'schleifen'. Dadurch entsteht Oberflächenspannung!";
+        else if (templateId === "roggenmisch") text = "PRO-TIPP: ROGGENTEIGE SÄUERN\nRoggenmehl enthält Enzyme (Amylasen), die ohne ausreichende Säure die Stärke abbauen – das Brot würde klitschig werden. Lass den Sauerteig daher reifen, bis er deutlich sauer riecht, um die Backfähigkeit des Roggens zu aktivieren.";
+        else text = "PRO-TIPP: SCHWADEN (DAMPF)\nGib beim Einschießen des Brotes direkt eine halbe Tasse Wasser auf ein vorgeheiztes Blech am Ofenboden. Der heiße Dampf (Schwaden) hält die Teighaut elastisch, sodass das Brot maximal aufgehen kann, ohne unkontrolliert aufzureißen. Nach 10 Min. den Dampf kurz entweichen lassen!";
+        
+        document.getElementById('proTipText').innerText = text;
+        document.getElementById('proTipModal').style.display = "flex";
+    }
+    function closeModal() { document.getElementById('proTipModal').style.display = "none"; }
+
+    function saveCurrentRecipe() {
+        const name = document.getElementById('newRecipeName').value.trim();
+        if(!name) return;
+        let recipe = {
+            id: Date.now(), name: name, category: category,
+            targetHydration: parseFloat(document.getElementById('targetHydration').value),
+            targetWeight: parseFloat(document.getElementById('targetWeight').value),
+            dryYeast: document.getElementById('dryYeastToggle').checked,
+            fridge: document.getElementById('fridgeToggle').checked,
+            weightOverrides: weightOverrides, customFlourNames: customFlourNames, manualIngredients: manualIngredients
+        };
+        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
+        list.push(recipe);
+        localStorage.setItem('bakery_recipes', JSON.stringify(list));
+        document.getElementById('newRecipeName').value = "";
+        renderSavedRecipes();
+    }
+
+    function renderSavedRecipes() {
+        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
+        const container = document.getElementById('savedRecipesContainer');
+        if(list.length === 0) {
+            container.innerHTML = `<div style="font-size:12px; color:#999; font-style:italic;">Noch keine Rezepte gesichert.</div>`;
+            return;
+        }
+        container.innerHTML = list.map(r => `
+            <div class="row">
+                <div>
+                    <div style="font-weight:bold; font-size:14px;">${r.name}</div>
+                    <div style="font-size:11px; color:#8e8e93;">Hydration: ${r.targetHydration}%</div>
+                </div>
+                <div>
+                    <button class="btn-plus" onclick="loadRecipe(${r.id})" style="padding:4px 10px; font-size:12px;">Laden</button>
+                    <button class="delete-btn" onclick="deleteRecipe(${r.id})" style="margin-left:8px;">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function loadRecipe(id) {
+        isLoadingRecipe = true;
+        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
+        let r = list.find(item => item.id === id);
+        if(r) {
+            changeCategory(r.category);
+            document.getElementById('targetHydration').value = r.targetHydration;
+            document.getElementById('targetWeight').value = r.targetWeight;
+            document.getElementById('dryYeastToggle').checked = r.dryYeast;
+            document.getElementById('fridgeToggle').checked = r.fridge;
+            weightOverrides = r.weightOverrides;
+            customFlourNames = r.customFlourNames;
+            manualIngredients = r.manualIngredients;
+        }
+        isLoadingRecipe = false;
+        calculateEngine();
+    }
+
+    function deleteRecipe(id) {
+        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
+        list = list.filter(item => item.id !== id);
+        localStorage.setItem('bakery_recipes', JSON.stringify(list));
+        renderSavedRecipes();
+    }
+</script>
+</body>
+</html>
