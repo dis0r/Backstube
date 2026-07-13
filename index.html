@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Back-Assistent Pro</title>
+    <title>Back-Assistent Pro (v.0.1.1)</title>
     <style>
         :root {
             --cream-bg: #faf9f5;
@@ -49,7 +49,7 @@
             font-weight: 800;
         }
 
-        /* Segmented Controls (Picker) */
+        /* Segmented Controls */
         .segmented-control {
             display: flex;
             background: #e3e2dc;
@@ -128,14 +128,13 @@
             padding-bottom: 4px;
         }
 
-        /* Verbesserte Zeilen-Struktur gegen Verrutschen */
         .row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
             border-bottom: 1px solid #f2f2f7;
-            gap: 8px; /* Sorgt für Abstand zwischen Elementen */
+            gap: 8px;
         }
 
         .row:last-child {
@@ -148,7 +147,7 @@
             margin-top: 1px;
         }
 
-        /* Eingabefelder & Buttons */
+        /* Eingabefelder */
         input[type="number"], input[type="text"], select {
             font-size: 15px;
             padding: 6px 8px;
@@ -165,16 +164,15 @@
             width: 100%;
         }
         
-        /* Neues, natives Dropdown für die Mehlauswahl */
         .flour-dropdown {
-            flex: 1; /* Nimmt sich den restlichen Platz */
+            flex: 1;
             font-size: 14px;
             padding: 6px;
             background-color: #fff;
             color: var(--baker-brown);
             border: 1px solid #d1d1d6;
-            text-overflow: ellipsis; /* Schneidet zu lange Namen ab anstatt umzubrechen */
-            max-width: 65%; /* Schützt das Eingabefeld vor dem Rausgeschoben werden */
+            text-overflow: ellipsis;
+            max-width: 65%;
         }
 
         .delete-btn {
@@ -207,7 +205,7 @@
             line-height: 1.4;
         }
 
-        /* Modal Overlay für Profi-Tipps */
+        /* Modal Overlay */
         .modal {
             display: none;
             position: fixed;
@@ -285,7 +283,7 @@
                 <label id="weightLabel" for="targetWeight">Zielgewicht (g):</label>
                 <input type="number" id="targetWeight" value="1000" step="50" oninput="updateInputs()">
             </div>
-            <div class="row">
+            <div class="row" id="yeastToggleRow">
                 <label for="dryYeastToggle">Trockenhefe verwenden?</label>
                 <input type="checkbox" id="dryYeastToggle" onchange="updateInputs()" style="transform: scale(1.2);">
             </div>
@@ -384,7 +382,7 @@
     </div>
 </div>
 
-<!-- MODAL OVERLAY FÜR PROFI-TIPPS -->
+<!-- MODAL OVERLAY -->
 <div class="modal" id="proTipModal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-title">💡 Bäckermeister Profi-Tipp</div>
@@ -394,7 +392,7 @@
 </div>
 
 <script>
-    // PRESETS & SAUGKRAFT MATRIZEN
+    // PRESETS MATRIZEN
     const ingredientPresets = [
         { name: "Weizenmehl Type 550 / Tipo 00", waterContent: 0, isFlour: true, binding: 0.0 },
         { name: "Weizenmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.05 },
@@ -455,7 +453,7 @@
         ]
     };
 
-    // REAKTIVER LIVE-ZUSTAND
+    // GLOBALER LIVE STATE
     let category = 0;
     let phase = 0;
     let manualIngredients = [];
@@ -552,14 +550,13 @@
         calculateEngine();
     }
 
-    // NATIVES DROP-DOWN HANDLER FÜR DIE MEHLSORTEN
     function changeFlour(slotId, newName) {
         customFlourNames[slotId] = newName;
-        weightOverrides = {}; // Setzt Gewicht-Overrides zurück, um die Bilanzen sicher auszugleichen
+        weightOverrides = {}; 
         calculateEngine();
     }
 
-    // BÄCKER-MATHEMATIK ENGINE
+    // BÄCKER-MATHEMATIK ENGINE (MIT LOGIK-KORREKTUREN FÜR REINEN SAUERTEIG)
     function calculateEngine() {
         const targetHydration = parseFloat(document.getElementById('targetHydration').value) || 65;
         const targetWeight = parseFloat(document.getElementById('targetWeight').value) || 1000;
@@ -578,20 +575,23 @@
         let floursConfigs = [];
         let yeastPct = 0.02;
         let sourdoughWeight = 0.0;
+        let isPureSourdough = false; // Flag für die Gärzeitsteuerung
 
         if (category === 0) {
             switch(templateId) {
                 case "weiss_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
-                case "weiss_sauer": let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; break;
-                case "bauernbrot": let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0.01; break;
-                case "roggenmisch": let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0.01; break;
+                case "weiss_sauer": let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; isPureSourdough = true; break;
+                // LOGIK-UPDATE: Bauernbrot und Roggenmischbrot sind jetzt traditionelle reine Sauerteigbrote (ohne Bäckerhefe!)
+                case "bauernbrot": let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0; isPureSourdough = true; break;
+                case "roggenmisch": let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break;
                 case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
                 case "baguette": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.005; break;
             }
         } else if (category === 1) {
             switch(templateId) {
                 case "broetchen_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "broetchen_sauer": let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0.01; break;
+                // LOGIK-UPDATE: Auch die Sauerteig-Brötchen treiben rein natürlich
+                case "broetchen_sauer": let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0; isPureSourdough = true; break;
                 case "burger_buns": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
                 case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
                 case "dinkel_broetchen": floursConfigs = [{ id: "mehl_1", def: "Dinkelmehl Type 630", w: rawFlour }]; yeastPct = 0.03; break;
@@ -608,6 +608,9 @@
             yeastPct = Math.max(0.05, yeastPctCalc) / 100;
         }
 
+        // Hefe-Umschalter ein- oder ausblenden
+        document.getElementById('yeastToggleRow').style.display = yeastPct === 0 ? 'none' : 'flex';
+
         let activeFlours = [];
         floursConfigs.forEach(f => {
             let activeName = customFlourNames[f.id] || f.def;
@@ -618,12 +621,10 @@
 
         let manualFlours = manualIngredients.filter(i => i.isFlour);
 
-        // Sauerteig splitten
         let actualSourdoughWeight = sourdoughWeight > 0 ? (weightOverrides["Sauerteig"] !== undefined ? weightOverrides["Sauerteig"] : Math.round(sourdoughWeight)) : 0;
         let sourdoughFlour = actualSourdoughWeight * 0.5;
         let sourdoughWater = actualSourdoughWeight * 0.5;
 
-        // Gesamtmehl berechnen
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0) + sourdoughFlour;
         let totalFlour = totalActiveFlour; 
 
@@ -673,9 +674,8 @@
             alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
         } else { alertsContainer.innerHTML = ""; }
 
-        // MEHL SEKTION RENDERN (JETZT MIT NATIVEM DROPDOWN)
+        // MEHL SEKTION RENDERN
         let flourHtml = activeFlours.map(f => {
-            // Dropdown-Optionen generieren
             let optionsHtml = ingredientPresets.filter(p => p.isFlour).map(p => {
                 let isSelected = p.name === f.name ? 'selected' : '';
                 return `<option value="${p.name}" ${isSelected}>🌾 ${p.name}</option>`;
@@ -693,7 +693,6 @@
             `;
         }).join('');
 
-        // Manuelle Mehle rendern (Optisch an das Dropdown angepasst)
         manualFlours.forEach(f => {
             flourHtml += `
                 <div class="row">
@@ -712,7 +711,9 @@
         if (actualSourdoughWeight > 0) {
             remHtml += `<div class="row"><span>🍇 Sauerteig</span><div><input type="number" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"> g</div></div>`;
         }
-        remHtml += `<div class="row"><span>🧫 ${yeastName}</span><div><input type="number" value="${finalYeast}" step="0.05" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
+        if (yeastPct > 0) {
+            remHtml += `<div class="row"><span>🧫 ${yeastName}</span><div><input type="number" value="${finalYeast}" step="0.05" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
+        }
         remHtml += `<div class="row"><span>🧂 Salz (2%)</span><strong>${finalSalt} g</strong></div>`;
 
         manualIngredients.filter(i => !i.isFlour).forEach(i => {
@@ -729,7 +730,8 @@
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
-        calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight);
+        // Weitergabe des Flags an Phase 2
+        calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight, isPureSourdough);
     }
 
     function setOverride(name, val) { weightOverrides[name] = parseFloat(val) || 0; calculateEngine(); }
@@ -752,7 +754,8 @@
         }
     }
 
-    function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight) {
+    // PHASE 2 ENGINE (MIT DYNAMISCHEN ZEIT-KORREKTUREN FÜR REINEN SAUERTEIG)
+    function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight, isPureSourdough) {
         const useFridge = document.getElementById('fridgeToggle').checked;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
         const heatingType = parseInt(document.getElementById('heatingType')?.value || 0);
@@ -760,12 +763,25 @@
         const preheated = document.getElementById('preheatToggle').checked;
 
         if (category === 0) {
-            document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "2 - 3 Std. bei Raumtemperatur";
-            document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
+            // Brot-Gärzeiten
+            if (isPureSourdough) {
+                document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "3 - 5 Std. bei Raumtemperatur (Dehnen/Falten)";
+                document.getElementById('outStueckgare').innerText = useFridge ? "1,5 Std. Akklimatisierung bei Raumtemp." : "2 - 3 Std. stabilisiert im Gärkorb";
+            } else {
+                document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "2 - 3 Std. bei Raumtemperatur";
+                document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
+            }
         } else if (category === 1) {
-            document.getElementById('outStockgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1,5 Std. bei Raumtemperatur";
-            document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
+            // Brötchen-Gärzeiten
+            if (isPureSourdough) {
+                document.getElementById('outStockgare').innerText = useFridge ? "2 Std. anspringen lassen" : "2,5 Std. bei Raumtemperatur";
+                document.getElementById('outStueckgare').innerText = useFridge ? "12-16 Std. fertig geformt im Kühlschrank" : "1,5 Std. geschliffen auf Blech";
+            } else {
+                document.getElementById('outStockgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1,5 Std. bei Raumtemperatur";
+                document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
+            }
         } else {
+            // Pizza-Gärzeiten
             let hours = parseFloat(document.getElementById('fermentHours').value) || 24;
             let stock = Math.max(1, Math.round(hours * 0.6));
             let stueck = Math.max(1, hours - stock);
@@ -810,7 +826,7 @@
         let text = "";
         if (category === 2) text = "PRO-TIPP: BASSINAGE (Wasserrückhalt)\nBei Pizzateigen mit hoher Hydration solltest du beim Kneten ca. 10-15% des Schüttwassers zurückhalten. Knete den Teig erst komplett aus, bis er stabil ist, und lass dann das restliche Wasser tröpfchenweise einfließen. Das garantiert ein stabiles Glutengerüst, ohne dass der Teig zerfließt!";
         else if (category === 1) text = "PRO-TIPP: BRÖTCHEN-SCHLEIFEN\nFür eine perfekte, glatte Oberfläche und einen kräftigen Ofentrieb musst du die Teiglinge mit leichtem Druck auf einer mehlfreien Arbeitsfläche kreisförmig unter deiner hohlen Hand 'schleifen'. Dadurch entsteht Oberflächenspannung!";
-        else if (templateId === "roggenmisch") text = "PRO-TIPP: ROGGENTEIGE SÄUERN\nRoggenmehl enthält Enzyme (Amylasen), die ohne ausreichende Säure die Stärke abbauen – das Brot würde klitschig werden. Lass den Sauerteig daher reifen, bis er deutlich sauer riecht, um die Backfähigkeit des Roggens zu aktivieren.";
+        else if (templateId === "roggenmisch" || templateId === "bauernbrot") text = "PRO-TIPP: REINER SAUERTEIG (OHNE HEFE)\nDa wir die künstliche Hefe eliminiert haben, benötigt der Teig deutlich mehr Zeit zum Reifen. Achte bei der Stockgare darauf, dass sich das Volumen sichtlich vergrößert, bevor du wirkst. Der Sauerteig sorgt für maximale Bekömmlichkeit und saftige Frischhaltung!";
         else text = "PRO-TIPP: SCHWADEN (DAMPF)\nGib beim Einschießen des Brotes direkt eine halbe Tasse Wasser auf ein vorgeheiztes Blech am Ofenboden. Der heiße Dampf (Schwaden) hält die Teighaut elastisch, sodass das Brot maximal aufgehen kann, ohne unkontrolliert aufzureißen. Nach 10 Min. den Dampf kurz entweichen lassen!";
         
         document.getElementById('proTipText').innerText = text;
