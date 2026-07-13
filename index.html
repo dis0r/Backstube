@@ -49,7 +49,7 @@
             font-weight: 800;
         }
 
-        /* Segmented Controls (Picker) */
+        /* Segmented Controls */
         .segmented-control {
             display: flex;
             background: #e3e2dc;
@@ -76,7 +76,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* Dashboard Card */
+        /* Dashboard */
         .dashboard {
             background: var(--card-white);
             border-radius: 16px;
@@ -94,7 +94,6 @@
         .hydration-display {
             font-size: 38px;
             font-weight: bold;
-            font-family: -apple-system-short, sans-serif;
         }
 
         .ta-display {
@@ -109,7 +108,7 @@
             font-weight: 600;
         }
 
-        /* Sektionen & Listen */
+        /* Sektionen */
         .section {
             background: var(--card-white);
             border-radius: 14px;
@@ -144,7 +143,6 @@
             margin-top: 1px;
         }
 
-        /* Eingabefelder & Buttons */
         input[type="number"], input[type="text"], select {
             font-size: 15px;
             padding: 6px 8px;
@@ -165,13 +163,13 @@
             background: none;
             border: none;
             color: var(--baker-brown);
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             padding: 2px 0;
             display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
         }
 
         .delete-btn {
@@ -193,7 +191,15 @@
             cursor: pointer;
         }
 
-        /* Modal Overlay für Profi-Tipps */
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid var(--warn-orange);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -226,14 +232,14 @@
 <div class="app-container">
     <h1>Bäcker-Assistent Pro</h1>
 
-    <!-- KATEGORIE PICKER -->
+    <!-- CATEGORY PICKER -->
     <div class="segmented-control">
         <button id="catBrot" class="active" onclick="changeCategory(0)">Brot</button>
         <button id="catBroetchen" onclick="changeCategory(1)">Brötchen</button>
         <button id="catPizza" onclick="changeCategory(2)">Pizza</button>
     </div>
 
-    <!-- ARBEITSSCHRITT PICKER -->
+    <!-- PHASE PICKER -->
     <div class="segmented-control">
         <button id="phaseTeig" class="active" onclick="changePhase(0)">🥣 1. Teig & Zutaten</button>
         <button id="phaseBacken" onclick="changePhase(1)">🔥 2. Gare & Backen</button>
@@ -253,15 +259,14 @@
             </div>
             <div style="text-align: right;">
                 <div style="font-size: 11px; color: #8e8e93; margin-bottom: 4px;">Ziel-Hydration</div>
-                <input type="number" id="targetHydration" value="65" min="50" max="100" style="text-align: center; width: 70px;">
+                <input type="number" id="targetHydration" value="65" min="50" max="100" style="text-align: center; width: 70px;" oninput="updateInputs()">
             </div>
         </div>
         <div id="dashboardAlerts" style="margin-top: 8px;"></div>
     </div>
 
     <!-- PHASE 1: TEIG & ZUTATEN -->
-    <div id="phase1Views" class="contents">
-        <!-- KONFIGURATOR -->
+    <div id="phase1Views">
         <div class="section">
             <div class="section-title">Rezept-Konfigurator</div>
             <div class="row">
@@ -278,7 +283,6 @@
             </div>
         </div>
 
-        <!-- REZEPT SPEICHERN -->
         <div class="section">
             <div class="section-title">Rezept in Backstube speichern</div>
             <div style="display: flex; gap: 8px;">
@@ -287,19 +291,16 @@
             </div>
         </div>
 
-        <!-- MEHL SEKTION -->
         <div class="section">
             <div class="section-title">🌾 Mehl in der Rührschüssel</div>
             <div id="flourContainer"></div>
         </div>
 
-        <!-- RESTE SEKTION -->
         <div class="section">
             <div class="section-title">💧 Flüssigkeit, Triebmittel & Extras</div>
             <div id="remainingContainer"></div>
         </div>
 
-        <!-- ZUTAT HINZUFÜGEN -->
         <div class="section">
             <div class="section-title">Zutat in die Schüssel werfen</div>
             <div style="display: flex; gap: 6px; align-items: center;">
@@ -311,7 +312,7 @@
     </div>
 
     <!-- PHASE 2: GARE & BACKEN -->
-    <div id="phase2Views" class="contents" style="display: none;">
+    <div id="phase2Views" style="display: none;">
         <div class="section">
             <div class="section-title">Gär- & Ofenparameter</div>
             <div class="row">
@@ -348,7 +349,7 @@
                 </select>
             </div>
             <div class="row normal-oven">
-                <label for="preheatToggle">Ofen vollständig vorgeheizt?</label>
+                <label for="preheatToggle">Backofen vollständig vorgeheizt?</label>
                 <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()" style="transform: scale(1.2);">
             </div>
         </div>
@@ -375,7 +376,7 @@
     </div>
 </div>
 
-<!-- INFO PROFI TIPP MODAL -->
+<!-- MODAL OVERLAY -->
 <div class="modal" id="proTipModal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-title">💡 Bäckermeister Profi-Tipp</div>
@@ -385,7 +386,7 @@
 </div>
 
 <script>
-    // PRESETS & SAUGKRAFT MATRIX
+    // 1. PRESSETS & SAUGKRAFT MATRIX (Komplette Abdeckung aller neuen Zutaten)
     const ingredientPresets = [
         { name: "Weizenmehl Type 550 / Tipo 00", waterContent: 0, isFlour: true, binding: 0.0 },
         { name: "Weizenmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.05 },
@@ -406,35 +407,48 @@
         { name: "Leinsamenschrot", waterContent: 0, isFlour: false, binding: 3.5 },
         { name: "Chia Samen", waterContent: 0, isFlour: false, binding: 7.0 },
         { name: "Flohsamenschalen", waterContent: 0, isFlour: false, binding: 10.0 },
-        { name: "Karotten (gerieben)", waterContent: 88, isFlour: false, binding: 0 }
+        { name: "Karotten (gerieben)", waterContent: 88, isFlour: false, binding: 0 },
+        { name: "Röstzwiebeln", waterContent: 2, isFlour: false, binding: 0.05 }
     ];
 
+    // 2. ERWEITERTE REZEPT MATRIZEN (Jetzt inklusive bäckereitechnischer "extras")
     const templates = {
         0: [
-            { id: "weiss_hefe", name: "Weißbrot (Hefe)", hydr: 65 },
-            { id: "weiss_sauer", name: "Weißbrot (Sauerteig)", hydr: 68 },
-            { id: "bauernbrot", name: "Bauernbrot (Weizen/Roggen)", hydr: 70 },
-            { id: "roggenmisch", name: "Roggenmischbrot (Sauerteig)", hydr: 75 },
-            { id: "dinkel_vollkorn", name: "Dinkel-Vollkornbrot", hydr: 72 },
-            { id: "baguette", name: "Baguette (Poolish)", hydr: 68 }
+            { id: "weiss_hefe", name: "Weißbrot (Hefe)", hydr: 65, extras: [] },
+            { id: "weiss_sauer", name: "Weißbrot (Sauerteig)", hydr: 68, extras: [] },
+            { id: "bauernbrot", name: "Bauernbrot (Weizen/Roggen)", hydr: 70, extras: [] },
+            { id: "roggenmisch", name: "Roggenmischbrot (Sauerteig)", hydr: 75, extras: [] },
+            { id: "dinkel_vollkorn", name: "Dinkel-Vollkornbrot", hydr: 72, extras: [] },
+            { id: "baguette", name: "Baguette (Poolish)", hydr: 68, extras: [] }
         ],
         1: [
-            { id: "broetchen_hefe", name: "Klassische Brötchen (Hefe)", hydr: 60 },
-            { id: "broetchen_sauer", name: "Sauerteig-Brötchen", hydr: 65 },
-            { id: "burger_buns", name: "Burger Buns (Brioche-Style)", hydr: 62 },
-            { id: "laugen", name: "Laugengebäck (Fest)", hydr: 55 },
-            { id: "dinkel_broetchen", name: "Dinkel-Brötchen", hydr: 65 },
-            { id: "ciabatta", name: "Ciabatta-Brötchen (Weich)", hydr: 80 }
+            { id: "broetchen_hefe", name: "Klassische Brötchen (Hefe)", hydr: 60, extras: [] },
+            { id: "broetchen_sauer", name: "Sauerteig-Brötchen", hydr: 65, extras: [] },
+            { id: "burger_buns", name: "Burger Buns (Brioche-Style)", hydr: 62, extras: [
+                { name: "Butter", factor: 6 }, // multipliziert mit Stückzahl
+                { name: "Zucker", factor: 3 },
+                { name: "Vollmilch", factor: 45 }
+            ] },
+            { id: "laugen", name: "Laugengebäck (Fest)", hydr: 55, extras: [] },
+            { id: "dinkel_broetchen", name: "Dinkel-Brötchen", hydr: 65, extras: [] },
+            { id: "ciabatta", name: "Ciabatta-Brötchen (Weich)", hydr: 80, extras: [] }
         ],
         2: [
-            { id: "napoli", name: "Neapolitanisch (Pizzaofen)", hydr: 62 },
-            { id: "newyork", name: "New York Style (Haushaltsofen)", hydr: 65 },
-            { id: "pan", name: "Pfannenpizza / Detroit", hydr: 70 },
-            { id: "teglia", name: "Römische Blechpizza (Teglia)", hydr: 75 }
+            { id: "napoli", name: "Neapolitanisch (Pizzaofen)", hydr: 62, extras: [] },
+            { id: "newyork", name: "New York Style (Haushaltsofen)", hydr: 65, extras: [
+                { name: "Olivenöl", factor: 6 },
+                { name: "Zucker", factor: 3 }
+            ] },
+            { id: "pan", name: "Pfannenpizza / Detroit", hydr: 70, extras: [
+                { name: "Olivenöl", factor: 12 }
+            ] },
+            { id: "teglia", name: "Römische Blechpizza (Teglia)", hydr: 75, extras: [
+                { name: "Olivenöl", factor: 8 }
+            ] }
         ]
     };
 
-    // GLOBALER SEITENZUSTAND
+    // GLOBALER LIVE STATE
     let category = 0;
     let phase = 0;
     let manualIngredients = [];
@@ -442,9 +456,9 @@
     let customFlourNames = { mehl_1: "", mehl_2: "" };
     let isLoadingRecipe = false;
 
-    // INITIALISIERUNG BEIM LADEN
     window.onload = function() {
         populateDropdowns();
+        buildTemplateDropdown();
         applyTemplate();
         renderSavedRecipes();
     };
@@ -454,35 +468,24 @@
         picker.innerHTML = ingredientPresets.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     }
 
+    function buildTemplateDropdown() {
+        const picker = document.getElementById('templatePicker');
+        picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+
     function changeCategory(catId) {
         category = catId;
         document.getElementById('catBrot').className = catId === 0 ? 'active' : '';
         document.getElementById('catBroetchen').className = catId === 1 ? 'active' : '';
         document.getElementById('catPizza').className = catId === 2 ? 'active' : '';
         
-        // UI-Labels steuern
         const weightLabel = document.getElementById('weightLabel');
         const targetWeight = document.getElementById('targetWeight');
         if (catId === 0) { weightLabel.innerText = "Zielgewicht (g):"; targetWeight.value = 1000; }
         else if (catId === 1) { weightLabel.innerText = "Anzahl Brötchen:"; targetWeight.value = 10; }
         else { weightLabel.innerText = "Anzahl Pizzen:"; targetWeight.value = 3; }
 
-        // Pizza-Spezifische Sichtbarkeiten steuern
         document.querySelectorAll('.pizza-only').forEach(el => el.style.display = catId === 2 ? 'flex' : 'none');
-
-        if (!isLoadingRecipe) {
-            manualIngredients = [];
-            weightOverrides = {};
-            customFlourNames = { mehl_1: "", mehl_2: "" };
-            
-            // Standard Burger Bun Zutaten triggern
-            if (catId === 1) {
-                const count = parseFloat(targetWeight.value) || 10;
-                manualIngredients.push({ name: "Butter", weight: count * 6, waterContent: 15, isFlour: false, binding: 0 });
-                manualIngredients.push({ name: "Zucker", weight: count * 3, waterContent: 0, isFlour: false, binding: 0 });
-                manualIngredients.push({ name: "Vollmilch", weight: count * 45, waterContent: 90, isFlour: false, binding: 0 });
-            }
-        }
 
         buildTemplateDropdown();
         applyTemplate();
@@ -497,35 +500,64 @@
         calculateEngine();
     }
 
-    function buildTemplateDropdown() {
-        const picker = document.getElementById('templatePicker');
-        picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    }
-
+    // FIX: Automatisches Befüllen der Zutaten-Extras beim Laden einer Vorlage
     function applyTemplate() {
         if (isLoadingRecipe) return;
-        buildTemplateDropdown();
         const templateId = document.getElementById('templatePicker').value;
         const currentTemplate = templates[category].find(t => t.id === templateId);
+        
+        weightOverrides = {};
+        customFlourNames = { mehl_1: "", mehl_2: "" };
+        manualIngredients = []; // Reset für neue Vorlage
+
         if (currentTemplate) {
             document.getElementById('targetHydration').value = currentTemplate.hydr;
+            
+            // Rechnen wir die Extras passend zur Stückzahl/Gewicht ein
+            const countFactor = parseFloat(document.getElementById('targetWeight').value) || 1;
+            currentTemplate.extras.forEach(ext => {
+                const presetData = ingredientPresets.find(p => p.name === ext.name);
+                if (presetData) {
+                    manualIngredients.push({
+                        name: ext.name,
+                        weight: ext.factor * countFactor,
+                        waterContent: presetData.waterContent,
+                        isFlour: presetData.isFlour,
+                        binding: presetData.binding
+                    });
+                }
+            });
         }
-        weightOverrides = {};
         calculateEngine();
     }
 
     function updateInputs() {
+        // Falls sich das Gewicht/Stückzahl ändert, passen wir die skalierten Extras dynamisch an
+        if(!isLoadingRecipe) {
+            const templateId = document.getElementById('templatePicker').value;
+            const currentTemplate = templates[category].find(t => t.id === templateId);
+            const countFactor = parseFloat(document.getElementById('targetWeight').value) || 1;
+            
+            if(currentTemplate) {
+                currentTemplate.extras.forEach(ext => {
+                    let ing = manualIngredients.find(i => i.name === ext.name);
+                    if(ing) {
+                        ing.weight = ext.factor * countFactor;
+                    }
+                });
+            }
+        }
         calculateEngine();
     }
 
-    // DIE LIVE MATHEMATIK ENGINE (Spiegelt die Swift-Logik wider)
+    // MATHEMATIK CORE
     function calculateEngine() {
         const targetHydration = parseFloat(document.getElementById('targetHydration').value) || 65;
         const targetWeight = parseFloat(document.getElementById('targetWeight').value) || 1000;
         const templateId = document.getElementById('templatePicker').value;
         const useDryYeast = document.getElementById('dryYeastToggle').checked;
-
         const factorH2O = targetHydration / 100.0;
+
         let targetRohTeig = 1000;
         if (category === 0) targetRohTeig = targetWeight * 1.15;
         else if (category === 1) targetRohTeig = targetWeight * 85.0;
@@ -534,7 +566,6 @@
         const totalDoughFactor = 1.0 + factorH2O + 0.02;
         const rawFlour = targetRohTeig / totalDoughFactor;
 
-        // Slot Definitionen
         let floursConfigs = [];
         let yeastPct = 0.02;
         let sourdoughWeight = 0.0;
@@ -559,8 +590,7 @@
             }
         } else {
             floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
-            let pizzaCount = category === 2 ? targetWeight : 3;
-            let pizzaWeight = 280;
+            let pizzaCount = targetWeight;
             let fermentHours = parseFloat(document.getElementById('fermentHours')?.value) || 24;
             let useFridge = document.getElementById('fridgeToggle').checked;
             let roomTemp = parseFloat(document.getElementById('roomTemp')?.value) || 21;
@@ -569,7 +599,6 @@
             yeastPct = Math.max(0.05, yeastPctCalc) / 100;
         }
 
-        // 1. Mehle generieren
         let activeFlours = [];
         floursConfigs.forEach(f => {
             let activeName = customFlourNames[f.id] || f.def;
@@ -578,11 +607,9 @@
             activeFlours.push({ name: activeName, weight: finalWeight, isFlour: true, binding: presetData.binding, id: f.id });
         });
 
-        // Manuelle Mehle filtern
         let manualFlours = manualIngredients.filter(i => i.isFlour);
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0);
 
-        // 2. Schüttwasser berechnen
         let targetWaterTotal = totalActiveFlour * factorH2O;
         let baseBoundWater = activeFlours.reduce((sum, f) => sum + (f.weight * f.binding), 0);
         let manualBoundWater = manualIngredients.reduce((sum, i) => sum + (i.weight * i.binding), 0);
@@ -594,24 +621,24 @@
         let calculatedTapWater = Math.max(0, requiredTotalWater - manualWetWater - sourdoughWater);
         let finalTapWater = weightOverrides["Schüttwasser"] !== undefined ? weightOverrides["Schüttwasser"] : Math.round(calculatedTapWater);
 
-        // Hefe & Salz ermitteln
         let freshYeastWeight = totalActiveFlour * yeastPct;
         let finalYeastWeight = useDryYeast ? (freshYeastWeight / 3.0) : freshYeastWeight;
         let yeastName = useDryYeast ? "Trockenhefe" : "Frischhefe";
         let finalYeast = weightOverrides[yeastName] !== undefined ? weightOverrides[yeastName] : parseFloat(finalYeastWeight.toFixed(2));
         let finalSalt = (totalActiveFlour * 0.02).toFixed(1);
 
-        // METRIKEN FÜRS DASHBOARD
         let totalWaterWeight = finalTapWater + manualWetWater + sourdoughWater;
         let totalBoundWaterWeight = baseBoundWater + manualBoundWater;
-        let currentHydr = totalActiveFlour > 0 ? ((totalWaterWeight - totalBoundWaterWeight) / totalFlour) * 100 : 0;
-        let ta = totalActiveFlour > 0 ? Math.round(((totalActiveFlour + totalWaterWeight) / totalFlour) * 100) : 0;
+        let currentHydr = totalActiveFlour > 0 ? ((totalWaterWeight - totalBoundWaterWeight) / totalActiveFlour) * 100 : 0;
+        let ta = totalActiveFlour > 0 ? Math.round(((totalActiveFlour + totalWaterWeight) / totalActiveFlour) * 100) : 0;
 
-        // UI-DASHBOARD AKTUALISIEREN
-        elCurrentHydration.innerText = currentHydr.toFixed(1) + " %";
-        elCurrentTA.innerText = "TA: " + ta;
+        document.getElementById('currentHydration').innerText = currentHydr.toFixed(1) + " %";
+        document.getElementById('currentTA').innerText = "TA: " + ta;
 
-        // Farb-Feedback
+        const elConsistencyText = document.getElementById('consistencyText');
+        const elCurrentHydration = document.getElementById('currentHydration');
+        const elDashboardCard = document.getElementById('dashboardCard');
+
         if (category === 2) {
             if (currentHydr < 60) { elConsistencyText.innerText = "Klassisch fest (Einsteiger)"; elCurrentHydration.style.color = "var(--warn-orange)"; }
             else if (currentHydr <= 66) { elConsistencyText.innerText = "Neapel Standard (Optimal)"; elCurrentHydration.style.color = "var(--success-green)"; }
@@ -622,25 +649,18 @@
             else { elConsistencyText.innerText = "Weicher Teig (Falten empfohlen)"; elCurrentHydration.style.color = "var(--blue-water)"; }
         }
 
-        // MANGEL ANZEIGE
         const alertsContainer = document.getElementById('dashboardAlerts');
         let idealFlour = targetRohTeig / (1.0 + factorH2O + 0.02);
         if (totalActiveFlour < idealFlour - 5) {
             let missing = Math.round(idealFlour - totalActiveFlour);
             alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
-        } else {
-            alertsContainer.innerHTML = "";
-        }
+        } else { alertsContainer.innerHTML = ""; }
 
-        // RENDERING SEKTION 1: MEHL
+        // MEHL RENDERN
         let flourHtml = activeFlours.map(f => `
             <div class="row">
-                <div>
-                    <button class="swap-btn" onclick="swapFlourMenu('${f.id}')">🌾 ${f.name} 🔄</button>
-                </div>
-                <div>
-                    <input type="number" value="${f.weight}" oninput="setOverride('${f.name}', this.value)"> g
-                </div>
+                <button class="swap-btn" onclick="swapFlourMenu('${f.id}')">🌾 ${f.name} 🔄</button>
+                <div><input type="number" value="${f.weight}" oninput="setOverride('${f.name}', this.value)"> g</div>
             </div>
         `).join('');
 
@@ -657,24 +677,20 @@
         });
         document.getElementById('flourContainer').innerHTML = flourHtml;
 
-        // RENDERING SEKTION 2: RESTLICHE ZUTATEN
+        // REST RENDERN
         let remHtml = `<div class="row"><span>💧 Schüttwasser</span><div><input type="number" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"> g</div></div>`;
         if (sourdoughWeight > 0) {
             let sWeight = weightOverrides["Sauerteig"] !== undefined ? weightOverrides["Sauerteig"] : Math.round(sourdoughWeight);
             remHtml += `<div class="row"><span>🍇 Sauerteig</span><div><input type="number" value="${sWeight}" oninput="setOverride('Sauerteig', this.value)"> g</div></div>`;
         }
-        remHtml += `<div class="row"><span>🧫 ${yeastName}</span><div><input type="number" value="${finalYeast}" step="0.1" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
-        remHtml += `<div class="row"><span>🧂 Salz (2%)</span><strong>${finalSalt} g</strong></div>`;
+        remHtml += `<div class="row"><span>🧫 ${yeastName}</span><div><input type="number" value="${finalYeast}" step="0.05" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
+        remHtml += `<div class="row"><span>=== Salz (2%) ===</span><strong>${finalSalt} g</strong></div>`;
 
-        // Manuelle Nicht-Mehle rendern
         manualIngredients.filter(i => !i.isFlour).forEach(i => {
             let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent/100))}g Wasser`;
             remHtml += `
                 <div class="row">
-                    <div>
-                        <div>${i.name}</div>
-                        <div class="row-details">${subText}</div>
-                    </div>
+                    <div><div>${i.name}</div><div class="row-details">${subText}</div></div>
                     <div>
                         <input type="number" value="${i.weight}" oninput="setManualWeight('${i.name}', this.value)"> g
                         <button class="delete-btn" onclick="deleteManual('${i.name}')">🗑️</button>
@@ -684,7 +700,6 @@
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
-        // PHASE 2 BERECHNUNGEN AKTUALISIEREN
         calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight);
     }
 
@@ -694,6 +709,7 @@
         if(ing) ing.weight = parseFloat(val) || 0;
         calculateEngine();
     }
+    // Crash-sicheres Entfernen per ID-Zuweisung
     function deleteManual(name) { manualIngredients = manualIngredients.filter(i => i.name !== name); calculateEngine(); }
 
     function swapFlourMenu(slotId) {
@@ -718,7 +734,6 @@
         }
     }
 
-    // PHASE 2 ENGINE
     function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight) {
         const useFridge = document.getElementById('fridgeToggle').checked;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
@@ -726,7 +741,6 @@
         const vesselType = parseInt(document.getElementById('vesselType')?.value || 0);
         const preheated = document.getElementById('preheatToggle').checked;
 
-        // Gare berechnen
         if (category === 0) {
             document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "2 - 3 Std. bei Raumtemperatur";
             document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
@@ -742,14 +756,19 @@
             document.getElementById('outStueckgare').innerText = `${stueck} Std. (Raumtemperatur)`;
         }
 
-        // Ofen berechnen
         if (category === 2 && ovenType === 1) {
             document.getElementById('outTemp').innerText = "400°C+ im Pizzaofen";
             document.getElementById('outTime').innerText = "90 - 120 Sekunden";
-            document.querySelectorAll('.normal-oven').forEach(e => el.style.display = 'none');
+            document.querySelectorAll('.normal-oven').forEach(e => e.style.display = 'none');
             return;
         }
+        
         document.querySelectorAll('.normal-oven').forEach(e => e.style.display = phase === 1 ? 'flex' : 'none');
+        if(category === 2) {
+            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = (phase === 1 && !useFridge) ? 'flex' : 'none');
+        } else {
+            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = 'none');
+        }
 
         var targetTemp = category === 2 ? 250 : 230;
         var targetTime = 20;
@@ -768,7 +787,6 @@
         document.getElementById('outTime').innerText = `${targetTime} Min. (${vMode})`;
     }
 
-    // PROFI TIPP AUSLÖSER
     function triggerProTip() {
         const templateId = document.getElementById('templatePicker').value;
         let text = "";
@@ -782,7 +800,6 @@
     }
     function closeModal() { document.getElementById('proTipModal').style.display = "none"; }
 
-    // STORAGE ENGINE (Ersetzt persistent UserDefaults / @AppStorage)
     function saveCurrentRecipe() {
         const name = document.getElementById('newRecipeName').value.trim();
         if(!name) return;
