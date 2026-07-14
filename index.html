@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Back-Assistent Pro v0.1.3</title>
+    <title>Back-Assistent Pro v0.2.0</title>
     <style>
         :root {
             --cream-bg: #faf9f5;
@@ -107,6 +107,11 @@
             align-items: center;
         }
 
+        .hydration-label {
+            font-size: 11px;
+            color: #8e8e93;
+        }
+
         .hydration-display {
             font-size: 38px;
             font-weight: bold;
@@ -122,6 +127,9 @@
         .consistency-text {
             font-size: 13px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         /* Sektionen & Listen */
@@ -162,6 +170,12 @@
             margin-top: 1px;
         }
 
+        .field-error {
+            font-size: 11px;
+            color: var(--alert-red);
+            margin-top: 2px;
+        }
+
         /* Eingabefelder */
         input[type="text"], select {
             font-size: 15px;
@@ -174,11 +188,16 @@
             width: 85px;
         }
 
+        input.invalid {
+            border-color: var(--alert-red);
+            background: #fdecea;
+        }
+
         select {
             text-align: left;
             width: 100%;
         }
-        
+
         .flour-dropdown {
             flex: 1;
             font-size: 14px;
@@ -210,6 +229,11 @@
             cursor: pointer;
         }
 
+        .btn-plus:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .info-box {
             background: #fff3e0;
             border-left: 4px solid var(--warn-orange);
@@ -218,6 +242,30 @@
             font-size: 13px;
             margin-top: 8px;
             line-height: 1.4;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1c1c1e;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.25s;
+            pointer-events: none;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
         /* Modal Overlay */
@@ -246,6 +294,23 @@
             color: var(--baker-brown);
             margin-bottom: 10px;
         }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .btn-secondary {
+            background: var(--gray-input);
+            color: #333;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -254,7 +319,7 @@
     <!-- TITELBEREICH MIT VERSIONIERUNG -->
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.1.3</div>
+        <div class="version-badge">v0.2.0</div>
     </div>
 
     <!-- CATEGORY PICKER -->
@@ -274,13 +339,13 @@
     <div class="dashboard" id="dashboardCard">
         <div class="dashboard-header">
             <div>
-                <div style="font-size: 11px; color: #8e8e93; display: flex; align-items: center; gap: 4px;">
-                    Teig-Konsistenz 
-                    <span onclick="triggerProTip()" style="cursor:pointer; color:var(--baker-brown); font-weight:bold;">ℹ️</span>
-                </div>
+                <div class="hydration-label">Aktuelle Hydration (Ist)</div>
                 <div class="hydration-display" id="currentHydration">65.0 %</div>
                 <div class="ta-display" id="currentTA">TA: 165</div>
-                <div class="consistency-text" id="consistencyText">Optimaler Brotteig</div>
+                <div class="consistency-text">
+                    <span id="consistencyText">Optimaler Brotteig</span>
+                    <span onclick="triggerProTip()" style="cursor:pointer; color:var(--baker-brown); font-weight:bold;">ℹ️</span>
+                </div>
             </div>
             <div style="text-align: right;">
                 <div style="font-size: 11px; color: #8e8e93; margin-bottom: 4px;">Ziel-Hydration</div>
@@ -312,7 +377,7 @@
             <div class="section-title">Rezept in Backstube speichern</div>
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left; width: 100%;">
-                <button type="button" class="btn-plus" onclick="saveCurrentRecipe()">💾</button>
+                <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()">💾</button>
             </div>
         </div>
 
@@ -397,7 +462,7 @@
     <!-- REZEPT VERWALTUNG -->
     <div class="section">
         <div class="section-title">Eigene Rezepte in der Backstube</div>
-        <div id="savedRecipesContainer"></div>
+        <div id="savedRecipesContainer">Lade Rezepte…</div>
     </div>
 </div>
 
@@ -410,13 +475,68 @@
     </div>
 </div>
 
+<!-- CONFIRM OVERLAY (ersetzt confirm()/alert() für konsistentes UI) -->
+<div class="modal" id="confirmModal">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title" id="confirmTitle">Bitte bestätigen</div>
+        <p id="confirmText" style="font-size: 14px; color: #333; line-height: 1.5; margin: 14px 0;"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeConfirm(false)">Abbrechen</button>
+            <button type="button" class="btn-plus" style="flex:1;" onclick="closeConfirm(true)" id="confirmOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    // HILFSFUNKTION FÜR DAS KOMMA-PROBLEM (Wandelt Komma in Punkt um)
+    // ============================================================
+    // HILFSFUNKTIONEN
+    // ============================================================
+
+    // Wandelt Komma in Punkt um und liefert einen gültigen Float oder den Default zurück.
     function getFloatVal(id, defaultVal) {
         let el = document.getElementById(id);
-        if(!el) return defaultVal;
+        if (!el) return defaultVal;
         let val = parseFloat(el.value.replace(',', '.'));
         return isNaN(val) ? defaultVal : val;
+    }
+
+    // Liest einen Wert, klemmt ihn auf [min, max] und markiert das Feld visuell,
+    // wenn der Rohwert außerhalb des gültigen Bereichs lag (z.B. 0 oder negativ).
+    function getClampedVal(id, defaultVal, min, max) {
+        let el = document.getElementById(id);
+        if (!el) return defaultVal;
+        let raw = parseFloat(el.value.replace(',', '.'));
+        if (isNaN(raw)) {
+            el.classList.add('invalid');
+            return defaultVal;
+        }
+        let clamped = Math.min(max, Math.max(min, raw));
+        el.classList.toggle('invalid', clamped !== raw);
+        return clamped;
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // Kleines Promise-basiertes Bestätigungs-Dialogfenster statt confirm().
+    function askConfirm(title, text) {
+        return new Promise((resolve) => {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmText').innerText = text;
+            document.getElementById('confirmModal').style.display = 'flex';
+            askConfirm._resolve = resolve;
+        });
+    }
+    function closeConfirm(result) {
+        document.getElementById('confirmModal').style.display = 'none';
+        if (askConfirm._resolve) askConfirm._resolve(result);
     }
 
     // PRESETS MATRIZEN
@@ -484,15 +604,20 @@
     let category = 0;
     let phase = 0;
     let manualIngredients = [];
+    // Gewichts-Overrides für Mehl werden pro Slot-ID gespeichert (nicht pro Name!),
+    // damit zwei Slots mit demselben Mehltyp sich nicht gegenseitig überschreiben.
+    let flourOverridesBySlot = {};
+    // Overrides für Wasser/Hefe/Sauerteig (eindeutige Zeilen, Name als Key ist hier sicher).
     let weightOverrides = {};
     let customFlourNames = { mehl_1: "", mehl_2: "" };
     let isLoadingRecipe = false;
+    let recipeCache = [];
 
     window.onload = function() {
         populateDropdowns();
         buildTemplateDropdown();
         applyTemplate();
-        renderSavedRecipes();
+        loadRecipesFromStorage();
     };
 
     function populateDropdowns() {
@@ -510,7 +635,7 @@
         document.getElementById('catBrot').className = catId === 0 ? 'active' : '';
         document.getElementById('catBroetchen').className = catId === 1 ? 'active' : '';
         document.getElementById('catPizza').className = catId === 2 ? 'active' : '';
-        
+
         const weightLabel = document.getElementById('weightLabel');
         const targetWeight = document.getElementById('targetWeight');
         if (catId === 0) { weightLabel.innerText = "Zielgewicht (g):"; targetWeight.value = 1000; }
@@ -521,7 +646,7 @@
 
         buildTemplateDropdown();
         applyTemplate();
-        renderSavedRecipes(); 
+        renderSavedRecipes();
     }
 
     function changePhase(phaseId) {
@@ -537,14 +662,15 @@
         if (isLoadingRecipe) return;
         const templateId = document.getElementById('templatePicker').value;
         const currentTemplate = templates[category].find(t => t.id === templateId);
-        
+
+        flourOverridesBySlot = {};
         weightOverrides = {};
         customFlourNames = { mehl_1: "", mehl_2: "" };
         manualIngredients = [];
 
         if (currentTemplate) {
             document.getElementById('targetHydration').value = currentTemplate.hydr;
-            
+
             const countFactor = getFloatVal('targetWeight', 1);
             currentTemplate.extras.forEach(ext => {
                 const presetData = ingredientPresets.find(p => p.name === ext.name);
@@ -563,30 +689,32 @@
     }
 
     function updateInputs() {
-        if(!isLoadingRecipe) {
+        if (!isLoadingRecipe) {
             const templateId = document.getElementById('templatePicker').value;
             const currentTemplate = templates[category].find(t => t.id === templateId);
             const countFactor = getFloatVal('targetWeight', 1);
-            
-            if(currentTemplate) {
+
+            if (currentTemplate) {
                 currentTemplate.extras.forEach(ext => {
                     let ing = manualIngredients.find(i => i.name === ext.name);
-                    if(ing) ing.weight = ext.factor * countFactor;
+                    if (ing) ing.weight = ext.factor * countFactor;
                 });
             }
         }
         calculateEngine();
     }
 
+    // Beim Wechsel eines Mehltyps in einem Slot wird NUR der Override dieses
+    // einen Slots gelöscht - alle anderen Overrides (Wasser, Hefe, anderes Mehl) bleiben erhalten.
     function changeFlour(slotId, newName) {
         customFlourNames[slotId] = newName;
-        weightOverrides = {}; 
+        delete flourOverridesBySlot[slotId];
         calculateEngine();
     }
 
     function calculateEngine() {
-        const targetHydration = getFloatVal('targetHydration', 65);
-        const targetWeight = getFloatVal('targetWeight', 1000);
+        const targetHydration = getClampedVal('targetHydration', 65, 40, 130);
+        const targetWeight = getClampedVal('targetWeight', 1000, 1, 20000);
         const templateId = document.getElementById('templatePicker').value;
         const useDryYeast = document.getElementById('dryYeastToggle').checked;
         const factorH2O = targetHydration / 100.0;
@@ -605,18 +733,18 @@
         let isPureSourdough = false;
 
         if (category === 0) {
-            switch(templateId) {
+            switch (templateId) {
                 case "weiss_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
-                case "weiss_sauer": let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; isPureSourdough = true; break;
-                case "bauernbrot": let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0; isPureSourdough = true; break;
-                case "roggenmisch": let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break;
+                case "weiss_sauer": { let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; isPureSourdough = true; break; }
+                case "bauernbrot": { let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0; isPureSourdough = true; break; }
+                case "roggenmisch": { let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break; }
                 case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
                 case "baguette": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.005; break;
             }
         } else if (category === 1) {
-            switch(templateId) {
+            switch (templateId) {
                 case "broetchen_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "broetchen_sauer": let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0; isPureSourdough = true; break;
+                case "broetchen_sauer": { let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0; isPureSourdough = true; break; }
                 case "burger_buns": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
                 case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
                 case "dinkel_broetchen": floursConfigs = [{ id: "mehl_1", def: "Dinkelmehl Type 630", w: rawFlour }]; yeastPct = 0.03; break;
@@ -624,9 +752,11 @@
             }
         } else {
             floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
-            let fermentHours = getFloatVal('fermentHours', 24);
+            let fermentHours = getClampedVal('fermentHours', 24, 1, 96);
             let useFridge = document.getElementById('fridgeToggle').checked;
-            let roomTemp = getFloatVal('roomTemp', 21);
+            // Formel gilt nur für Temperaturen > 14°C - unterhalb wäre die Gärung
+            // praktisch zum Stillstand gekommen. Untergrenze daher bei 15°C geklemmt.
+            let roomTemp = getClampedVal('roomTemp', 21, 15, 35);
             let temp = useFridge ? 4.0 : roomTemp;
             let yeastPctCalc = useFridge ? (15.0 / (fermentHours * 4.0)) : (2.5 / (fermentHours * (temp - 14.0)));
             yeastPct = Math.max(0.05, yeastPctCalc) / 100;
@@ -638,8 +768,8 @@
         floursConfigs.forEach(f => {
             let activeName = customFlourNames[f.id] || f.def;
             let presetData = ingredientPresets.find(p => p.name === activeName) || { binding: 0 };
-            let finalWeight = weightOverrides[activeName] !== undefined ? weightOverrides[activeName] : Math.round(f.w);
-            activeFlours.push({ name: activeName, weight: finalWeight, isFlour: true, binding: presetData.binding, id: f.id });
+            let finalWeight = flourOverridesBySlot[f.id] !== undefined ? flourOverridesBySlot[f.id] : Math.round(f.w);
+            activeFlours.push({ name: activeName, weight: Math.max(0, finalWeight), isFlour: true, binding: presetData.binding, id: f.id });
         });
 
         let manualFlours = manualIngredients.filter(i => i.isFlour);
@@ -649,12 +779,12 @@
         let sourdoughWater = actualSourdoughWeight * 0.5;
 
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0) + sourdoughFlour;
-        let totalFlour = totalActiveFlour; 
+        let totalFlour = totalActiveFlour;
 
         let targetWaterTotal = totalFlour * factorH2O;
         let baseBoundWater = activeFlours.reduce((sum, f) => sum + (f.weight * f.binding), 0);
         let manualBoundWater = manualIngredients.reduce((sum, i) => sum + (i.weight * i.binding), 0);
-        
+
         let requiredTotalWater = targetWaterTotal + baseBoundWater + manualBoundWater;
         let manualWetWater = manualIngredients.reduce((sum, i) => sum + (i.weight * (i.waterContent / 100)), 0);
 
@@ -677,7 +807,6 @@
 
         const elConsistencyText = document.getElementById('consistencyText');
         const elCurrentHydration = document.getElementById('currentHydration');
-        const elDashboardCard = document.getElementById('dashboardCard');
 
         if (category === 2) {
             if (currentHydr < 60) { elConsistencyText.innerText = "Klassisch fest (Einsteiger)"; elCurrentHydration.style.color = "var(--warn-orange)"; }
@@ -691,11 +820,16 @@
 
         const alertsContainer = document.getElementById('dashboardAlerts');
         let idealFlour = targetRohTeig / (1.0 + factorH2O + 0.02);
-        
+        let alerts = [];
+
         if (totalFlour < idealFlour - 5) {
             let missing = Math.round(idealFlour - totalFlour);
-            alertsContainer.innerHTML = `<div class="info-box">💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!</div>`;
-        } else { alertsContainer.innerHTML = ""; }
+            alerts.push(`💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!`);
+        }
+        if (finalTapWater <= 0 && requiredTotalWater > manualWetWater + sourdoughWater) {
+            alerts.push(`⚠️ Kein Schüttwasser übrig: Deine feuchten Zutaten (z.B. Milch, Joghurt) decken bereits die gesamte Ziel-Hydration ab. Prüfe, ob der Teig nicht zu weich wird.`);
+        }
+        alertsContainer.innerHTML = alerts.map(a => `<div class="info-box">${a}</div>`).join('');
 
         // MEHL RENDERN
         let flourHtml = activeFlours.map(f => {
@@ -710,7 +844,7 @@
                         ${optionsHtml}
                     </select>
                     <div style="white-space: nowrap;">
-                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setOverride('${f.name}', this.value)"> g
+                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setFlourOverride('${f.id}', this.value)"> g
                     </div>
                 </div>
             `;
@@ -727,7 +861,7 @@
                 </div>
             `;
         });
-        document.getElementById('flourContainer').innerHTML = flourHtml;
+        document.getElementById('flourContainer').innerHTML = flourHtml || `<div style="font-size:12px; color:#999; font-style:italic;">Keine Mehle in der Schüssel.</div>`;
 
         // RESTE RENDERN
         let remHtml = `<div class="row"><span>💧 Schüttwasser</span><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"> g</div></div>`;
@@ -740,7 +874,7 @@
         remHtml += `<div class="row"><span>🧂 Salz (2%)</span><strong>${finalSalt} g</strong></div>`;
 
         manualIngredients.filter(i => !i.isFlour).forEach(i => {
-            let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent/100))}g Wasser`;
+            let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent / 100))}g Wasser`;
             remHtml += `
                 <div class="row">
                     <div><div style="font-weight:600;">${i.name}</div><div class="row-details">${subText}</div></div>
@@ -753,49 +887,56 @@
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
-        calculatePhase2(totalWaterWeight, currentHydr, targetWeight, useDryYeast, finalYeastWeight, isPureSourdough);
+        calculatePhase2(targetWeight, isPureSourdough);
     }
 
-    function setOverride(name, val) { 
-        weightOverrides[name] = parseFloat(val.replace(',', '.')) || 0; 
-        calculateEngine(); 
-    }
-    
-    function setManualWeight(name, val) { 
-        let ing = manualIngredients.find(i => i.name === name);
-        if(ing) ing.weight = parseFloat(val.replace(',', '.')) || 0;
+    function setFlourOverride(slotId, val) {
+        let n = parseFloat(val.replace(',', '.'));
+        flourOverridesBySlot[slotId] = isNaN(n) || n < 0 ? 0 : n;
         calculateEngine();
     }
-    
-    function deleteManual(name) { 
-        manualIngredients = manualIngredients.filter(i => i.name !== name); 
-        calculateEngine(); 
+
+    function setOverride(name, val) {
+        let n = parseFloat(val.replace(',', '.'));
+        weightOverrides[name] = isNaN(n) || n < 0 ? 0 : n;
+        calculateEngine();
     }
 
-    // UPDATE: Verbesserte Hinzufügen-Logik
+    function setManualWeight(name, val) {
+        let ing = manualIngredients.find(i => i.name === name);
+        let n = parseFloat(val.replace(',', '.'));
+        if (ing) ing.weight = isNaN(n) || n < 0 ? 0 : n;
+        calculateEngine();
+    }
+
+    function deleteManual(name) {
+        manualIngredients = manualIngredients.filter(i => i.name !== name);
+        calculateEngine();
+    }
+
     function addManualIngredient() {
         const pName = document.getElementById('presetPicker').value;
         const rawStr = document.getElementById('manualWeightInput').value;
-        const pWeight = parseFloat(rawStr.replace(',', '.')); // Komma zu Punkt umwandeln
-        if (!pWeight || isNaN(pWeight)) return; // Abbrechen wenn keine gültige Zahl
+        const pWeight = parseFloat(rawStr.replace(',', '.'));
+        if (!pWeight || isNaN(pWeight) || pWeight <= 0) {
+            showToast('Bitte eine gültige Grammzahl > 0 eingeben.');
+            return;
+        }
 
         const preset = ingredientPresets.find(p => p.name === pName);
         if (preset) {
-            // Prüfen, ob die Zutat schon in der Schüssel ist
             let existing = manualIngredients.find(i => i.name === preset.name);
             if (existing) {
-                // Wenn ja: Einfach die Grammzahl oben drauf addieren
-                existing.weight += pWeight; 
+                existing.weight += pWeight;
             } else {
-                // Wenn nein: Als neue Zeile anlegen
                 manualIngredients.push({ name: preset.name, weight: pWeight, waterContent: preset.waterContent, isFlour: preset.isFlour, binding: preset.binding });
             }
-            document.getElementById('manualWeightInput').value = ""; // Feld wieder leeren
+            document.getElementById('manualWeightInput').value = "";
             calculateEngine();
         }
     }
 
-    function calculatePhase2(totalWater, currentHydr, targetWeight, useDryYeast, yeastWeight, isPureSourdough) {
+    function calculatePhase2(targetWeight, isPureSourdough) {
         const useFridge = document.getElementById('fridgeToggle').checked;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
         const heatingType = parseInt(document.getElementById('heatingType')?.value || 0);
@@ -819,7 +960,7 @@
                 document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
             }
         } else {
-            let hours = getFloatVal('fermentHours', 24);
+            let hours = getClampedVal('fermentHours', 24, 1, 96);
             let stock = Math.max(1, Math.round(hours * 0.6));
             let stueck = Math.max(1, hours - stock);
             let loc = useFridge ? "Kühlschrank" : "Raumtemp.";
@@ -833,9 +974,9 @@
             document.querySelectorAll('.normal-oven').forEach(e => e.style.display = 'none');
             return;
         }
-        
+
         document.querySelectorAll('.normal-oven').forEach(e => e.style.display = phase === 1 ? 'flex' : 'none');
-        if(category === 2) {
+        if (category === 2) {
             document.querySelectorAll('.no-fridge').forEach(e => e.style.display = (phase === 1 && !useFridge) ? 'flex' : 'none');
         } else {
             document.querySelectorAll('.no-fridge').forEach(e => e.style.display = 'none');
@@ -865,36 +1006,44 @@
         else if (category === 1) text = "PRO-TIPP: BRÖTCHEN-SCHLEIFEN\nFür eine perfekte, glatte Oberfläche und einen kräftigen Ofentrieb musst du die Teiglinge mit leichtem Druck auf einer mehlfreien Arbeitsfläche kreisförmig unter deiner hohlen Hand 'schleifen'. Dadurch entsteht Oberflächenspannung!";
         else if (templateId === "roggenmisch" || templateId === "bauernbrot") text = "PRO-TIPP: REINER SAUERTEIG (OHNE HEFE)\nDa wir die künstliche Hefe eliminiert haben, benötigt der Teig deutlich mehr Zeit zum Reifen. Achte bei der Stockgare darauf, dass sich das Volumen sichtlich vergrößert, bevor du wirkst. Der Sauerteig sorgt für maximale Bekömmlichkeit und saftige Frischhaltung!";
         else text = "PRO-TIPP: SCHWADEN (DAMPF)\nGib beim Einschießen des Brotes direkt eine halbe Tasse Wasser auf ein vorgeheiztes Blech am Ofenboden. Der heiße Dampf (Schwaden) hält die Teighaut elastisch, sodass das Brot maximal aufgehen kann, ohne unkontrolliert aufzureißen. Nach 10 Min. den Dampf kurz entweichen lassen!";
-        
+
         document.getElementById('proTipText').innerText = text;
         document.getElementById('proTipModal').style.display = "flex";
     }
     function closeModal() { document.getElementById('proTipModal').style.display = "none"; }
 
-    function saveCurrentRecipe() {
-        const name = document.getElementById('newRecipeName').value.trim();
-        if(!name) return;
-        let recipe = {
-            id: Date.now(), name: name, category: category,
-            targetHydration: getFloatVal('targetHydration', 65),
-            targetWeight: getFloatVal('targetWeight', 1000),
-            dryYeast: document.getElementById('dryYeastToggle').checked,
-            fridge: document.getElementById('fridgeToggle').checked,
-            weightOverrides: weightOverrides, customFlourNames: customFlourNames, manualIngredients: manualIngredients
-        };
-        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
-        list.push(recipe);
-        localStorage.setItem('bakery_recipes', JSON.stringify(list));
-        document.getElementById('newRecipeName').value = "";
+    // ============================================================
+    // REZEPT-SPEICHERUNG (persistent über window.storage, geräteübergreifend
+    // für diesen Nutzer - läuft NICHT über localStorage, da das in Artefakten
+    // nicht unterstützt wird)
+    // ============================================================
+
+    async function loadRecipesFromStorage() {
+        const container = document.getElementById('savedRecipesContainer');
+        try {
+            const listResult = await window.storage.list('recipe:');
+            const keys = (listResult && listResult.keys) || [];
+            const recipes = [];
+            for (const key of keys) {
+                try {
+                    const res = await window.storage.get(key);
+                    if (res && res.value) recipes.push(JSON.parse(res.value));
+                } catch (e) { /* einzelnen defekten Eintrag überspringen */ }
+            }
+            recipeCache = recipes;
+        } catch (e) {
+            recipeCache = [];
+            container.innerHTML = `<div class="field-error">Rezepte konnten nicht geladen werden.</div>`;
+            return;
+        }
         renderSavedRecipes();
     }
 
     function renderSavedRecipes() {
-        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
-        let filteredList = list.filter(r => r.category === category);
-        
         const container = document.getElementById('savedRecipesContainer');
-        if(filteredList.length === 0) {
+        let filteredList = recipeCache.filter(r => r.category === category);
+
+        if (filteredList.length === 0) {
             container.innerHTML = `<div style="font-size:12px; color:#999; font-style:italic;">Noch keine Rezepte in dieser Kategorie gesichert.</div>`;
             return;
         }
@@ -912,29 +1061,84 @@
         `).join('');
     }
 
+    async function saveCurrentRecipe() {
+        const nameInput = document.getElementById('newRecipeName');
+        const name = nameInput.value.trim();
+        if (!name) {
+            showToast('Bitte einen Namen für das Rezept eingeben.');
+            return;
+        }
+
+        const duplicate = recipeCache.find(r => r.category === category && r.name.toLowerCase() === name.toLowerCase());
+        if (duplicate) {
+            const overwrite = await askConfirm('Rezept überschreiben?', `Es existiert bereits ein Rezept namens "${name}". Möchtest du es überschreiben?`);
+            if (!overwrite) return;
+        }
+
+        const recipe = {
+            id: duplicate ? duplicate.id : Date.now(),
+            name: name,
+            category: category,
+            targetHydration: getFloatVal('targetHydration', 65),
+            targetWeight: getFloatVal('targetWeight', 1000),
+            dryYeast: document.getElementById('dryYeastToggle').checked,
+            fridge: document.getElementById('fridgeToggle').checked,
+            flourOverridesBySlot: flourOverridesBySlot,
+            weightOverrides: weightOverrides,
+            customFlourNames: customFlourNames,
+            manualIngredients: manualIngredients
+        };
+
+        const btn = document.getElementById('saveRecipeBtn');
+        btn.disabled = true;
+        try {
+            await window.storage.set('recipe:' + recipe.id, JSON.stringify(recipe));
+            if (duplicate) {
+                recipeCache = recipeCache.map(r => r.id === recipe.id ? recipe : r);
+            } else {
+                recipeCache.push(recipe);
+            }
+            nameInput.value = "";
+            renderSavedRecipes();
+            showToast('Rezept gespeichert.');
+        } catch (e) {
+            showToast('Speichern fehlgeschlagen. Bitte erneut versuchen.');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     function loadRecipe(id) {
         isLoadingRecipe = true;
-        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
-        let r = list.find(item => item.id === id);
-        if(r) {
+        let r = recipeCache.find(item => item.id === id);
+        if (r) {
             changeCategory(r.category);
             document.getElementById('targetHydration').value = r.targetHydration;
             document.getElementById('targetWeight').value = r.targetWeight;
             document.getElementById('dryYeastToggle').checked = r.dryYeast;
             document.getElementById('fridgeToggle').checked = r.fridge;
-            weightOverrides = r.weightOverrides;
-            customFlourNames = r.customFlourNames;
-            manualIngredients = r.manualIngredients;
+            flourOverridesBySlot = r.flourOverridesBySlot || {};
+            weightOverrides = r.weightOverrides || {};
+            customFlourNames = r.customFlourNames || { mehl_1: "", mehl_2: "" };
+            manualIngredients = r.manualIngredients || [];
+            showToast(`"${r.name}" geladen.`);
         }
         isLoadingRecipe = false;
         calculateEngine();
     }
 
-    function deleteRecipe(id) {
-        let list = JSON.parse(localStorage.getItem('bakery_recipes') || "[]");
-        list = list.filter(item => item.id !== id);
-        localStorage.setItem('bakery_recipes', JSON.stringify(list));
-        renderSavedRecipes();
+    async function deleteRecipe(id) {
+        const r = recipeCache.find(item => item.id === id);
+        const ok = await askConfirm('Rezept löschen?', `Soll "${r ? r.name : 'dieses Rezept'}" wirklich dauerhaft gelöscht werden?`);
+        if (!ok) return;
+        try {
+            await window.storage.delete('recipe:' + id);
+            recipeCache = recipeCache.filter(item => item.id !== id);
+            renderSavedRecipes();
+            showToast('Rezept gelöscht.');
+        } catch (e) {
+            showToast('Löschen fehlgeschlagen. Bitte erneut versuchen.');
+        }
     }
 </script>
 </body>
