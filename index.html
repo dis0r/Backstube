@@ -1,332 +1,493 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Back-Assistent Pro v0.2.0</title>
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Back-Assistent Pro v0.3.0</title>
+<style>
+    :root {
+        --cream-bg: #f7f6f2;
+        --baker-brown: #8a5a2b;
+        --baker-brown-dark: #6b4520;
+        --card-white: #ffffff;
+        --card-border: rgba(60, 40, 20, 0.08);
+        --gray-input: #f2f2f5;
+        --text-primary: #1c1c1e;
+        --text-secondary: #7c7c80;
+        --success-green: #2e7d32;
+        --warn-orange: #c9720a;
+        --alert-red: #d32f2f;
+        --purple-pro: #7b3fa0;
+        --blue-water: #1565c0;
+        --divider: rgba(60, 40, 20, 0.08);
+        --shadow-card: 0 1px 2px rgba(20,14,6,0.04), 0 6px 16px rgba(20,14,6,0.05);
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --radius-sm: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
         :root {
-            --cream-bg: #faf9f5;
-            --baker-brown: #73471e;
-            --card-white: #ffffff;
-            --gray-input: #f2f2f7;
-            --success-green: #2e7d32;
-            --warn-orange: #ef6c00;
-            --alert-red: #c62828;
-            --purple-pro: #6a1b9a;
-            --blue-water: #1565c0;
+            --cream-bg: #0f0e0c;
+            --baker-brown: #d69a5c;
+            --baker-brown-dark: #f0b878;
+            --card-white: #1c1b19;
+            --card-border: rgba(255, 235, 210, 0.08);
+            --gray-input: #2a2926;
+            --text-primary: #f2f1ee;
+            --text-secondary: #9b9a96;
+            --divider: rgba(255, 235, 210, 0.08);
+            --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
         }
+    }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--cream-bg);
-            color: #1c1c1e;
-            margin: 0;
-            padding: 12px;
-            display: flex;
-            justify-content: center;
-        }
+    html { -webkit-text-size-adjust: 100%; }
 
-        .app-container {
-            max-width: 480px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            padding-bottom: 40px;
-        }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+        background-color: var(--cream-bg);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        -webkit-font-smoothing: antialiased;
+    }
 
-        .header-area {
-            text-align: center;
-            margin: 6px 0;
-        }
+    .app-container {
+        max-width: 480px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-bottom: 48px;
+    }
 
-        h1 {
-            color: var(--baker-brown);
-            font-size: 24px;
-            margin: 0;
-            font-weight: 800;
-        }
+    .header-area {
+        text-align: center;
+        margin: 6px 0 2px;
+    }
 
-        .version-badge {
-            font-size: 11px;
-            font-weight: 700;
-            color: #8e8e93;
-            background: #e3e2dc;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 4px;
-        }
+    h1 {
+        color: var(--baker-brown);
+        font-size: 26px;
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+    }
 
-        /* Segmented Controls */
-        .segmented-control {
-            display: flex;
-            background: #e3e2dc;
-            padding: 2px;
-            border-radius: 8px;
-            margin-bottom: 4px;
-        }
+    .version-badge {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        background: var(--gray-input);
+        padding: 2px 8px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: 6px;
+    }
 
-        .segmented-control button {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
+    /* Segmented Controls */
+    .segmented-control {
+        display: flex;
+        background: var(--gray-input);
+        padding: 3px;
+        border-radius: 11px;
+        margin-bottom: 2px;
+    }
 
-        .segmented-control button.active {
-            background: var(--card-white);
-            color: #000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+    .segmented-control button {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 9px 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background .18s ease, color .18s ease, transform .1s ease;
+        min-height: 38px;
+    }
 
-        /* Dashboard Card */
-        .dashboard {
-            background: var(--card-white);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            border: 2px solid rgba(115, 71, 30, 0.15);
-        }
+    .segmented-control button.active {
+        background: var(--card-white);
+        color: var(--text-primary);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
 
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .segmented-control button:active { transform: scale(0.96); }
 
-        .hydration-label {
-            font-size: 11px;
-            color: #8e8e93;
-        }
+    .segmented-control.small button { font-size: 12px; padding: 7px 4px; min-height: 32px; }
 
-        .hydration-display {
-            font-size: 38px;
-            font-weight: bold;
-        }
+    /* Dashboard Card */
+    .dashboard {
+        background: linear-gradient(180deg, var(--card-white), var(--card-white));
+        border-radius: var(--radius-lg);
+        padding: 18px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--card-border);
+    }
 
-        .ta-display {
-            font-size: 14px;
-            font-weight: bold;
-            color: #666;
-            margin: 2px 0;
-        }
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
 
-        .consistency-text {
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+    .hydration-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
 
-        /* Sektionen & Listen */
-        .section {
-            background: var(--card-white);
-            border-radius: 14px;
-            padding: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
+    .hydration-display {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        line-height: 1.1;
+        margin-top: 2px;
+    }
 
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: var(--baker-brown);
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid #f2f2f7;
-            padding-bottom: 4px;
-        }
+    .ta-display {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 3px 0 4px;
+    }
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f2f2f7;
-            gap: 8px;
-        }
+    .consistency-text {
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
 
-        .row:last-child {
-            border-bottom: none;
-        }
+    .info-icon-btn {
+        cursor: pointer;
+        color: var(--baker-brown);
+        font-weight: bold;
+        background: var(--gray-input);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        border: none;
+        flex-shrink: 0;
+    }
 
-        .row-details {
-            font-size: 11px;
-            color: #8e8e93;
-            margin-top: 1px;
-        }
+    .target-hydration-box {
+        text-align: right;
+        flex-shrink: 0;
+    }
 
-        .field-error {
-            font-size: 11px;
-            color: var(--alert-red);
-            margin-top: 2px;
-        }
+    .target-hydration-box label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 5px;
+    }
 
-        /* Eingabefelder */
-        input[type="text"], select {
-            font-size: 15px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            border: 1px solid #d1d1d6;
-            background: var(--gray-input);
-            font-weight: 600;
-            text-align: right;
-            width: 85px;
-        }
+    /* Sektionen & Listen */
+    .section {
+        background: var(--card-white);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--card-border);
+    }
 
-        input.invalid {
-            border-color: var(--alert-red);
-            background: #fdecea;
-        }
+    .section-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--baker-brown);
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--divider);
+        padding-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
 
-        select {
-            text-align: left;
-            width: 100%;
-        }
+    .section-subtitle {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin: -4px 0 10px;
+        line-height: 1.4;
+    }
 
-        .flour-dropdown {
-            flex: 1;
-            font-size: 14px;
-            padding: 6px;
-            background-color: #fff;
-            color: var(--baker-brown);
-            border: 1px solid #d1d1d6;
-            text-overflow: ellipsis;
-            max-width: 65%;
-        }
+    .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--divider);
+        gap: 10px;
+        min-height: 44px;
+    }
 
-        .delete-btn {
-            background: none;
-            border: none;
-            color: var(--alert-red);
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 8px;
-        }
+    .row:last-child { border-bottom: none; }
 
-        .btn-plus {
-            background: var(--baker-brown);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    .row label { font-size: 14px; color: var(--text-primary); }
 
-        .btn-plus:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+    .row-details {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
 
-        .info-box {
-            background: #fff3e0;
-            border-left: 4px solid var(--warn-orange);
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-top: 8px;
-            line-height: 1.4;
-        }
+    .row-percent {
+        font-size: 11px;
+        color: var(--baker-brown);
+        font-weight: 600;
+        margin-top: 2px;
+    }
 
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #1c1c1e;
-            color: white;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            opacity: 0;
-            transition: all 0.25s;
-            pointer-events: none;
-            z-index: 2000;
-            max-width: 90%;
-            text-align: center;
-        }
+    .field-error {
+        font-size: 12px;
+        color: var(--alert-red);
+        padding: 6px 0;
+    }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
+    .empty-state {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        font-style: italic;
+        text-align: center;
+        padding: 14px 4px;
+    }
 
-        /* Modal Overlay */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            justify-content: center; align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
+    /* Eingabefelder */
+    input[type="text"], input[type="time"], select, textarea {
+        font-size: 15px;
+        padding: 8px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--card-border);
+        background: var(--gray-input);
+        font-weight: 600;
+        text-align: right;
+        width: 88px;
+        color: var(--text-primary);
+        min-height: 40px;
+        transition: border-color .15s ease, background .15s ease;
+    }
 
-        .modal-content {
-            background: white;
-            border-radius: 14px;
-            padding: 20px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
+    input[type="text"]:focus, input[type="time"]:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--baker-brown);
+        background: var(--card-white);
+    }
 
-        .modal-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--baker-brown);
-            margin-bottom: 10px;
-        }
+    input.invalid {
+        border-color: var(--alert-red);
+        background: rgba(211, 47, 47, 0.08);
+    }
 
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 14px;
-        }
+    select { text-align: left; width: 100%; }
 
-        .btn-secondary {
-            background: var(--gray-input);
-            color: #333;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            flex: 1;
-        }
-    </style>
+    textarea {
+        text-align: left;
+        font-weight: 400;
+        width: 100%;
+        resize: vertical;
+        min-height: 56px;
+        font-family: inherit;
+    }
+
+    .flour-dropdown {
+        flex: 1;
+        font-size: 14px;
+        padding: 8px;
+        background-color: var(--gray-input);
+        color: var(--baker-brown-dark);
+        font-weight: 600;
+        border: 1px solid var(--card-border);
+        text-overflow: ellipsis;
+        max-width: 62%;
+        min-height: 40px;
+        border-radius: var(--radius-sm);
+    }
+
+    .unit-suffix { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-left: 2px; }
+
+    .delete-btn {
+        background: none;
+        border: none;
+        color: var(--alert-red);
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 6px;
+        min-width: 32px;
+        min-height: 32px;
+        border-radius: 8px;
+        transition: background .15s ease;
+    }
+    .delete-btn:active { background: rgba(211, 47, 47, 0.12); }
+
+    .btn-plus {
+        background: var(--baker-brown);
+        color: white;
+        border: none;
+        padding: 9px 16px;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+        cursor: pointer;
+        min-height: 40px;
+        transition: transform .1s ease, opacity .15s ease;
+        font-size: 14px;
+    }
+    .btn-plus:active { transform: scale(0.96); }
+    .btn-plus:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-secondary {
+        background: var(--gray-input);
+        color: var(--text-primary);
+        border: none;
+        padding: 9px 14px;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+        cursor: pointer;
+        flex: 1;
+        min-height: 40px;
+        transition: transform .1s ease;
+    }
+    .btn-secondary:active { transform: scale(0.96); }
+
+    .btn-ghost {
+        background: none;
+        border: 1px solid var(--card-border);
+        color: var(--baker-brown);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .btn-ghost:active { transform: scale(0.96); }
+
+    .info-box {
+        background: rgba(201, 114, 10, 0.1);
+        border-left: 3px solid var(--warn-orange);
+        padding: 11px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        margin-top: 8px;
+        line-height: 1.45;
+    }
+
+    .info-box.error { background: rgba(211, 47, 47, 0.1); border-left-color: var(--alert-red); }
+
+    .result-box {
+        background: var(--gray-input);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    .result-box .big { font-size: 24px; font-weight: 800; color: var(--baker-brown-dark); letter-spacing: -0.5px; }
+    .result-box .small { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+
+    .search-box {
+        width: 100%;
+        text-align: left;
+        font-weight: 400;
+        margin-bottom: 10px;
+    }
+
+    /* Skeleton loader */
+    .skeleton-row { height: 44px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--gray-input) 25%, var(--card-border) 37%, var(--gray-input) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; margin-bottom: 8px; }
+    @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+    /* Toast */
+    .toast {
+        position: fixed;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%) translateY(16px);
+        background: rgba(28,28,30,0.92);
+        backdrop-filter: blur(6px);
+        color: white;
+        padding: 11px 20px;
+        border-radius: 24px;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity .22s ease, transform .22s ease;
+        pointer-events: none;
+        z-index: 2000;
+        max-width: 88%;
+        text-align: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Modal Overlay */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.45);
+        justify-content: center; align-items: center;
+        z-index: 1000;
+        padding: 20px;
+        animation: fadeIn .18s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-content {
+        background: var(--card-white);
+        border-radius: 18px;
+        padding: 22px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+        color: var(--text-primary);
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--baker-brown);
+        margin-bottom: 8px;
+        letter-spacing: -0.2px;
+    }
+
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+    .fade-view { animation: fadeIn .16s ease; }
+
+    .toggle-switch-row { display: flex; align-items: center; gap: 8px; }
+    input[type="checkbox"] { transform: scale(1.25); accent-color: var(--baker-brown); }
+</style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- TITELBEREICH MIT VERSIONIERUNG -->
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.2.0</div>
+        <div class="version-badge">v0.3.0</div>
     </div>
 
     <!-- CATEGORY PICKER -->
     <div class="segmented-control">
-        <button type="button" id="catBrot" class="active" onclick="changeCategory(0)">Brot</button>
-        <button type="button" id="catBroetchen" onclick="changeCategory(1)">Brötchen</button>
-        <button type="button" id="catPizza" onclick="changeCategory(2)">Pizza</button>
+        <button type="button" id="catBrot" class="active" onclick="changeCategory(0)">🍞 Brot</button>
+        <button type="button" id="catBroetchen" onclick="changeCategory(1)">🥐 Brötchen</button>
+        <button type="button" id="catPizza" onclick="changeCategory(2)">🍕 Pizza</button>
     </div>
 
     <!-- PHASE PICKER -->
@@ -336,23 +497,23 @@
     </div>
 
     <!-- DASHBOARD -->
-    <div class="dashboard" id="dashboardCard">
+    <div class="dashboard" id="dashboardCard" role="status" aria-live="polite">
         <div class="dashboard-header">
             <div>
                 <div class="hydration-label">Aktuelle Hydration (Ist)</div>
-                <div class="hydration-display" id="currentHydration">65.0 %</div>
+                <div class="hydration-display" id="currentHydration">65.0%</div>
                 <div class="ta-display" id="currentTA">TA: 165</div>
                 <div class="consistency-text">
                     <span id="consistencyText">Optimaler Brotteig</span>
-                    <span onclick="triggerProTip()" style="cursor:pointer; color:var(--baker-brown); font-weight:bold;">ℹ️</span>
+                    <button type="button" class="info-icon-btn" onclick="triggerProTip()" aria-label="Profi-Tipp anzeigen">i</button>
                 </div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 11px; color: #8e8e93; margin-bottom: 4px;">Ziel-Hydration</div>
-                <input type="text" inputmode="decimal" id="targetHydration" value="65" style="text-align: center; width: 70px;" oninput="updateInputs()">
+            <div class="target-hydration-box">
+                <label for="targetHydration">Ziel-Hydration</label>
+                <input type="text" inputmode="decimal" id="targetHydration" value="65" style="text-align:center; width:72px;" oninput="updateInputs()">
             </div>
         </div>
-        <div id="dashboardAlerts" style="margin-top: 8px;"></div>
+        <div id="dashboardAlerts" style="margin-top: 4px;"></div>
     </div>
 
     <!-- PHASE 1: TEIG & ZUTATEN -->
@@ -360,29 +521,39 @@
         <div class="section">
             <div class="section-title">Rezept-Konfigurator</div>
             <div class="row">
-                <label for="templatePicker">Rezept-Vorlage:</label>
+                <label for="templatePicker">Rezept-Vorlage</label>
                 <select id="templatePicker" onchange="applyTemplate()"></select>
             </div>
-            <div class="row">
-                <label id="weightLabel" for="targetWeight">Zielgewicht (g):</label>
+            <div class="row" id="totalWeightRow">
+                <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
                 <input type="text" inputmode="decimal" id="targetWeight" value="1000" oninput="updateInputs()">
+            </div>
+            <div class="row cat-piece-only" id="pieceWeightRow" style="display:none;">
+                <label id="pieceWeightLabel" for="targetPieceWeight">Gewicht / Stück (g)</label>
+                <input type="text" inputmode="decimal" id="targetPieceWeight" value="85" oninput="updateInputs()">
+            </div>
+            <div class="row cat-bread-only" id="bakeLossRow">
+                <label for="bakeLossPct">Backverlust (%)</label>
+                <input type="text" inputmode="decimal" id="bakeLossPct" value="15" oninput="updateInputs()">
+            </div>
+            <div class="row">
+                <label for="saltPct">Salz (%)</label>
+                <input type="text" inputmode="decimal" id="saltPct" value="2.0" oninput="updateInputs()">
             </div>
             <div class="row" id="yeastToggleRow">
                 <label for="dryYeastToggle">Trockenhefe verwenden?</label>
-                <input type="checkbox" id="dryYeastToggle" onchange="updateInputs()" style="transform: scale(1.2);">
+                <input type="checkbox" id="dryYeastToggle" onchange="updateInputs()">
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">Rezept in Backstube speichern</div>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left; width: 100%;">
-                <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()">💾</button>
+            <div class="section-title">
+                🌾 Mehl in der Rührschüssel
+                <div class="segmented-control small" style="width:150px; margin-bottom:0;">
+                    <button type="button" id="unitGrams" class="active" onclick="setDisplayUnit('grams')">Gramm</button>
+                    <button type="button" id="unitPercent" onclick="setDisplayUnit('percent')">Bäcker%</button>
+                </div>
             </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">🌾 Mehl in der Rührschüssel</div>
             <div id="flourContainer"></div>
         </div>
 
@@ -396,8 +567,17 @@
             <div style="display: flex; gap: 6px; align-items: center;">
                 <select id="presetPicker" style="flex: 2; text-align: left;"></select>
                 <input type="text" inputmode="decimal" id="manualWeightInput" placeholder="Gramm" style="flex: 1; width: 80px;">
-                <button type="button" class="btn-plus" onclick="addManualIngredient()">+</button>
+                <button type="button" class="btn-plus" onclick="addManualIngredient()" aria-label="Zutat hinzufügen">+</button>
             </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Rezept in Backstube speichern</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left; width: 100%; font-weight:500;">
+                <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()" aria-label="Rezept speichern">💾</button>
+            </div>
+            <textarea id="newRecipeNotes" placeholder="Notiz (optional) – z.B. 'etwas mehr Salz, Ofen läuft heiß'"></textarea>
         </div>
     </div>
 
@@ -407,32 +587,32 @@
             <div class="section-title">Gär- & Ofenparameter</div>
             <div class="row">
                 <label for="fridgeToggle">Im Kühlschrank (5°C) reifen lassen?</label>
-                <input type="checkbox" id="fridgeToggle" onchange="updateInputs()" style="transform: scale(1.2);">
+                <input type="checkbox" id="fridgeToggle" onchange="updateInputs()">
             </div>
             <div class="row pizza-only">
-                <label for="fermentHours">Gehzeit Gesamt (Std):</label>
+                <label for="fermentHours">Gehzeit Gesamt (Std)</label>
                 <input type="text" inputmode="decimal" id="fermentHours" value="24" oninput="updateInputs()">
             </div>
             <div class="row pizza-only no-fridge">
-                <label for="roomTemp">Raum-Temperatur (°C):</label>
+                <label for="roomTemp">Raum-Temperatur (°C)</label>
                 <input type="text" inputmode="decimal" id="roomTemp" value="21" oninput="updateInputs()">
             </div>
             <div class="row pizza-only">
-                <label for="ovenType">Ofentyp:</label>
+                <label for="ovenType">Ofentyp</label>
                 <select id="ovenType" onchange="updateInputs()">
                     <option value="0">Haushaltsbackofen</option>
                     <option value="1">Pizzaofen (400°C+)</option>
                 </select>
             </div>
             <div class="row normal-oven">
-                <label for="heatingType">Heizart:</label>
+                <label for="heatingType">Heizart</label>
                 <select id="heatingType" onchange="updateInputs()">
                     <option value="0">Ober-/Unterhitze</option>
                     <option value="1">Umluft / Heißluft</option>
                 </select>
             </div>
             <div class="row normal-oven">
-                <label for="vesselType">Back-Behältnis:</label>
+                <label for="vesselType">Back-Behältnis</label>
                 <select id="vesselType" onchange="updateInputs()">
                     <option value="0">Freigeschoben (Stein/Blech)</option>
                     <option value="1">In Backform / Pfanne</option>
@@ -440,46 +620,100 @@
             </div>
             <div class="row normal-oven">
                 <label for="preheatToggle">Backofen vollständig vorgeheizt?</label>
-                <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()" style="transform: scale(1.2);">
+                <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()">
             </div>
         </div>
 
         <div class="section">
             <div class="section-title">Zubereitungs-Fahrplan</div>
-            <div style="padding: 4px 0 12px 0; border-bottom: 1px solid #eee;">
-                <div style="font-weight: bold; font-size: 14px; color: var(--baker-brown); margin-bottom: 6px;">Gärzeiten</div>
-                <div class="row"><span style="font-size:13px; color:#666;">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
-                <div class="row"><span style="font-size:13px; color:#666;">Stückgare (Formruhe):</span><span id="outStueckgare" style="font-weight:600;">-</span></div>
+            <div style="padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
+                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Gärzeiten</div>
+                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
+                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stückgare (Formruhe):</span><span id="outStueckgare" style="font-weight:600;">-</span></div>
             </div>
             <div style="padding: 12px 0 4px 0;">
-                <div style="font-weight: bold; font-size: 14px; color: var(--baker-brown); margin-bottom: 6px;">Backanleitung</div>
-                <div class="row"><span style="font-size:13px; color:#666;">Back-Temperatur:</span><span id="outTemp" style="font-weight:600;">-</span></div>
-                <div class="row"><span style="font-size:13px; color:#666;">Empfohlene Backzeit:</span><span id="outTime" style="font-weight:600;">-</span></div>
+                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Backanleitung</div>
+                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Back-Temperatur:</span><span id="outTemp" style="font-weight:600;">-</span></div>
+                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Empfohlene Backzeit:</span><span id="outTime" style="font-weight:600;">-</span></div>
             </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">⏰ Rückwärts-Backplaner</div>
+            <div class="section-subtitle">Basierend auf Gärzeiten, Backzeit und ca. 30 Min. Vorbereitungspuffer.</div>
+            <div class="row">
+                <label for="finishTimeInput">Fertig backen um</label>
+                <input type="time" id="finishTimeInput" value="18:00" oninput="updateTimeline()">
+            </div>
+            <div class="result-box" id="timelineResult">
+                <div class="big">-</div>
+                <div class="small">Starte deinen Teig um diese Uhrzeit</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🌡️ Wassertemperatur-Rechner (DDT)</div>
+            <div class="section-subtitle">Berechnet die nötige Schüttwasser-Temperatur für eine konstante gewünschte Teigtemperatur.</div>
+            <div class="row">
+                <label for="ddtDesired">Ziel-Teigtemperatur (°C)</label>
+                <input type="text" inputmode="decimal" id="ddtDesired" value="25" oninput="updateDDT()">
+            </div>
+            <div class="row">
+                <label for="ddtRoomTemp">Raumtemperatur (°C)</label>
+                <input type="text" inputmode="decimal" id="ddtRoomTemp" value="21" oninput="updateDDT()">
+            </div>
+            <div class="row">
+                <label for="ddtFlourTemp">Mehltemperatur (°C)</label>
+                <input type="text" inputmode="decimal" id="ddtFlourTemp" value="20" oninput="updateDDT()">
+            </div>
+            <div class="row">
+                <label for="ddtFriction">Knetart</label>
+                <select id="ddtFriction" onchange="updateDDT()">
+                    <option value="1">Handknetung</option>
+                    <option value="2" selected>Küchenmaschine</option>
+                </select>
+            </div>
+            <div class="row">
+                <label for="ddtUseStarter">Sauerteig / Vorteig verwendet?</label>
+                <input type="checkbox" id="ddtUseStarter" onchange="updateDDT()">
+            </div>
+            <div class="row" id="ddtStarterRow" style="display:none;">
+                <label for="ddtStarterTemp">Sauerteig-Temperatur (°C)</label>
+                <input type="text" inputmode="decimal" id="ddtStarterTemp" value="21" oninput="updateDDT()">
+            </div>
+            <div class="result-box">
+                <div class="big" id="ddtResult">- °C</div>
+                <div class="small">Ziel-Temperatur für dein Schüttwasser</div>
+            </div>
+            <div id="ddtWarning"></div>
         </div>
     </div>
 
     <!-- REZEPT VERWALTUNG -->
     <div class="section">
         <div class="section-title">Eigene Rezepte in der Backstube</div>
-        <div id="savedRecipesContainer">Lade Rezepte…</div>
+        <input type="text" id="recipeSearch" class="search-box" placeholder="Rezepte durchsuchen…" oninput="renderSavedRecipes()">
+        <div id="savedRecipesContainer">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+        </div>
     </div>
 </div>
 
-<!-- MODAL OVERLAY -->
+<!-- PRO-TIPP MODAL -->
 <div class="modal" id="proTipModal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-title">💡 Bäckermeister Profi-Tipp</div>
-        <p id="proTipText" style="font-size: 14px; color: #333; line-height: 1.5; margin: 14px 0;"></p>
+        <p id="proTipText" style="font-size: 14px; line-height: 1.5; margin: 14px 0;"></p>
         <button type="button" class="btn-plus" onclick="closeModal()" style="width:100%;">Verstanden!</button>
     </div>
 </div>
 
-<!-- CONFIRM OVERLAY (ersetzt confirm()/alert() für konsistentes UI) -->
+<!-- BESTÄTIGUNGS-MODAL -->
 <div class="modal" id="confirmModal">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-title" id="confirmTitle">Bitte bestätigen</div>
-        <p id="confirmText" style="font-size: 14px; color: #333; line-height: 1.5; margin: 14px 0;"></p>
+        <p id="confirmText" style="font-size: 14px; line-height: 1.5; margin: 14px 0;"></p>
         <div class="modal-actions">
             <button type="button" class="btn-secondary" onclick="closeConfirm(false)">Abbrechen</button>
             <button type="button" class="btn-plus" style="flex:1;" onclick="closeConfirm(true)" id="confirmOkBtn">OK</button>
@@ -487,14 +721,31 @@
     </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
     // ============================================================
+    // STORAGE POLYFILL (Fallback für Umgebungen ohne window.storage,
+    // z.B. lokale Vorschau/Tests. In Claude.ai wird die native,
+    // persistente window.storage API verwendet.)
+    // ============================================================
+    (function ensureStorage() {
+        if (window.storage) return;
+        const mem = new Map();
+        window.storage = {
+            async get(key) { return mem.has(key) ? { key, value: mem.get(key), shared: false } : null; },
+            async set(key, value) { mem.set(key, value); return { key, value, shared: false }; },
+            async delete(key) { const existed = mem.delete(key); return { key, deleted: existed, shared: false }; },
+            async list(prefix) {
+                const keys = [...mem.keys()].filter(k => !prefix || k.startsWith(prefix));
+                return { keys, prefix, shared: false };
+            }
+        };
+    })();
+
+    // ============================================================
     // HILFSFUNKTIONEN
     // ============================================================
-
-    // Wandelt Komma in Punkt um und liefert einen gültigen Float oder den Default zurück.
     function getFloatVal(id, defaultVal) {
         let el = document.getElementById(id);
         if (!el) return defaultVal;
@@ -502,8 +753,6 @@
         return isNaN(val) ? defaultVal : val;
     }
 
-    // Liest einen Wert, klemmt ihn auf [min, max] und markiert das Feld visuell,
-    // wenn der Rohwert außerhalb des gültigen Bereichs lag (z.B. 0 oder negativ).
     function getClampedVal(id, defaultVal, min, max) {
         let el = document.getElementById(id);
         if (!el) return defaultVal;
@@ -525,7 +774,6 @@
         showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
     }
 
-    // Kleines Promise-basiertes Bestätigungs-Dialogfenster statt confirm().
     function askConfirm(title, text) {
         return new Promise((resolve) => {
             document.getElementById('confirmTitle').innerText = title;
@@ -600,24 +848,26 @@
         ]
     };
 
+    const defaultPieceWeight = { 1: 85, 2: 280 };
+
     // GLOBALER LIVE STATE
     let category = 0;
     let phase = 0;
     let manualIngredients = [];
-    // Gewichts-Overrides für Mehl werden pro Slot-ID gespeichert (nicht pro Name!),
-    // damit zwei Slots mit demselben Mehltyp sich nicht gegenseitig überschreiben.
     let flourOverridesBySlot = {};
-    // Overrides für Wasser/Hefe/Sauerteig (eindeutige Zeilen, Name als Key ist hier sicher).
     let weightOverrides = {};
     let customFlourNames = { mehl_1: "", mehl_2: "" };
     let isLoadingRecipe = false;
     let recipeCache = [];
+    let displayUnit = 'grams'; // 'grams' | 'percent'
+    let lastEstimatedHours = 0;
 
     window.onload = function() {
         populateDropdowns();
         buildTemplateDropdown();
         applyTemplate();
         loadRecipesFromStorage();
+        updateDDT();
     };
 
     function populateDropdowns() {
@@ -630,6 +880,13 @@
         picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
     }
 
+    function setDisplayUnit(unit) {
+        displayUnit = unit;
+        document.getElementById('unitGrams').className = unit === 'grams' ? 'active' : '';
+        document.getElementById('unitPercent').className = unit === 'percent' ? 'active' : '';
+        calculateEngine();
+    }
+
     function changeCategory(catId) {
         category = catId;
         document.getElementById('catBrot').className = catId === 0 ? 'active' : '';
@@ -638,9 +895,24 @@
 
         const weightLabel = document.getElementById('weightLabel');
         const targetWeight = document.getElementById('targetWeight');
-        if (catId === 0) { weightLabel.innerText = "Zielgewicht (g):"; targetWeight.value = 1000; }
-        else if (catId === 1) { weightLabel.innerText = "Anzahl Brötchen:"; targetWeight.value = 10; }
-        else { weightLabel.innerText = "Anzahl Pizzen:"; targetWeight.value = 3; }
+        const pieceWeightInput = document.getElementById('targetPieceWeight');
+
+        document.getElementById('totalWeightRow').style.display = catId === 0 ? 'flex' : 'flex';
+        document.getElementById('pieceWeightRow').style.display = catId === 0 ? 'none' : 'flex';
+        document.getElementById('bakeLossRow').style.display = catId === 0 ? 'flex' : 'none';
+
+        if (catId === 0) {
+            weightLabel.innerText = "Zielgewicht (g)";
+            targetWeight.value = 1000;
+        } else if (catId === 1) {
+            weightLabel.innerText = "Anzahl Brötchen";
+            targetWeight.value = 10;
+            pieceWeightInput.value = defaultPieceWeight[1];
+        } else {
+            weightLabel.innerText = "Anzahl Pizzen";
+            targetWeight.value = 3;
+            pieceWeightInput.value = defaultPieceWeight[2];
+        }
 
         document.querySelectorAll('.pizza-only').forEach(el => el.style.display = catId === 2 ? 'flex' : 'none');
 
@@ -655,6 +927,11 @@
         document.getElementById('phaseBacken').className = phaseId === 1 ? 'active' : '';
         document.getElementById('phase1Views').style.display = phaseId === 0 ? 'block' : 'none';
         document.getElementById('phase2Views').style.display = phaseId === 1 ? 'block' : 'none';
+        if (phaseId === 1) {
+            document.getElementById('phase2Views').classList.add('fade-view');
+        } else {
+            document.getElementById('phase1Views').classList.add('fade-view');
+        }
         calculateEngine();
     }
 
@@ -704,8 +981,6 @@
         calculateEngine();
     }
 
-    // Beim Wechsel eines Mehltyps in einem Slot wird NUR der Override dieses
-    // einen Slots gelöscht - alle anderen Overrides (Wasser, Hefe, anderes Mehl) bleiben erhalten.
     function changeFlour(slotId, newName) {
         customFlourNames[slotId] = newName;
         delete flourOverridesBySlot[slotId];
@@ -714,15 +989,25 @@
 
     function calculateEngine() {
         const targetHydration = getClampedVal('targetHydration', 65, 40, 130);
-        const targetWeight = getClampedVal('targetWeight', 1000, 1, 20000);
-        const templateId = document.getElementById('templatePicker').value;
         const useDryYeast = document.getElementById('dryYeastToggle').checked;
+        const saltPct = getClampedVal('saltPct', 2.0, 0.5, 4.0);
         const factorH2O = targetHydration / 100.0;
+        const templateId = document.getElementById('templatePicker').value;
 
-        let targetRohTeig = 1000;
-        if (category === 0) targetRohTeig = targetWeight * 1.15;
-        else if (category === 1) targetRohTeig = targetWeight * 85.0;
-        else targetRohTeig = targetWeight * 280.0;
+        // --- Ziel-Rohteig-Gewicht ---
+        let targetRohTeig;
+        let displayTargetWeight;
+        if (category === 0) {
+            const finishedWeight = getClampedVal('targetWeight', 1000, 50, 20000);
+            const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
+            targetRohTeig = finishedWeight * (1 + bakeLoss / 100);
+            displayTargetWeight = finishedWeight;
+        } else {
+            const count = getClampedVal('targetWeight', category === 1 ? 10 : 3, 1, 500);
+            const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
+            targetRohTeig = count * pieceWeight;
+            displayTargetWeight = targetRohTeig;
+        }
 
         const totalDoughFactor = 1.0 + factorH2O + 0.02;
         const rawFlour = targetRohTeig / totalDoughFactor;
@@ -754,8 +1039,6 @@
             floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
             let fermentHours = getClampedVal('fermentHours', 24, 1, 96);
             let useFridge = document.getElementById('fridgeToggle').checked;
-            // Formel gilt nur für Temperaturen > 14°C - unterhalb wäre die Gärung
-            // praktisch zum Stillstand gekommen. Untergrenze daher bei 15°C geklemmt.
             let roomTemp = getClampedVal('roomTemp', 21, 15, 35);
             let temp = useFridge ? 4.0 : roomTemp;
             let yeastPctCalc = useFridge ? (15.0 / (fermentHours * 4.0)) : (2.5 / (fermentHours * (temp - 14.0)));
@@ -795,17 +1078,17 @@
         let finalYeastWeight = useDryYeast ? (freshYeastWeight / 3.0) : freshYeastWeight;
         let yeastName = useDryYeast ? "Trockenhefe" : "Frischhefe";
         let finalYeast = weightOverrides[yeastName] !== undefined ? weightOverrides[yeastName] : parseFloat(finalYeastWeight.toFixed(2));
-        let finalSalt = (totalFlour * 0.02).toFixed(1);
+        let finalSalt = (totalFlour * saltPct / 100).toFixed(1);
 
         let totalWaterWeight = finalTapWater + manualWetWater + sourdoughWater;
         let totalBoundWaterWeight = baseBoundWater + manualBoundWater;
         let currentHydr = totalFlour > 0 ? ((totalWaterWeight - totalBoundWaterWeight) / totalFlour) * 100 : 0;
         let ta = totalFlour > 0 ? Math.round(((totalFlour + totalWaterWeight) / totalFlour) * 100) : 0;
 
-        document.getElementById('currentHydration').innerText = currentHydr.toFixed(1) + " %";
+        document.getElementById('currentHydration').innerText = currentHydr.toFixed(1) + "%";
         document.getElementById('currentTA').innerText = "TA: " + ta;
 
-        const elConsistencyText = document.getElementById('consistencyText');
+        const elConsistencyText = document.getElementById('consistencyText').querySelector('span') || document.getElementById('consistencyText');
         const elCurrentHydration = document.getElementById('currentHydration');
 
         if (category === 2) {
@@ -831,6 +1114,14 @@
         }
         alertsContainer.innerHTML = alerts.map(a => `<div class="info-box">${a}</div>`).join('');
 
+        // --- RENDER-HELFER FÜR GRAMM / BÄCKER% ---
+        function qtyMarkup(weight) {
+            if (displayUnit === 'percent' && totalFlour > 0) {
+                return `<span class="row-percent">${((weight / totalFlour) * 100).toFixed(1)}% Mehl</span>`;
+            }
+            return '';
+        }
+
         // MEHL RENDERN
         let flourHtml = activeFlours.map(f => {
             let optionsHtml = ingredientPresets.filter(p => p.isFlour).map(p => {
@@ -840,11 +1131,14 @@
 
             return `
                 <div class="row">
-                    <select class="flour-dropdown" onchange="changeFlour('${f.id}', this.value)">
-                        ${optionsHtml}
-                    </select>
-                    <div style="white-space: nowrap;">
-                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setFlourOverride('${f.id}', this.value)"> g
+                    <div style="flex:1; min-width:0;">
+                        <select class="flour-dropdown" onchange="changeFlour('${f.id}', this.value)">
+                            ${optionsHtml}
+                        </select>
+                        ${qtyMarkup(f.weight)}
+                    </div>
+                    <div style="white-space: nowrap; text-align:right;">
+                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setFlourOverride('${f.id}', this.value)"><span class="unit-suffix">g</span>
                     </div>
                 </div>
             `;
@@ -853,41 +1147,48 @@
         manualFlours.forEach(f => {
             flourHtml += `
                 <div class="row">
-                    <div style="flex: 1; font-size: 14px; font-weight: 600; color: var(--baker-brown); padding-left: 6px;">🌾 ${f.name}</div>
-                    <div style="white-space: nowrap;">
-                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setManualWeight('${f.name}', this.value)"> g
-                        <button type="button" class="delete-btn" onclick="deleteManual('${f.name}')">🗑️</button>
+                    <div style="flex: 1; min-width:0;">
+                        <div style="font-size: 14px; font-weight: 600; color: var(--baker-brown-dark); padding-left: 2px;">🌾 ${f.name}</div>
+                        ${qtyMarkup(f.weight)}
+                    </div>
+                    <div style="white-space: nowrap; text-align:right;">
+                        <input type="text" inputmode="decimal" value="${f.weight}" oninput="setManualWeight('${f.name}', this.value)"><span class="unit-suffix">g</span>
+                        <button type="button" class="delete-btn" onclick="deleteManual('${f.name}')" aria-label="${f.name} entfernen">🗑️</button>
                     </div>
                 </div>
             `;
         });
-        document.getElementById('flourContainer').innerHTML = flourHtml || `<div style="font-size:12px; color:#999; font-style:italic;">Keine Mehle in der Schüssel.</div>`;
+        document.getElementById('flourContainer').innerHTML = flourHtml || `<div class="empty-state">Keine Mehle in der Schüssel.</div>`;
 
         // RESTE RENDERN
-        let remHtml = `<div class="row"><span>💧 Schüttwasser</span><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"> g</div></div>`;
+        let remHtml = `<div class="row"><div><span>💧 Schüttwasser</span>${qtyMarkup(finalTapWater)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"><span class="unit-suffix">g</span></div></div>`;
         if (actualSourdoughWeight > 0) {
-            remHtml += `<div class="row"><span>🫙 Sauerteig</span><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"> g</div></div>`;
+            remHtml += `<div class="row"><div><span>🫙 Sauerteig</span>${qtyMarkup(actualSourdoughWeight)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"><span class="unit-suffix">g</span></div></div>`;
         }
         if (yeastPct > 0) {
-            remHtml += `<div class="row"><span>🧊 ${yeastName}</span><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${finalYeast}" oninput="setOverride('${yeastName}', this.value)"> g</div></div>`;
+            remHtml += `<div class="row"><div><span>🧊 ${yeastName}</span>${qtyMarkup(finalYeast)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" value="${finalYeast}" oninput="setOverride('${yeastName}', this.value)"><span class="unit-suffix">g</span></div></div>`;
         }
-        remHtml += `<div class="row"><span>🧂 Salz (2%)</span><strong>${finalSalt} g</strong></div>`;
+        remHtml += `<div class="row"><div><span>🧂 Salz (${saltPct.toFixed(1)}%)</span></div><strong>${finalSalt} g</strong></div>`;
 
         manualIngredients.filter(i => !i.isFlour).forEach(i => {
             let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent / 100))}g Wasser`;
             remHtml += `
                 <div class="row">
-                    <div><div style="font-weight:600;">${i.name}</div><div class="row-details">${subText}</div></div>
+                    <div>
+                        <div style="font-weight:600;">${i.name}</div>
+                        <div class="row-details">${subText}</div>
+                        ${qtyMarkup(i.weight)}
+                    </div>
                     <div style="white-space: nowrap;">
-                        <input type="text" inputmode="decimal" value="${i.weight}" oninput="setManualWeight('${i.name}', this.value)"> g
-                        <button type="button" class="delete-btn" onclick="deleteManual('${i.name}')">🗑️</button>
+                        <input type="text" inputmode="decimal" value="${i.weight}" oninput="setManualWeight('${i.name}', this.value)"><span class="unit-suffix">g</span>
+                        <button type="button" class="delete-btn" onclick="deleteManual('${i.name}')" aria-label="${i.name} entfernen">🗑️</button>
                     </div>
                 </div>
             `;
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
-        calculatePhase2(targetWeight, isPureSourdough);
+        calculatePhase2(displayTargetWeight, isPureSourdough);
     }
 
     function setFlourOverride(slotId, val) {
@@ -936,6 +1237,9 @@
         }
     }
 
+    // ============================================================
+    // PHASE 2: GÄRUNG, OFEN, RÜCKWÄRTS-PLANER
+    // ============================================================
     function calculatePhase2(targetWeight, isPureSourdough) {
         const useFridge = document.getElementById('fridgeToggle').checked;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
@@ -943,21 +1247,32 @@
         const vesselType = parseInt(document.getElementById('vesselType')?.value || 0);
         const preheated = document.getElementById('preheatToggle').checked;
 
+        // Numerische Mittelwert-Schätzungen (für Rückwärts-Planer) parallel zu den Textausgaben.
+        let stockHoursNum = 1, stueckHoursNum = 1;
+
         if (category === 0) {
             if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "3 - 5 Std. bei Raumtemperatur (Dehnen/Falten)";
                 document.getElementById('outStueckgare').innerText = useFridge ? "1,5 Std. Akklimatisierung bei Raumtemp." : "2 - 3 Std. stabilisiert im Gärkorb";
+                stockHoursNum = useFridge ? (2 + 15) : 4;
+                stueckHoursNum = useFridge ? 1.5 : 2.5;
             } else {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "2 - 3 Std. bei Raumtemperatur";
                 document.getElementById('outStueckgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1 - 2 Std. im Gärkorb";
+                stockHoursNum = useFridge ? (2 + 15) : 2.5;
+                stueckHoursNum = useFridge ? 1 : 1.5;
             }
         } else if (category === 1) {
             if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. anspringen lassen" : "2,5 Std. bei Raumtemperatur";
                 document.getElementById('outStueckgare').innerText = useFridge ? "12-16 Std. fertig geformt im Kühlschrank" : "1,5 Std. geschliffen auf Blech";
+                stockHoursNum = useFridge ? 2 : 2.5;
+                stueckHoursNum = useFridge ? 14 : 1.5;
             } else {
                 document.getElementById('outStockgare').innerText = useFridge ? "1 Std. bei Raumtemperatur" : "1,5 Std. bei Raumtemperatur";
                 document.getElementById('outStueckgare').innerText = useFridge ? "8-12 Std. im Kühlschrank" : "45 Min. geformt auf Blech";
+                stockHoursNum = useFridge ? 1 : 1.5;
+                stueckHoursNum = useFridge ? 10 : 0.75;
             }
         } else {
             let hours = getClampedVal('fermentHours', 24, 1, 96);
@@ -966,12 +1281,19 @@
             let loc = useFridge ? "Kühlschrank" : "Raumtemp.";
             document.getElementById('outStockgare').innerText = `${stock} Std. (${loc})`;
             document.getElementById('outStueckgare').innerText = `${stueck} Std. (Raumtemperatur)`;
+            stockHoursNum = stock;
+            stueckHoursNum = stueck;
         }
+
+        let bakeMinutes = 20;
 
         if (category === 2 && ovenType === 1) {
             document.getElementById('outTemp').innerText = "400°C+ im Pizzaofen";
             document.getElementById('outTime').innerText = "90 - 120 Sekunden";
             document.querySelectorAll('.normal-oven').forEach(e => e.style.display = 'none');
+            bakeMinutes = 2;
+            lastEstimatedHours = stockHoursNum + stueckHoursNum + (bakeMinutes / 60) + 0.5;
+            updateTimeline();
             return;
         }
 
@@ -997,6 +1319,68 @@
         let vMode = vesselType === 0 ? "Freigeschoben" : "In Form/Pfanne";
         document.getElementById('outTemp').innerText = `${targetTemp}°C (${hMode})`;
         document.getElementById('outTime').innerText = `${targetTime} Min. (${vMode})`;
+
+        lastEstimatedHours = stockHoursNum + stueckHoursNum + (targetTime / 60) + 0.5;
+        updateTimeline();
+    }
+
+    function updateTimeline() {
+        const timeInput = document.getElementById('finishTimeInput');
+        const resultBox = document.getElementById('timelineResult');
+        if (!timeInput.value || !lastEstimatedHours) {
+            resultBox.innerHTML = `<div class="big">-</div><div class="small">Fertigzeit eingeben, um den Startzeitpunkt zu berechnen</div>`;
+            return;
+        }
+        const [hh, mm] = timeInput.value.split(':').map(Number);
+        let finish = new Date();
+        finish.setHours(hh, mm, 0, 0);
+
+        let start = new Date(finish.getTime() - lastEstimatedHours * 3600000);
+
+        const dayDiff = Math.round((new Date(start.getFullYear(), start.getMonth(), start.getDate()) - new Date(finish.getFullYear(), finish.getMonth(), finish.getDate())) / 86400000);
+        let dayLabel = "heute";
+        if (dayDiff === -1) dayLabel = "gestern";
+        else if (dayDiff <= -2) dayLabel = `vor ${Math.abs(dayDiff)} Tagen`;
+
+        const timeStr = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        const totalH = Math.floor(lastEstimatedHours);
+        const totalM = Math.round((lastEstimatedHours - totalH) * 60);
+
+        resultBox.innerHTML = `<div class="big">${timeStr} Uhr <span style="font-size:14px; font-weight:600; color:var(--text-secondary);">(${dayLabel})</span></div><div class="small">Gesamtdauer ca. ${totalH} Std. ${totalM > 0 ? totalM + ' Min.' : ''} inkl. Vorbereitung & Backzeit</div>`;
+    }
+
+    // ============================================================
+    // DDT / WASSERTEMPERATUR-RECHNER
+    // ============================================================
+    function updateDDT() {
+        const useStarter = document.getElementById('ddtUseStarter').checked;
+        document.getElementById('ddtStarterRow').style.display = useStarter ? 'flex' : 'none';
+
+        const desired = getClampedVal('ddtDesired', 25, 15, 35);
+        const room = getClampedVal('ddtRoomTemp', 21, 5, 40);
+        const flour = getClampedVal('ddtFlourTemp', 20, 0, 40);
+        const friction = parseInt(document.getElementById('ddtFriction').value || 2);
+        const warningBox = document.getElementById('ddtWarning');
+
+        let waterTemp;
+        if (useStarter) {
+            const starter = getClampedVal('ddtStarterTemp', 21, 5, 35);
+            waterTemp = (desired * 4) - (room + flour + friction + starter);
+        } else {
+            waterTemp = (desired * 3) - (room + flour + friction);
+        }
+
+        let clampedDisplay = waterTemp;
+        warningBox.innerHTML = '';
+        if (waterTemp < 1) {
+            clampedDisplay = 1;
+            warningBox.innerHTML = `<div class="info-box error">⚠️ Rechnerisch wäre Eiswasser nötig (${Math.round(waterTemp)}°C). Nutze ersatzweise Eiswürfel im Schüttwasser oder kühle Zutaten vorab.</div>`;
+        } else if (waterTemp > 45) {
+            clampedDisplay = 45;
+            warningBox.innerHTML = `<div class="info-box">⚠️ Rechnerisch wäre sehr warmes Wasser nötig (${Math.round(waterTemp)}°C). Über 45°C tötet die Hefe ab – nicht wärmer als 45°C verwenden.</div>`;
+        }
+
+        document.getElementById('ddtResult').innerText = Math.round(clampedDisplay) + " °C";
     }
 
     function triggerProTip() {
@@ -1013,11 +1397,8 @@
     function closeModal() { document.getElementById('proTipModal').style.display = "none"; }
 
     // ============================================================
-    // REZEPT-SPEICHERUNG (persistent über window.storage, geräteübergreifend
-    // für diesen Nutzer - läuft NICHT über localStorage, da das in Artefakten
-    // nicht unterstützt wird)
+    // REZEPT-SPEICHERUNG (persistent über window.storage)
     // ============================================================
-
     async function loadRecipesFromStorage() {
         const container = document.getElementById('savedRecipesContainer');
         try {
@@ -1041,28 +1422,43 @@
 
     function renderSavedRecipes() {
         const container = document.getElementById('savedRecipesContainer');
+        const searchEl = document.getElementById('recipeSearch');
+        const query = (searchEl ? searchEl.value : '').trim().toLowerCase();
+
         let filteredList = recipeCache.filter(r => r.category === category);
+        if (query) {
+            filteredList = filteredList.filter(r =>
+                r.name.toLowerCase().includes(query) || (r.notes || '').toLowerCase().includes(query)
+            );
+        }
 
         if (filteredList.length === 0) {
-            container.innerHTML = `<div style="font-size:12px; color:#999; font-style:italic;">Noch keine Rezepte in dieser Kategorie gesichert.</div>`;
+            container.innerHTML = `<div class="empty-state">${query ? 'Keine Treffer für „' + query + '“.' : 'Noch keine Rezepte in dieser Kategorie gesichert.'}</div>`;
             return;
         }
         container.innerHTML = filteredList.map(r => `
             <div class="row">
-                <div>
-                    <div style="font-weight:bold; font-size:14px;">${r.name}</div>
-                    <div style="font-size:11px; color:#8e8e93;">Hydration: ${r.targetHydration}%</div>
+                <div style="min-width:0;">
+                    <div style="font-weight:700; font-size:14px;">${r.name}</div>
+                    <div style="font-size:11px; color:var(--text-secondary);">Hydration: ${r.targetHydration}%${r.notes ? ' · ' + escapeHtml(r.notes).slice(0, 60) : ''}</div>
                 </div>
                 <div style="white-space: nowrap;">
-                    <button type="button" class="btn-plus" onclick="loadRecipe(${r.id})" style="padding:4px 10px; font-size:12px;">Laden</button>
-                    <button type="button" class="delete-btn" onclick="deleteRecipe(${r.id})">🗑️</button>
+                    <button type="button" class="btn-plus" onclick="loadRecipe(${r.id})" style="padding:6px 12px; font-size:12px;">Laden</button>
+                    <button type="button" class="delete-btn" onclick="deleteRecipe(${r.id})" aria-label="${r.name} löschen">🗑️</button>
                 </div>
             </div>
         `).join('');
     }
 
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     async function saveCurrentRecipe() {
         const nameInput = document.getElementById('newRecipeName');
+        const notesInput = document.getElementById('newRecipeNotes');
         const name = nameInput.value.trim();
         if (!name) {
             showToast('Bitte einen Namen für das Rezept eingeben.');
@@ -1078,9 +1474,13 @@
         const recipe = {
             id: duplicate ? duplicate.id : Date.now(),
             name: name,
+            notes: notesInput.value.trim(),
             category: category,
             targetHydration: getFloatVal('targetHydration', 65),
             targetWeight: getFloatVal('targetWeight', 1000),
+            targetPieceWeight: getFloatVal('targetPieceWeight', defaultPieceWeight[category] || 85),
+            bakeLossPct: getFloatVal('bakeLossPct', 15),
+            saltPct: getFloatVal('saltPct', 2.0),
             dryYeast: document.getElementById('dryYeastToggle').checked,
             fridge: document.getElementById('fridgeToggle').checked,
             flourOverridesBySlot: flourOverridesBySlot,
@@ -1099,6 +1499,7 @@
                 recipeCache.push(recipe);
             }
             nameInput.value = "";
+            notesInput.value = "";
             renderSavedRecipes();
             showToast('Rezept gespeichert.');
         } catch (e) {
@@ -1115,6 +1516,9 @@
             changeCategory(r.category);
             document.getElementById('targetHydration').value = r.targetHydration;
             document.getElementById('targetWeight').value = r.targetWeight;
+            if (r.targetPieceWeight) document.getElementById('targetPieceWeight').value = r.targetPieceWeight;
+            if (r.bakeLossPct !== undefined) document.getElementById('bakeLossPct').value = r.bakeLossPct;
+            if (r.saltPct !== undefined) document.getElementById('saltPct').value = r.saltPct;
             document.getElementById('dryYeastToggle').checked = r.dryYeast;
             document.getElementById('fridgeToggle').checked = r.fridge;
             flourOverridesBySlot = r.flourOverridesBySlot || {};
