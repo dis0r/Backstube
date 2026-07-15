@@ -673,6 +673,10 @@
                     <option value="2" selected>Küchenmaschine</option>
                 </select>
             </div>
+            <div class="row" id="ddtKneadMinutesRow">
+                <label for="ddtKneadMinutes">Knetdauer (Min.)</label>
+                <input type="text" inputmode="decimal" id="ddtKneadMinutes" value="10" oninput="updateDDT()">
+            </div>
             <div class="row">
                 <label for="ddtUseStarter">Sauerteig / Vorteig verwendet?</label>
                 <input type="checkbox" id="ddtUseStarter" onchange="updateDDT()">
@@ -683,7 +687,7 @@
             </div>
             <div class="result-box">
                 <div class="big" id="ddtResult">- °C</div>
-                <div class="small">Ziel-Temperatur für dein Schüttwasser</div>
+                <div class="small" id="ddtResultSub">Ziel-Temperatur für dein Schüttwasser</div>
             </div>
             <div id="ddtWarning"></div>
         </div>
@@ -1352,14 +1356,32 @@
     // ============================================================
     // DDT / WASSERTEMPERATUR-RECHNER
     // ============================================================
+    // Reibungswärme (Friction Factor): Beim maschinellen Kneten erwärmt sich der Teig durch
+    // die mechanische Reibung im Kneter spürbar - und zwar umso mehr, je länger geknetet wird.
+    // Faustregel aus der Bäckerei-Praxis: ca. 0,5°C Erwärmung pro Minute intensiver Maschinenknetung
+    // (z.B. Spiralkneter bei Pizzateig, der oft 10+ Minuten geknetet wird). Handknetung erwärmt den
+    // Teig kaum spürbar und wird daher weiterhin als fixer, kleiner Wert angenommen.
+    const MACHINE_FRICTION_PER_MINUTE = 0.5;
+    const HAND_FRICTION = 1;
+
+    function calculateFriction() {
+        const isMachine = document.getElementById('ddtFriction').value === '2';
+        if (!isMachine) return HAND_FRICTION;
+        const minutes = getClampedVal('ddtKneadMinutes', 10, 1, 30);
+        return minutes * MACHINE_FRICTION_PER_MINUTE;
+    }
+
     function updateDDT() {
         const useStarter = document.getElementById('ddtUseStarter').checked;
         document.getElementById('ddtStarterRow').style.display = useStarter ? 'flex' : 'none';
 
+        const isMachine = document.getElementById('ddtFriction').value === '2';
+        document.getElementById('ddtKneadMinutesRow').style.display = isMachine ? 'flex' : 'none';
+
         const desired = getClampedVal('ddtDesired', 25, 15, 35);
         const room = getClampedVal('ddtRoomTemp', 21, 5, 40);
         const flour = getClampedVal('ddtFlourTemp', 20, 0, 40);
-        const friction = parseInt(document.getElementById('ddtFriction').value || 2);
+        const friction = calculateFriction();
         const warningBox = document.getElementById('ddtWarning');
 
         let waterTemp;
@@ -1369,6 +1391,8 @@
         } else {
             waterTemp = (desired * 3) - (room + flour + friction);
         }
+
+        document.getElementById('ddtResultSub').innerText = `Ziel-Temperatur für dein Schüttwasser · Reibungswärme: ${friction.toFixed(1)}°C`;
 
         let clampedDisplay = waterTemp;
         warningBox.innerHTML = '';
