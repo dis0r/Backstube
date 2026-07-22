@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Back-Assistent Pro v0.6.0</title>
+<title>Back-Assistent Pro v0.7.0</title>
 
 <!-- PWA: Installierbarkeit + Homescreen-Verhalten -->
 <link rel="manifest" href="manifest.json">
@@ -683,7 +683,7 @@
 <div class="app-container">
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.6.0</div>
+        <div class="version-badge">v0.7.0</div>
     </div>
 
     <!-- CATEGORY PICKER -->
@@ -727,22 +727,11 @@
                 <label style="font-size:11px; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Rezept-Vorlage</label>
                 <div class="template-gallery" id="templateGallery" role="listbox" aria-label="Rezept-Vorlage auswählen"></div>
             </div>
-            <div class="row" style="flex-direction:column; align-items:stretch; gap:6px;">
-                <label style="font-size:11px; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Was ist fix?</label>
-                <div class="segmented-control small" style="margin-bottom:0;">
-                    <button type="button" id="sizingModeWeight" class="active" onclick="setSizingMode('weight')">🎯 Zielgewicht</button>
-                    <button type="button" id="sizingModeFlour" onclick="setSizingMode('flour')">🌾 Mehlmenge</button>
-                </div>
-            </div>
             <div class="row" id="totalWeightRow">
                 <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
-                <input type="text" inputmode="decimal" id="targetWeight" value="1000" oninput="updateInputs()">
+                <input type="text" inputmode="decimal" id="targetWeight" value="1000" oninput="onTargetWeightChanged()">
             </div>
-            <div class="row" id="availableFlourRow" style="display:none;">
-                <label for="availableFlourInput">Verfügbares Mehl (g)</label>
-                <input type="text" inputmode="decimal" id="availableFlourInput" value="800" oninput="updateInputs()">
-            </div>
-            <div id="sizingResultBox" class="info-box" style="display:none; margin-top:2px;"></div>
+            <div id="sizingResultBox" class="info-box" style="margin-top:2px;"></div>
             <div class="row cat-piece-only" id="pieceWeightRow" style="display:none;">
                 <label id="pieceWeightLabel" for="targetPieceWeight">Gewicht / Stück (g)</label>
                 <input type="text" inputmode="decimal" id="targetPieceWeight" value="85" oninput="updateInputs()">
@@ -1495,7 +1484,6 @@
     let notifyEnabled = false;
     let guidedState = null;
     let ownerId = null;
-    let sizingMode = 'weight'; // 'weight' = Zielgewicht/Stückzahl fix | 'flour' = verfügbare Mehlmenge fix
 
     // ============================================================
     // GERÄTE-/BESITZER-ID (für Owner-Absicherung geteilter Rezepte)
@@ -1585,12 +1573,14 @@
         calculateEngine();
     }
 
-    function setSizingMode(mode) {
-        sizingMode = mode;
-        document.getElementById('sizingModeWeight').className = mode === 'weight' ? 'active' : '';
-        document.getElementById('sizingModeFlour').className = mode === 'flour' ? 'active' : '';
-        document.getElementById('totalWeightRow').style.display = mode === 'weight' ? 'flex' : 'none';
-        document.getElementById('availableFlourRow').style.display = mode === 'flour' ? 'flex' : 'none';
+    // Wird ausgelöst, wenn der Nutzer direkt am Zielgewicht/der Stückzahl dreht.
+    // Das ist die einzige Aktion, die die Mehlmenge "fix" auf einen Zielwert
+    // zurücksetzt: manuell in der Schüssel angepasste Mehl-Mengen (Overrides)
+    // werden verworfen, damit die Mehlverteilung wieder exakt zum neuen
+    // Zielgewicht passt. Alle anderen manuellen Anpassungen (Wasser, Hefe,
+    // Sauerteig, Zusatzzutaten) bleiben unangetastet.
+    function onTargetWeightChanged() {
+        flourOverridesBySlot = {};
         calculateEngine();
     }
 
@@ -1765,52 +1755,28 @@
         const templateId = selectedTemplateId;
 
         // --- Ziel-Rohteig-Gewicht ---
-        // sizingMode 'weight' (Standard): Nutzer gibt Zielgewicht/Stückzahl vor,
-        //   Mehlmenge wird daraus errechnet (bisheriges Verhalten).
-        // sizingMode 'flour': Nutzer gibt die tatsächlich verfügbare Mehlmenge vor
-        //   (z.B. weil nicht mehr da ist), das erreichbare Zielgewicht/die Stückzahl
-        //   wird daraus rückwärts errechnet und nur noch angezeigt.
+        // Das Zielgewicht (bzw. die Stückzahl) bestimmt die STANDARD-Mehlverteilung
+        // je Rezept-Vorlage. Sobald der Nutzer eine Mehlmenge in der Schüssel direkt
+        // per Hand anpasst (flourOverridesBySlot), gewinnt diese manuelle Angabe -
+        // das tatsächliche Mehl in der Schüssel ist danach die alleinige Quelle der
+        // Wahrheit für Wasser/Salz/Hefe. Nur ein erneutes Antippen des Zielgewichts
+        // (siehe onTargetWeightChanged) setzt die Mehlverteilung wieder zurück.
         let targetRohTeig;
         let displayTargetWeight;
-        let rawFlour;
-        let sizingResultText = '';
         const totalDoughFactor = 1.0 + factorH2O + 0.02;
 
-        if (sizingMode === 'flour') {
-            rawFlour = getClampedVal('availableFlourInput', 800, 20, 50000);
-            targetRohTeig = rawFlour * totalDoughFactor;
-            if (category === 0) {
-                const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
-                const finishedWeight = targetRohTeig / (1 + bakeLoss / 100);
-                displayTargetWeight = finishedWeight;
-                sizingResultText = `🌾 Mit ${Math.round(rawFlour)}g Mehl ergibt das bei ${targetHydration}% Hydration ca. <strong>${Math.round(targetRohTeig)}g Rohteig</strong> → etwa <strong>${Math.round(finishedWeight)}g</strong> fertig gebackenes Brot.`;
-            } else {
-                const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
-                const wholePieces = Math.floor(targetRohTeig / pieceWeight);
-                const leftover = Math.round(targetRohTeig - wholePieces * pieceWeight);
-                displayTargetWeight = targetRohTeig;
-                sizingResultText = `🌾 Mit ${Math.round(rawFlour)}g Mehl ergibt das bei ${targetHydration}% Hydration ca. <strong>${wholePieces} Stück</strong> à ${pieceWeight}g${leftover > 0 ? ` (+ ${leftover}g Restteig übrig)` : ''}.`;
-            }
+        if (category === 0) {
+            const finishedWeight = getClampedVal('targetWeight', 1000, 50, 20000);
+            const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
+            targetRohTeig = finishedWeight * (1 + bakeLoss / 100);
+            displayTargetWeight = finishedWeight;
         } else {
-            if (category === 0) {
-                const finishedWeight = getClampedVal('targetWeight', 1000, 50, 20000);
-                const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
-                targetRohTeig = finishedWeight * (1 + bakeLoss / 100);
-                displayTargetWeight = finishedWeight;
-            } else {
-                const count = getClampedVal('targetWeight', category === 1 ? 10 : 3, 1, 500);
-                const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
-                targetRohTeig = count * pieceWeight;
-                displayTargetWeight = targetRohTeig;
-            }
-            rawFlour = targetRohTeig / totalDoughFactor;
+            const count = getClampedVal('targetWeight', category === 1 ? 10 : 3, 1, 500);
+            const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
+            targetRohTeig = count * pieceWeight;
+            displayTargetWeight = targetRohTeig;
         }
-
-        const sizingResultBox = document.getElementById('sizingResultBox');
-        if (sizingResultBox) {
-            sizingResultBox.style.display = sizingMode === 'flour' ? 'block' : 'none';
-            sizingResultBox.innerHTML = sizingResultText;
-        }
+        const rawFlour = targetRohTeig / totalDoughFactor;
 
         // Zusatzzutaten aus der Rezeptvorlage (fromTemplate) werden hier als Bäcker-Prozent
         // vom Mehlgewicht berechnet - außer der Nutzer hat die Menge manuell überschrieben.
@@ -1894,6 +1860,27 @@
         let yeastName = useDryYeast ? "Trockenhefe" : "Frischhefe";
         let finalYeast = weightOverrides[yeastName] !== undefined ? weightOverrides[yeastName] : parseFloat(finalYeastWeight.toFixed(2));
         let finalSalt = (totalFlour * saltPct / 100).toFixed(1);
+
+        // --- Ergebnis-Hinweis: welche Teigmenge kommt am Ende TATSÄCHLICH raus? ---
+        // Bewusst aus der echten Summe aller Zutaten in der Schüssel berechnet
+        // (nicht aus der Zielgewicht-Formel) - damit stimmt der Hinweis auch dann,
+        // wenn Mehl/Wasser/Zusatzzutaten von Hand angepasst wurden und vom
+        // ursprünglich geplanten Zielgewicht abweichen.
+        const manualNonFlourWeight = manualIngredients.filter(i => !i.isFlour).reduce((sum, i) => sum + i.weight, 0);
+        const actualRawDoughWeight = totalFlour + finalTapWater + sourdoughWater + finalYeast + parseFloat(finalSalt) + manualNonFlourWeight;
+        const sizingResultBox = document.getElementById('sizingResultBox');
+        if (sizingResultBox) {
+            if (category === 0) {
+                const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
+                const finishedWeight = actualRawDoughWeight / (1 + bakeLoss / 100);
+                sizingResultBox.innerHTML = `📦 Aktuell in der Schüssel: <strong>${Math.round(actualRawDoughWeight)}g Rohteig</strong> → ergibt gebacken ca. <strong>${Math.round(finishedWeight)}g</strong> Brot.`;
+            } else {
+                const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
+                const wholePieces = Math.floor(actualRawDoughWeight / pieceWeight);
+                const leftover = Math.round(actualRawDoughWeight - wholePieces * pieceWeight);
+                sizingResultBox.innerHTML = `📦 Aktuell in der Schüssel: <strong>${Math.round(actualRawDoughWeight)}g Rohteig</strong> → ergibt ca. <strong>${wholePieces} Stück</strong> à ${pieceWeight}g${leftover > 0 ? ` (+ ${leftover}g Restteig übrig)` : ''}.`;
+            }
+        }
 
         let totalWaterWeight = finalTapWater + manualWetWater + sourdoughWater;
         let totalBoundWaterWeight = baseBoundWater + manualBoundWater;
@@ -2335,8 +2322,6 @@
             templateId: selectedTemplateId,
             targetHydration: getFloatVal('targetHydration', 65),
             targetWeight: getFloatVal('targetWeight', 1000),
-            sizingMode: sizingMode,
-            availableFlour: getFloatVal('availableFlourInput', 800),
             targetPieceWeight: getFloatVal('targetPieceWeight', defaultPieceWeight[category] || 85),
             bakeLossPct: getFloatVal('bakeLossPct', 15),
             saltPct: getFloatVal('saltPct', 2.0),
@@ -2467,8 +2452,6 @@
             if (r.targetPieceWeight) document.getElementById('targetPieceWeight').value = r.targetPieceWeight;
             if (r.bakeLossPct !== undefined) document.getElementById('bakeLossPct').value = r.bakeLossPct;
             if (r.saltPct !== undefined) document.getElementById('saltPct').value = r.saltPct;
-            document.getElementById('availableFlourInput').value = r.availableFlour !== undefined ? r.availableFlour : 800;
-            setSizingMode(r.sizingMode === 'flour' ? 'flour' : 'weight');
             document.getElementById('dryYeastToggle').checked = r.dryYeast;
             document.getElementById('fridgeToggle').checked = r.fridge;
             flourOverridesBySlot = r.flourOverridesBySlot || {};

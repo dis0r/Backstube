@@ -3,7 +3,7 @@
 // startet und rechnet. Reine Client-Logik – keine API-Calls, die
 // gecacht werden müssten außer den statischen Assets selbst.
 
-const CACHE_NAME = 'back-assistent-pro-v0-6-0';
+const CACHE_NAME = 'back-assistent-pro-v0-7-0';
 const APP_SHELL = [
   './index.html',
   './manifest.json',
