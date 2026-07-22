@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Back-Assistent Pro v0.7.0</title>
+<title>Back-Assistent Pro v0.23.0</title>
 
 <!-- PWA: Installierbarkeit + Homescreen-Verhalten -->
 <link rel="manifest" href="manifest.json">
@@ -139,6 +139,90 @@
         padding: 18px;
         box-shadow: var(--shadow-card);
         border: 1px solid var(--card-border);
+        position: sticky;
+        top: max(8px, env(safe-area-inset-top, 0px));
+        z-index: 500;
+    }
+
+    .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--divider);
+    }
+
+    /* Leichtere Kartenoptik für Tab-eigene Mini-Dashboards (z.B. Backen) -
+       bewusst NICHT die schwere, sticky .dashboard-Kachel: kein Schatten,
+       kein Verlauf, damit auf den ersten Blick klar ist, dass es sich um
+       einen kompakten Kennzahlen-Streifen handelt und nicht um das
+       Haupt-Dashboard. */
+    .mini-dashboard {
+        background: var(--gray-input);
+        border-radius: var(--radius-md);
+        padding: 12px 14px 10px;
+        border: 1px solid var(--card-border);
+        margin-bottom: 14px;
+    }
+
+    .mini-dashboard .dashboard-stats-grid {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    .dashboard-stat {
+        text-align: center;
+        min-width: 0;
+    }
+
+    .dashboard-stat-label {
+        font-size: 9.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--text-secondary);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dashboard-stat-value {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.2px;
+    }
+
+    .nutrition-section {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--divider);
+    }
+
+    .nutrition-main-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .nutrition-main-stat { text-align: center; }
+
+    .nutrition-macro-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        justify-content: center;
+        margin-top: 8px;
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+
+    .nutrition-macro-line strong {
+        color: var(--text-primary);
+        font-weight: 700;
     }
 
     .dashboard-header {
@@ -193,6 +277,32 @@
         font-size: 12px;
         border: none;
         flex-shrink: 0;
+    }
+
+    /* Pill-Toggle für "Fix vorgeben" (Hydration/Zielgewicht) - ersetzt die
+       Checkbox+Text-Kombination durch einen kompakten Schloss-Button,
+       konsistent mit der restlichen Icon-Button-Sprache der App. */
+    .fix-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 20px;
+        border: 1px solid var(--card-border);
+        background: var(--gray-input);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .fix-toggle-btn:active { transform: scale(0.96); }
+    .fix-toggle-btn.active {
+        background: var(--baker-brown);
+        color: #fff;
+        border-color: var(--baker-brown);
     }
 
     .target-hydration-box {
@@ -363,6 +473,12 @@
     .btn-plus:active { transform: scale(0.96); }
     .btn-plus:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    input[type="text"]:disabled {
+        opacity: 0.45;
+        background: var(--gray-input);
+        cursor: not-allowed;
+    }
+
     .btn-secondary {
         background: var(--gray-input);
         color: var(--text-primary);
@@ -467,6 +583,26 @@
         width: 100%;
         box-shadow: 0 12px 40px rgba(0,0,0,0.25);
         color: var(--text-primary);
+    }
+
+    .modal-content-scroll {
+        max-height: 82vh;
+        overflow-y: auto;
+    }
+
+    .macro-tips-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .macro-tips-list li {
+        background: var(--gray-input);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
     }
 
     .modal-title {
@@ -673,7 +809,7 @@
         .tab-bar, .segmented-control, .btn-plus, .delete-btn, .info-icon-btn, .modal, .toast,
         #stepsSection .steps-recipe-header ~ *, .btn-ghost, .btn-secondary, .no-print { display: none !important; }
         body { background: #fff; padding: 0; }
-        .section, .dashboard { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+        .section, .dashboard { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; position: static !important; }
         input { border: none !important; background: none !important; font-weight: 700 !important; color: #000 !important; }
     }
 </style>
@@ -683,7 +819,7 @@
 <div class="app-container">
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.7.0</div>
+        <div class="version-badge">v0.23.0</div>
     </div>
 
     <!-- CATEGORY PICKER -->
@@ -699,28 +835,128 @@
             <div>
                 <div class="hydration-label">Aktuelle Hydration (Ist)</div>
                 <div class="hydration-display" id="currentHydration">65.0%</div>
-                <div class="ta-display" id="currentTA">TA: 165</div>
                 <div class="consistency-text">
                     <span id="consistencyText">Optimaler Brotteig</span>
                     <button type="button" class="info-icon-btn" onclick="triggerProTip()" aria-label="Profi-Tipp anzeigen">i</button>
+                    <button type="button" class="info-icon-btn" onclick="openQuickHelpModal()" aria-label="Teig-Problem? Schnelle Hilfe">🩺</button>
                 </div>
+                <div class="small" id="consistencyFeel" style="color:var(--text-secondary); margin-top:2px;">Geschmeidig und elastisch, klebt nur noch leicht an den Fingern.</div>
             </div>
             <div class="target-hydration-box">
                 <label for="targetHydration">Ziel-Hydration</label>
-                <input type="text" inputmode="decimal" id="targetHydration" value="65" style="text-align:center; width:72px;" oninput="updateInputs()">
+                <input type="text" inputmode="decimal" id="targetHydration" value="65" style="text-align:center; width:72px;" disabled oninput="onTargetHydrationChanged()">
+                <button type="button" class="fix-toggle-btn" id="targetHydrationActiveToggle" onclick="toggleTargetHydrationActive()" aria-pressed="false" style="margin-top:6px; justify-content:center; width:72px; padding-left:0; padding-right:0;">
+                    Fix
+                </button>
             </div>
+        </div>
+        <div class="dashboard-stats-grid">
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">Teigausbeute</div>
+                <div class="dashboard-stat-value" id="currentTA">165</div>
+            </div>
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">Rohteig</div>
+                <div class="dashboard-stat-value" id="dashRawDough">– g</div>
+            </div>
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label" id="dashFinishedLabel">Brotgewicht</div>
+                <div class="dashboard-stat-value" id="dashFinishedValue">– g</div>
+            </div>
+        </div>
+        <div class="nutrition-section">
+            <div class="nutrition-main-row">
+                <div class="nutrition-main-stat">
+                    <div class="dashboard-stat-label" style="white-space:normal; overflow:visible; display:flex; align-items:center; justify-content:center; gap:3px;">
+                        🔥 Kcal gesamt
+                        <button type="button" class="info-icon-btn" onclick="openMacroTipsModal()" aria-label="Tipps: kalorienärmer oder eiweißreicher backen" style="width:15px; height:15px; font-size:9px; flex-shrink:0;">💡</button>
+                    </div>
+                    <div class="dashboard-stat-value" id="nutriKcalTotal">– kcal</div>
+                </div>
+                <div class="nutrition-main-stat">
+                    <div class="dashboard-stat-label" id="nutriPerPieceLabel">Kcal / Scheibe</div>
+                    <div class="dashboard-stat-value" id="nutriKcalPerPiece">– kcal</div>
+                </div>
+            </div>
+            <div class="nutrition-macro-line">
+                <span>KH <strong id="nutriCarbs">–</strong> g</span>
+                <span>davon Ballaststoffe <strong id="nutriFiber">–</strong> g</span>
+                <span>Eiweiß <strong id="nutriProtein">–</strong> g</span>
+                <span>Fett <strong id="nutriFat">–</strong> g</span>
+            </div>
+        </div>
+        <div id="blankStateCTA" style="display:none; margin-top:6px;">
+            <button type="button" class="btn-plus" style="width:100%; font-size:13px;" onclick="scrollToTemplateGallery()">👉 Rezept-Vorlage wählen, um loszulegen</button>
         </div>
         <div id="dashboardAlerts" style="margin-top: 4px;"></div>
     </div>
 
-    <!-- SCHRITT-FÜR-SCHRITT ANLEITUNG (separater, phasenunabhängiger Bereich) -->
-    <div class="section" id="stepsSection">
-        <div class="section-title">📋 Schritt-für-Schritt Anleitung</div>
-        <div id="stepsContent"></div>
-    </div>
-
     <!-- PHASE 1: TEIG & ZUTATEN -->
     <div id="phase1Views">
+        <div class="section">
+            <div class="section-title">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    🌾 Mehl in der Rührschüssel
+                    <button type="button" class="info-icon-btn" onclick="toggleFlourAddRow()" aria-label="Weitere Mehlsorte hinzufügen">+</button>
+                </span>
+                <div class="segmented-control small" style="width:150px; margin-bottom:0;">
+                    <button type="button" id="unitGrams" class="active" onclick="setDisplayUnit('grams')">Gramm</button>
+                    <button type="button" id="unitPercent" onclick="setDisplayUnit('percent')">Bäcker%</button>
+                </div>
+            </div>
+            <div id="flourContainer"></div>
+            <div id="flourAddSection" style="display:none; margin-top:10px; padding-top:10px; border-top: 1px solid var(--divider);">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select id="flourAddPicker" style="flex: 2; text-align: left;" onchange="updateFlourAddInfo()"></select>
+                    <input type="text" inputmode="decimal" id="flourAddWeightInput" placeholder="Gramm" style="flex: 1; width: 80px;">
+                    <button type="button" class="btn-plus" onclick="addFlourIngredient()" aria-label="Mehlsorte hinzufügen">+</button>
+                </div>
+                <div id="flourAddInfoBox" style="font-size:12px; color:var(--text-secondary); margin-top:8px; display:flex; align-items:center; gap:6px;"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🧂 Brotbasics</div>
+            <div class="row">
+                <label for="leavenTypeSelect" style="display:flex; align-items:center; gap:5px;">
+                    Triebmittel
+                    <button type="button" class="info-icon-btn" onclick="explainTriebmittel()" aria-label="Was bedeutet das?">i</button>
+                </label>
+                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                    <select id="leavenTypeSelect" onchange="setLeavenType(this.value)" style="max-width:150px; text-align:left;">
+                        <option value="none">– Bitte wählen –</option>
+                        <option value="frischhefe">Frischhefe</option>
+                        <option value="trockenhefe">Trockenhefe</option>
+                        <option value="sauerteig">Sauerteig (reif)</option>
+                        <option value="starter">Starter / Anstellgut</option>
+                        <option value="poolish">Poolish (Vorteig)</option>
+                    </select>
+                    <input type="text" inputmode="decimal" id="triebmittelPctInput" value="20" style="display:none; width:52px; text-align:center;" oninput="updateInputs()">
+                    <span class="unit-suffix" id="triebmittelPctUnit" style="display:none;">%</span>
+                </div>
+            </div>
+            <div id="triebmittelWarning" style="display:none;"></div>
+            <div id="remainingContainer"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    Weitere Zutaten
+                    <button type="button" class="info-icon-btn" onclick="toggleExtraAddRow()" aria-label="Weitere Zutat hinzufügen">+</button>
+                </span>
+            </div>
+            <div id="extraAddSection" style="display:none; margin-bottom:10px; padding-bottom:10px; border-bottom: 1px solid var(--divider);">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select id="presetPicker" style="flex: 2; text-align: left;" onchange="updatePresetInfo()"></select>
+                    <input type="text" inputmode="decimal" id="manualWeightInput" placeholder="Gramm" style="flex: 1; width: 80px;">
+                    <button type="button" class="btn-plus" onclick="addManualIngredient()" aria-label="Zutat hinzufügen">+</button>
+                </div>
+                <div id="presetInfoBox" style="font-size:12px; color:var(--text-secondary); margin-top:8px; display:flex; align-items:center; gap:6px;"></div>
+            </div>
+            <div id="extrasContainer"></div>
+        </div>
+
         <div class="section">
             <div class="section-title">Rezept-Konfigurator</div>
             <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
@@ -729,9 +965,15 @@
             </div>
             <div class="row" id="totalWeightRow">
                 <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
-                <input type="text" inputmode="decimal" id="targetWeight" value="1000" oninput="onTargetWeightChanged()">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" inputmode="decimal" id="targetWeight" value="1000" disabled oninput="onTargetWeightChanged()" style="width:70px;">
+                    <span id="targetWeightActiveWrapper" style="display:inline-flex;">
+                        <button type="button" class="fix-toggle-btn" id="targetWeightActiveToggle" onclick="toggleTargetWeightActive()" aria-pressed="false">
+                            Fix
+                        </button>
+                    </span>
+                </div>
             </div>
-            <div id="sizingResultBox" class="info-box" style="margin-top:2px;"></div>
             <div class="row cat-piece-only" id="pieceWeightRow" style="display:none;">
                 <label id="pieceWeightLabel" for="targetPieceWeight">Gewicht / Stück (g)</label>
                 <input type="text" inputmode="decimal" id="targetPieceWeight" value="85" oninput="updateInputs()">
@@ -744,35 +986,12 @@
                 <label for="saltPct">Salz (%)</label>
                 <input type="text" inputmode="decimal" id="saltPct" value="2.0" oninput="updateInputs()">
             </div>
-            <div class="row" id="yeastToggleRow">
-                <label for="dryYeastToggle">Trockenhefe verwenden?</label>
-                <input type="checkbox" id="dryYeastToggle" onchange="updateInputs()">
-            </div>
         </div>
 
-        <div class="section">
-            <div class="section-title">
-                🌾 Mehl in der Rührschüssel
-                <div class="segmented-control small" style="width:150px; margin-bottom:0;">
-                    <button type="button" id="unitGrams" class="active" onclick="setDisplayUnit('grams')">Gramm</button>
-                    <button type="button" id="unitPercent" onclick="setDisplayUnit('percent')">Bäcker%</button>
-                </div>
-            </div>
-            <div id="flourContainer"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">💧 Flüssigkeit, Triebmittel & Extras</div>
-            <div id="remainingContainer"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Zutat in die Schüssel werfen</div>
-            <div style="display: flex; gap: 6px; align-items: center;">
-                <select id="presetPicker" style="flex: 2; text-align: left;"></select>
-                <input type="text" inputmode="decimal" id="manualWeightInput" placeholder="Gramm" style="flex: 1; width: 80px;">
-                <button type="button" class="btn-plus" onclick="addManualIngredient()" aria-label="Zutat hinzufügen">+</button>
-            </div>
+        <!-- SCHRITT-FÜR-SCHRITT ANLEITUNG -->
+        <div class="section" id="stepsSection">
+            <div class="section-title">📋 Schritt-für-Schritt Anleitung</div>
+            <div id="stepsContent"></div>
         </div>
 
         <div class="section">
@@ -792,11 +1011,35 @@
 
     <!-- PHASE 2: GARE & BACKEN -->
     <div id="phase2Views" style="display: none;">
+        <div class="mini-dashboard">
+            <div class="dashboard-stats-grid">
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label">Back-Temp.</div>
+                    <div class="dashboard-stat-value" id="miniBakeTemp">– °C</div>
+                </div>
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label">Backzeit</div>
+                    <div class="dashboard-stat-value" id="miniBakeTime">– Min</div>
+                </div>
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label">Gesamtzeit</div>
+                    <div class="dashboard-stat-value" id="miniTotalTime">– Std</div>
+                </div>
+            </div>
+        </div>
         <div class="section">
             <div class="section-title">Gär- & Ofenparameter</div>
             <div class="row">
                 <label for="fridgeToggle">Im Kühlschrank (5°C) reifen lassen?</label>
                 <input type="checkbox" id="fridgeToggle" onchange="updateInputs()">
+            </div>
+            <div class="row">
+                <label for="mixedProofToggle">🌙 Gemischt: kurz anspringen, dann kalt</label>
+                <input type="checkbox" id="mixedProofToggle" onchange="updateInputs()">
+            </div>
+            <div class="row" id="autolyseRow">
+                <label for="autolyseToggle">🕐 <span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span> einplanen</label>
+                <input type="checkbox" id="autolyseToggle" onchange="updateInputs()">
             </div>
             <div class="row pizza-only">
                 <label for="fermentHours">Gehzeit Gesamt (Std)</label>
@@ -835,6 +1078,11 @@
 
         <div class="section">
             <div class="section-title">Zubereitungs-Fahrplan</div>
+            <div id="autolyseFahrplanRow" style="display:none; padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
+                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Vorbereitung</div>
+                <div class="row"><span style="font-size:13px; color:var(--text-secondary);"><span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span>:</span><span id="outAutolyse" style="font-weight:600;">30-60 Min.</span></div>
+                <div class="section-subtitle" style="margin-top:2px;">Nur Mehl + Wasser vermischen und ruhen lassen. Salz und Hefe/Sauerteig erst danach zugeben.</div>
+            </div>
             <div style="padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
                 <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Gärzeiten</div>
                 <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
@@ -1028,19 +1276,21 @@
 <!-- BOTTOM TAB-BAR -->
 <div class="tab-bar">
     <button type="button" class="tab-bar-btn active" id="tabBtnRecipe" onclick="switchTab('recipe')">
-        <span class="tab-icon">🥣</span><span class="tab-label">Rezept</span>
+        <svg class="tab-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M4 11h16c0 4.5-3.5 8-8 8s-8-3.5-8-8z"/><line x1="3" y1="11" x2="21" y2="11"/><line x1="16" y1="4" x2="12" y2="11"/></svg><span class="tab-label">Rezept</span>
     </button>
     <button type="button" class="tab-bar-btn" id="tabBtnBaking" onclick="switchTab('baking')">
-        <span class="tab-icon">🔥</span><span class="tab-label">Backen</span>
+        <svg class="tab-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6" y="6" width="12" height="7" rx="1"/><line x1="6" y1="17" x2="18" y2="17"/><circle cx="16.5" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg>
+        <span class="tab-label">Backen</span>
     </button>
     <button type="button" class="tab-bar-btn" id="tabBtnTools" onclick="switchTab('tools')">
-        <span class="tab-icon">🧰</span><span class="tab-label">Werkzeuge</span>
+        <svg class="tab-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M5 19c0-3.3 2.4-5.5 6-5.5s6 2.2 6 5.5"/><line x1="4" y1="19" x2="18" y2="19"/><line x1="17" y1="4" x2="17" y2="13.5"/><path d="M17 4h-4"/><line x1="13" y1="4" x2="13" y2="8"/></svg>
+        <span class="tab-label">Werkzeuge</span>
     </button>
     <button type="button" class="tab-bar-btn" id="tabBtnDiary" onclick="switchTab('diary')">
-        <span class="tab-icon">📓</span><span class="tab-label">Tagebuch</span>
+        <svg class="tab-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><rect x="5" y="3" width="14" height="18" rx="1.5"/><line x1="8" y1="8" x2="15" y2="8"/><line x1="8" y1="12" x2="15" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg><span class="tab-label">Tagebuch</span>
     </button>
     <button type="button" class="tab-bar-btn" id="tabBtnRecipes" onclick="switchTab('recipes')">
-        <span class="tab-icon">📚</span><span class="tab-label">Rezepte</span>
+        <svg class="tab-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M12 6c-1.5-1.2-3.8-1.8-6-1.8v13.6c2.2 0 4.5.6 6 1.8"/><path d="M12 6c1.5-1.2 3.8-1.8 6-1.8v13.6c-2.2 0-4.5.6-6 1.8"/><line x1="12" y1="6" x2="12" y2="19.6"/></svg><span class="tab-label">Rezepte</span>
     </button>
 </div>
 
@@ -1071,6 +1321,42 @@
         <div class="modal-title" id="glossaryTerm">Begriff</div>
         <p id="glossaryText" style="font-size: 14px; line-height: 1.5; margin: 14px 0;"></p>
         <button type="button" class="btn-plus" onclick="closeGlossary()" style="width:100%;">Verstanden!</button>
+    </div>
+</div>
+
+<!-- MAKRO-TIPPS MODAL -->
+<div class="modal" id="macroTipsModal" onclick="closeMacroTipsModal()">
+    <div class="modal-content modal-content-scroll" onclick="event.stopPropagation()">
+        <div class="modal-title">💡 Rezept anpassen</div>
+        <div class="segmented-control small" style="margin: 10px 0;">
+            <button type="button" id="macroTipsBtnLowcal" class="active" onclick="setMacroTipsMode('lowcal')">🔥 Kalorienärmer</button>
+            <button type="button" id="macroTipsBtnProtein" onclick="setMacroTipsMode('protein')">💪 Eiweißreicher</button>
+        </div>
+        <div id="macroTipsContent" style="font-size:13px; line-height:1.5;"></div>
+        <p style="font-size:10.5px; color:var(--text-secondary); margin-top:10px;">Alle Tipps sind auf dein aktuelles Rezept zugeschnitten und halten die Ziel-Hydration unangetastet – die App rechnet Schüttwasser & Co. automatisch mit.</p>
+        <button type="button" class="btn-plus" onclick="closeMacroTipsModal()" style="width:100%; margin-top:10px;">Schließen</button>
+    </div>
+</div>
+
+<!-- SCHNELLE-HILFE MODAL (Problemlöser direkt zugänglich, ohne zu Werkzeuge wechseln zu müssen) -->
+<div class="modal" id="quickHelpModal" onclick="closeQuickHelpModal()">
+    <div class="modal-content modal-content-scroll" onclick="event.stopPropagation()">
+        <div class="modal-title">🩺 Teig-Problem? Schnelle Hilfe</div>
+        <div id="quickHelpContent" style="margin-top:8px;"></div>
+        <button type="button" class="btn-plus" onclick="closeQuickHelpModal()" style="width:100%; margin-top:10px;">Schließen</button>
+    </div>
+</div>
+
+<!-- ONBOARDING MODAL (nur beim allerersten Start) -->
+<div class="modal" id="onboardingModal">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">👋 Willkommen im Back-Assistent Pro</div>
+        <p style="font-size: 14px; line-height: 1.6; margin: 14px 0;">
+            Dein Hydrationsrechner und Back-Optimierungstool für Brote, Brötchen und Pizzateig.<br><br>
+            <strong>So geht's los:</strong> Wähle unten eine Rezept-Vorlage – Mehl, Wasser und Triebmittel werden automatisch passend eingestellt. Alles bleibt danach frei anpassbar, und das Dashboard oben zeigt dir live Hydration, Nährwerte und das erwartete Ergebnis.<br><br>
+            Kein Rezept ausgewählt? Kein Problem – dann startet alles bei 0 und du stellst dir dein Rezept komplett selbst zusammen.
+        </p>
+        <button type="button" class="btn-plus" onclick="dismissOnboarding()" style="width:100%;">Los geht's!</button>
     </div>
 </div>
 
@@ -1188,24 +1474,158 @@
         { name: "Weizenmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.05 },
         { name: "Weizenvollkornmehl", waterContent: 0, isFlour: true, binding: 0.12 },
         { name: "Dinkelmehl Type 630", waterContent: 0, isFlour: true, binding: 0.01 },
+        { name: "Dinkelmehl Type 1050", waterContent: 0, isFlour: true, binding: 0.06 },
         { name: "Dinkelvollkornmehl", waterContent: 0, isFlour: true, binding: 0.11 },
+        { name: "Roggenmehl Type 815", waterContent: 0, isFlour: true, binding: 0.05 },
+        { name: "Roggenmehl Type 997", waterContent: 0, isFlour: true, binding: 0.07 },
         { name: "Roggenmehl Type 1150", waterContent: 0, isFlour: true, binding: 0.08 },
         { name: "Roggenvollkornmehl", waterContent: 0, isFlour: true, binding: 0.15 },
+        { name: "Buchweizenmehl", waterContent: 0, isFlour: true, binding: 0.10 },
+        { name: "Hafermehl", waterContent: 0, isFlour: true, binding: 0.14 },
+        { name: "Maismehl", waterContent: 0, isFlour: true, binding: 0.05 },
         { name: "Sauerteig", waterContent: 50, isFlour: false, binding: 0 },
         { name: "Joghurt (3,5% Fett)", waterContent: 85, isFlour: false, binding: 0 },
-        { name: "Skyr", waterContent: 80, isFlour: false, binding: 0 },
+        { name: "Griechischer Joghurt (10% Fett)", waterContent: 78, isFlour: false, binding: 0 },
+        { name: "Joghurt (0,2% Fett)", waterContent: 89, isFlour: false, binding: 0 },
+        { name: "Skyr (0,2% Fett)", waterContent: 80, isFlour: false, binding: 0 },
         { name: "Vollmilch", waterContent: 90, isFlour: false, binding: 0 },
         { name: "Ei (Größe M)", waterContent: 75, isFlour: false, binding: 0 },
         { name: "Olivenöl", waterContent: 0, isFlour: false, binding: 0 },
         { name: "Butter", waterContent: 15, isFlour: false, binding: 0 },
         { name: "Zucker", waterContent: 0, isFlour: false, binding: 0 },
         { name: "Sonnenblumenkerne", waterContent: 0, isFlour: false, binding: 0.5 },
+        { name: "Haferflocken", waterContent: 0, isFlour: false, binding: 1.5 },
         { name: "Leinsamenschrot", waterContent: 0, isFlour: false, binding: 3.5 },
         { name: "Chia Samen", waterContent: 0, isFlour: false, binding: 7.0 },
         { name: "Flohsamenschalen", waterContent: 0, isFlour: false, binding: 10.0 },
         { name: "Karotten (gerieben)", waterContent: 88, isFlour: false, binding: 0 },
         { name: "Röstzwiebeln", waterContent: 2, isFlour: false, binding: 0.05 }
     ];
+
+    // Kleine Piktogramme für "Weitere Zutaten" - rein optischer Wiedererkennungswert
+    // im Picker und in der Extras-Liste, ersetzt nicht die Namensbeschriftung.
+    const EXTRA_ICONS = {
+        "Joghurt (3,5% Fett)": "🥣",
+        "Joghurt (0,2% Fett)": "🥣",
+        "Griechischer Joghurt (10% Fett)": "🥣",
+        "Skyr (0,2% Fett)": "🥣",
+        "Vollmilch": "🥛",
+        "Ei (Größe M)": "🥚",
+        "Olivenöl": "🫒",
+        "Butter": "🧈",
+        "Zucker": "🍬",
+        "Sonnenblumenkerne": "🌻",
+        "Haferflocken": "🌾",
+        "Leinsamenschrot": "🌰",
+        "Chia Samen": "⚫",
+        "Flohsamenschalen": "🌿",
+        "Karotten (gerieben)": "🥕",
+        "Röstzwiebeln": "🧅"
+    };
+    function extraIcon(name) {
+        return EXTRA_ICONS[name] || "🧺";
+    }
+
+    // ============================================================
+    // NÄHRWERT-DATENBANK (Richtwerte pro 100g, Standard-Nährwerttabellen)
+    // Deckt alle Presets ab, plus die im Teig entstehenden Positionen,
+    // die selbst kein Preset sind (Schüttwasser, Sauerteig als Mischung,
+    // Frischhefe/Trockenhefe, Salz). "Sauerteig" wird pauschal als
+    // ausgereifter Mehl-Wasser-Teig (ca. hälftig) angenähert, da die App
+    // nicht nachhält, aus welchem Mehl das Anstellgut stammt.
+    // ============================================================
+    const NUTRITION_DB = {
+        "Weizenmehl Type 550 / Tipo 00": { kcal: 348, carbs: 70, fiber: 3.5, protein: 10, fat: 1.0 },
+        "Weizenmehl Type 1050": { kcal: 335, carbs: 65, fiber: 6, protein: 11, fat: 1.5 },
+        "Weizenvollkornmehl": { kcal: 328, carbs: 60, fiber: 9.6, protein: 12.6, fat: 2.2 },
+        "Dinkelmehl Type 630": { kcal: 340, carbs: 69, fiber: 4, protein: 11, fat: 1.8 },
+        "Dinkelmehl Type 1050": { kcal: 336, carbs: 66, fiber: 6, protein: 11.5, fat: 2.0 },
+        "Dinkelvollkornmehl": { kcal: 330, carbs: 61, fiber: 8.9, protein: 13, fat: 2.5 },
+        "Roggenmehl Type 815": { kcal: 330, carbs: 71, fiber: 6, protein: 8, fat: 1.0 },
+        "Roggenmehl Type 997": { kcal: 327, carbs: 68, fiber: 8, protein: 8.5, fat: 1.2 },
+        "Roggenmehl Type 1150": { kcal: 325, carbs: 66, fiber: 9, protein: 8.7, fat: 1.4 },
+        "Roggenvollkornmehl": { kcal: 319, carbs: 61, fiber: 13.4, protein: 9.5, fat: 2.0 },
+        "Buchweizenmehl": { kcal: 335, carbs: 68, fiber: 6.5, protein: 12, fat: 2.5 },
+        "Hafermehl": { kcal: 375, carbs: 60, fiber: 8.8, protein: 14, fat: 7.0 },
+        "Maismehl": { kcal: 361, carbs: 73, fiber: 5.7, protein: 8, fat: 3.5 },
+        "Sauerteig": { kcal: 160, carbs: 32, fiber: 3, protein: 5, fat: 0.7 },
+        "Joghurt (3,5% Fett)": { kcal: 66, carbs: 4.5, fiber: 0, protein: 3.5, fat: 3.5 },
+        "Griechischer Joghurt (10% Fett)": { kcal: 133, carbs: 4, fiber: 0, protein: 5, fat: 10 },
+        "Joghurt (0,2% Fett)": { kcal: 36, carbs: 4.0, fiber: 0, protein: 4.0, fat: 0.2 },
+        "Skyr (0,2% Fett)": { kcal: 63, carbs: 4, fiber: 0, protein: 11, fat: 0.2 },
+        "Vollmilch": { kcal: 64, carbs: 4.8, fiber: 0, protein: 3.3, fat: 3.6 },
+        "Ei (Größe M)": { kcal: 155, carbs: 1.1, fiber: 0, protein: 13, fat: 11 },
+        "Olivenöl": { kcal: 884, carbs: 0, fiber: 0, protein: 0, fat: 100 },
+        "Butter": { kcal: 717, carbs: 0.6, fiber: 0, protein: 0.9, fat: 81 },
+        "Zucker": { kcal: 400, carbs: 100, fiber: 0, protein: 0, fat: 0 },
+        "Sonnenblumenkerne": { kcal: 584, carbs: 20, fiber: 8.6, protein: 21, fat: 51 },
+        "Haferflocken": { kcal: 372, carbs: 59, fiber: 10, protein: 13, fat: 7 },
+        "Leinsamenschrot": { kcal: 534, carbs: 29, fiber: 27, protein: 18, fat: 42 },
+        "Chia Samen": { kcal: 486, carbs: 42, fiber: 34, protein: 17, fat: 31 },
+        "Flohsamenschalen": { kcal: 200, carbs: 88, fiber: 71, protein: 3, fat: 1 },
+        "Karotten (gerieben)": { kcal: 41, carbs: 9.6, fiber: 2.8, protein: 0.9, fat: 0.2 },
+        "Röstzwiebeln": { kcal: 462, carbs: 48, fiber: 5, protein: 8, fat: 27 },
+        "Schüttwasser": { kcal: 0, carbs: 0, fiber: 0, protein: 0, fat: 0 },
+        "Salz": { kcal: 0, carbs: 0, fiber: 0, protein: 0, fat: 0 },
+        "Frischhefe": { kcal: 105, carbs: 3, fiber: 6, protein: 12, fat: 0.4 },
+        "Trockenhefe": { kcal: 320, carbs: 30, fiber: 27, protein: 40, fat: 6 }
+    };
+    // Fallback für unbekannte/eigene Mehlprofile ohne hinterlegte Nährwerte
+    const NUTRITION_FALLBACK_FLOUR = { kcal: 340, carbs: 68, fiber: 5, protein: 11, fat: 1.5 };
+
+    // ============================================================
+    // TRIEBMITTEL-VORSCHLÄGE JE REZEPT-VORLAGE
+    // Das Triebmittel (Frischhefe/Trockenhefe/Sauerteig/Starter/Poolish) ist
+    // eine freie Wahl über das Dropdown in "Brotbasics" - unabhängig von der
+    // gewählten Rezept-Vorlage. Diese Tabelle liefert beim Auswählen einer
+    // Vorlage nur einen sinnvollen STARTWERT (z.B. "Bauernbrot" schlägt
+    // Sauerteig vor), den man danach jederzeit frei umstellen kann.
+    // pct = Bäcker-Prozent vom Gesamtmehl (bei Sauerteig/Starter/Poolish: Anteil
+    // des Mehls, der als Mehl-Hälfte in den Vorteig wandert; bei Hefe: direkter
+    // Hefeanteil vom Mehlgewicht).
+    // ============================================================
+    const TEMPLATE_SUGGESTED_LEAVEN = {
+        weiss_hefe: { type: 'frischhefe', pct: 2.0 },
+        weiss_sauer: { type: 'sauerteig', pct: 15 },
+        bauernbrot: { type: 'sauerteig', pct: 15 },
+        roggenmisch: { type: 'sauerteig', pct: 30 },
+        dinkel_vollkorn: { type: 'frischhefe', pct: 2.0 },
+        baguette: { type: 'poolish', pct: 25 },
+        toastbrot: { type: 'frischhefe', pct: 2.5 },
+        roggenbrot_rein: { type: 'sauerteig', pct: 25 },
+        focaccia: { type: 'frischhefe', pct: 2.0 },
+        saatenbrot: { type: 'frischhefe', pct: 2.0 },
+        broetchen_hefe: { type: 'frischhefe', pct: 3.0 },
+        broetchen_sauer: { type: 'sauerteig', pct: 10 },
+        burger_buns: { type: 'frischhefe', pct: 3.0 },
+        laugen: { type: 'frischhefe', pct: 2.0 },
+        dinkel_broetchen: { type: 'frischhefe', pct: 3.0 },
+        ciabatta: { type: 'frischhefe', pct: 1.5 },
+        kaiserbroetchen: { type: 'frischhefe', pct: 3.0 },
+        milchbroetchen: { type: 'frischhefe', pct: 3.0 },
+        mehrkornbroetchen: { type: 'frischhefe', pct: 3.0 },
+        napoli: { type: 'frischhefe' },
+        newyork: { type: 'frischhefe' },
+        pan: { type: 'frischhefe' },
+        teglia: { type: 'frischhefe' }
+    };
+    // Default-Vorteig-Anteil, falls eine Vorlage keinen eigenen Vorschlag hat
+    // oder der Nutzer ganz ohne Vorlage (Blanko-Zustand) selbst ein Triebmittel wählt.
+    const LEAVEN_DEFAULT_PCT = { sauerteig: 20, starter: 8, poolish: 25 };
+    const YEAST_DEFAULT_PCT = 2.0;
+    // Fachlich übliche Bandbreiten je Triebmittel (Bäcker-% vom Mehl). Außerhalb
+    // dieser Spannen wird gewarnt - zu wenig treibt kaum, zu viel beeinträchtigt
+    // Geschmack/Struktur oder übersäuert den Teig.
+    const TRIEBMITTEL_HEALTHY_RANGE = {
+        frischhefe: [0.5, 6],
+        trockenhefe: [0.5, 6],
+        sauerteig: [5, 40],
+        starter: [2, 20],
+        poolish: [10, 60]
+    };
+    // Durchschnittsgewicht Ei Größe M (EU-Handelsklasse: 53-63g, Mittelwert 58g) -
+    // erlaubt die Eingabe in Stück statt Gramm bei dieser einen Zutat.
+    const EGG_AVERAGE_WEIGHT_G = 58;
 
     // ============================================================
     // REZEPT-ICONS (eigenständige, generierte SVG-Illustrationen)
@@ -1464,7 +1884,9 @@
     // GLOBALER LIVE STATE
     let category = 0;
     let activeTab = 'recipe';
-    let selectedTemplateId = templates[0][0].id;
+    let selectedTemplateId = null; // kein Rezept beim Start ausgewählt -> Blanko-Zustand, alles bei 0
+    let leavenType = 'none'; // 'none' | 'frischhefe' | 'trockenhefe' | 'sauerteig' | 'starter' | 'poolish'
+    let templateSuggestedLeaven = null; // {type, pct} des aktuell geladenen Rezepts - Referenz für die Abweichungs-Warnung
     let manualIngredients = [];
     let flourOverridesBySlot = {};
     let weightOverrides = {};
@@ -1484,6 +1906,8 @@
     let notifyEnabled = false;
     let guidedState = null;
     let ownerId = null;
+    let targetWeightActive = false; // Zielgewicht ist standardmäßig inaktiv (Mehl in der Schüssel führt)
+    let targetHydrationActive = false; // Ziel-Hydration ist standardmäßig inaktiv (Wasser frei editierbar, Ist-Hydration ist reiner Messwert)
 
     // ============================================================
     // GERÄTE-/BESITZER-ID (für Owner-Absicherung geteilter Rezepte)
@@ -1518,11 +1942,113 @@
         updateDDT();
         updateAltitude();
         calculateEngine();
+        checkFirstVisit();
     };
 
+    // Zeigt ein einmaliges Willkommens-Overlay beim allerersten Start (danach
+    // nie wieder, außer der Nutzer setzt seine Daten komplett zurück).
+    async function checkFirstVisit() {
+        try {
+            const res = await window.storage.get('settings:onboardingSeen');
+            if (res && res.value) return; // schon gesehen
+        } catch (e) { /* noch nicht gesetzt -> Overlay zeigen */ }
+        document.getElementById('onboardingModal').style.display = 'flex';
+    }
+
+    async function dismissOnboarding() {
+        document.getElementById('onboardingModal').style.display = 'none';
+        try { await window.storage.set('settings:onboardingSeen', 'true'); } catch (e) { /* bestenfalls für diese Sitzung */ }
+    }
+
+    // Untergruppen für den "Weitere Zutaten"-Picker - rein für die Übersicht,
+    // ändert nichts an der Berechnung. Zutaten ohne Zuordnung landen automatisch
+    // unter "Sonstiges" (z.B. künftig ergänzte Presets).
+    const EXTRA_CATEGORIES = {
+        "Joghurt (3,5% Fett)": "🥛 Milchprodukte & Eier",
+        "Joghurt (0,2% Fett)": "🥛 Milchprodukte & Eier",
+        "Griechischer Joghurt (10% Fett)": "🥛 Milchprodukte & Eier",
+        "Skyr (0,2% Fett)": "🥛 Milchprodukte & Eier",
+        "Vollmilch": "🥛 Milchprodukte & Eier",
+        "Ei (Größe M)": "🥛 Milchprodukte & Eier",
+        "Butter": "🥛 Milchprodukte & Eier",
+        "Sonnenblumenkerne": "🌻 Saaten & Körner",
+        "Haferflocken": "🌻 Saaten & Körner",
+        "Leinsamenschrot": "🌻 Saaten & Körner",
+        "Chia Samen": "🌻 Saaten & Körner",
+        "Flohsamenschalen": "🌻 Saaten & Körner",
+        "Olivenöl": "🫒 Sonstiges",
+        "Zucker": "🫒 Sonstiges",
+        "Karotten (gerieben)": "🫒 Sonstiges",
+        "Röstzwiebeln": "🫒 Sonstiges"
+    };
+    const EXTRA_CATEGORY_ORDER = ["🥛 Milchprodukte & Eier", "🌻 Saaten & Körner", "🫒 Sonstiges"];
+    function extraCategory(name) {
+        return EXTRA_CATEGORIES[name] || "🫒 Sonstiges";
+    }
+
     function populateDropdowns() {
+        const flourPicker = document.getElementById('flourAddPicker');
+        const otherPicker = document.getElementById('presetPicker');
+        const previousFlourValue = flourPicker.value;
+        const previousOtherValue = otherPicker.value;
+
+        // "Sauerteig" ist ein Brotbasic (eigene Zeile in "Brotbasics") und taucht
+        // hier bewusst nicht als generisch hinzufügbare Zutat auf.
+        const flourPresets = getAllPresets().filter(p => p.isFlour);
+        const otherPresets = getAllPresets().filter(p => !p.isFlour && p.name !== 'Sauerteig');
+
+        flourPicker.innerHTML = flourPresets.map(p => `<option value="${escAttr(p.name)}">${p.name}</option>`).join('');
+        otherPicker.innerHTML = EXTRA_CATEGORY_ORDER.map(cat => {
+            const items = otherPresets.filter(p => extraCategory(p.name) === cat);
+            if (items.length === 0) return '';
+            const options = items.map(p => `<option value="${escAttr(p.name)}">${extraIcon(p.name)} ${p.name}</option>`).join('');
+            return `<optgroup label="${cat}">${options}</optgroup>`;
+        }).join('');
+
+        if (previousFlourValue && flourPresets.some(p => p.name === previousFlourValue)) flourPicker.value = previousFlourValue;
+        if (previousOtherValue && otherPresets.some(p => p.name === previousOtherValue)) otherPicker.value = previousOtherValue;
+
+        updatePresetInfo();
+        updateFlourAddInfo();
+    }
+
+    // Zeigt an, ob die aktuell im jeweiligen Picker ausgewählte Zutat Wasser
+    // enthält/hinzufügt (in % ihres Eigengewichts) oder zusätzliches Wasser
+    // bindet - beides wirkt sich direkt auf die errechnete Schüttwassermenge
+    // und Hydration aus. Gemeinsame Logik für beide Picker (Mehl & Extras).
+    function showIngredientInfo(pickerId, boxId, presetList) {
+        const box = document.getElementById(boxId);
+        const picker = document.getElementById(pickerId);
+        if (!box || !picker) return;
+        const preset = presetList.find(p => p.name === picker.value);
+        if (!preset) { box.innerHTML = ''; return; }
+
+        const parts = [];
+        if (preset.name === 'Ei (Größe M)') {
+            parts.push(`🥚 Ø <strong>${EGG_AVERAGE_WEIGHT_G}g</strong> pro Stück (Größe M) – hier bitte in Stück eingeben, nicht in Gramm`);
+        }
+        if (preset.waterContent > 0) {
+            parts.push(`💧 Enthält <strong>${preset.waterContent}%</strong> Wasser – wird auf die Hydration angerechnet`);
+        }
+        if (preset.binding > 0) {
+            parts.push(`🧽 Bindet zusätzlich das <strong>${preset.binding}-fache</strong> des Eigengewichts an Wasser`);
+        }
+        box.innerHTML = parts.length === 0
+            ? `⚪ Neutral – enthält kein nennenswertes Wasser und bindet auch keins`
+            : parts.join(' · ');
+    }
+
+    function updatePresetInfo() {
+        showIngredientInfo('presetPicker', 'presetInfoBox', getAllPresets().filter(p => !p.isFlour && p.name !== 'Sauerteig'));
         const picker = document.getElementById('presetPicker');
-        picker.innerHTML = getAllPresets().map(p => `<option value="${p.name}">+ ${p.name}</option>`).join('');
+        const weightInput = document.getElementById('manualWeightInput');
+        if (picker && weightInput) {
+            weightInput.placeholder = picker.value === 'Ei (Größe M)' ? 'Stück' : 'Gramm';
+        }
+    }
+
+    function updateFlourAddInfo() {
+        showIngredientInfo('flourAddPicker', 'flourAddInfoBox', getAllPresets().filter(p => p.isFlour));
     }
 
     function renderTemplateGallery() {
@@ -1548,7 +2074,7 @@
         const container = document.getElementById('stepsContent');
         if (!container) return;
         const t = templates[category].find(x => x.id === selectedTemplateId);
-        if (!t) { container.innerHTML = ''; return; }
+        if (!t) { container.innerHTML = `<div class="steps-empty">Wähle oben eine Rezept-Vorlage, um loszulegen – oder stell dir dein Rezept komplett frei aus Mehl, Triebmittel und Extras zusammen.</div>`; return; }
         let html = `<div class="steps-recipe-header"><div class="template-card-icon">${renderRecipeIcon(t.icon)}</div><div><div class="steps-recipe-name">${t.name}</div><div class="steps-recipe-desc">${t.desc || ''}</div><span class="difficulty-badge difficulty-${t.difficulty}">${t.difficulty}</span></div></div>`;
         if (t.steps && t.steps.length > 0) {
             html += `<ol class="steps-list">` + t.steps.map((s, i) => `
@@ -1573,14 +2099,108 @@
         calculateEngine();
     }
 
+    // Schaltet vor, ob das Zielgewicht überhaupt etwas bewirken darf.
+    // Standardmäßig inaktiv: Feld ist gesperrt, Mehl in der Schüssel führt
+    // (aktuelle Logik). Erst nach bewusster Aktivierung wird das Feld
+    // editierbar und ein Antippen setzt die Mehlverteilung fix aufs Ziel.
+    // Aktualisiert Optik (aktiv/inaktiv, Schloss-Icon) eines Fix-Toggle-Buttons.
+    function setFixToggleVisual(btnId, isActive) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+    }
+
+    // Aktiviert = Feld ist editierbar, hier kann ein Wert hinterlegt werden,
+    // der die Berechnung fix vorgibt. Deaktiviert = Feld ist gesperrt (kein
+    // Wert eingebbar), die aktuelle Logik (freies Mehl bzw. reine
+    // Ist-Hydration als Messwert) greift stattdessen.
+    function resetTargetWeightActivation() {
+        targetWeightActive = false;
+        setFixToggleVisual('targetWeightActiveToggle', false);
+        const input = document.getElementById('targetWeight');
+        if (input) input.disabled = true;
+    }
+
+    function toggleTargetWeightActive() {
+        targetWeightActive = !targetWeightActive;
+        setFixToggleVisual('targetWeightActiveToggle', targetWeightActive);
+        const input = document.getElementById('targetWeight');
+        input.disabled = !targetWeightActive;
+        if (targetWeightActive) {
+            onTargetWeightChanged(); // sofort auf den aktuellen Feldwert fixieren
+        } else {
+            calculateEngine(); // nur neu anzeigen, Mehl-Overrides bleiben unangetastet
+        }
+    }
+
     // Wird ausgelöst, wenn der Nutzer direkt am Zielgewicht/der Stückzahl dreht.
-    // Das ist die einzige Aktion, die die Mehlmenge "fix" auf einen Zielwert
+    // Das ist die einzige Aktion, die die Mehlmenge fix auf einen Zielwert
     // zurücksetzt: manuell in der Schüssel angepasste Mehl-Mengen (Overrides)
     // werden verworfen, damit die Mehlverteilung wieder exakt zum neuen
     // Zielgewicht passt. Alle anderen manuellen Anpassungen (Wasser, Hefe,
-    // Sauerteig, Zusatzzutaten) bleiben unangetastet.
+    // Sauerteig, Zusatzzutaten) bleiben unangetastet. Greift nur, wenn das
+    // Zielgewicht aktiviert wurde - sonst wäre das Feld ohnehin gesperrt.
     function onTargetWeightChanged() {
+        if (category !== 0) { calculateEngine(); return; }
+        if (!targetWeightActive) { calculateEngine(); return; }
         flourOverridesBySlot = {};
+        calculateEngine();
+    }
+
+    function resetTargetHydrationActivation() {
+        targetHydrationActive = false;
+        setFixToggleVisual('targetHydrationActiveToggle', false);
+        const input = document.getElementById('targetHydration');
+        if (input) input.disabled = true;
+    }
+
+    // Aktiviert die Ziel-Hydration programmatisch (z.B. beim Auswählen einer
+    // Rezept-Vorlage) - der hinterlegte Hydrationswert einer Vorlage ist ja
+    // bereits ein für dieses Rezept passender Optimalwert, den man in aller
+    // Regel auch wirklich treffen will. clearOverride=false lässt einen evtl.
+    // bereits gespeicherten Schüttwasser-Override unangetastet (z.B. beim
+    // Laden eines gespeicherten Rezepts mit bewusst abweichendem Wert).
+    function activateTargetHydration(clearOverride) {
+        targetHydrationActive = true;
+        setFixToggleVisual('targetHydrationActiveToggle', true);
+        const input = document.getElementById('targetHydration');
+        if (input) input.disabled = false;
+        if (clearOverride !== false) delete weightOverrides['Schüttwasser'];
+    }
+
+    function toggleTargetHydrationActive() {
+        const wasActive = targetHydrationActive;
+        targetHydrationActive = !targetHydrationActive;
+        setFixToggleVisual('targetHydrationActiveToggle', targetHydrationActive);
+        const input = document.getElementById('targetHydration');
+        input.disabled = !targetHydrationActive;
+        if (targetHydrationActive) {
+            onTargetHydrationChanged(); // sofort sauber auf die Ziel-Hydration einschwingen
+        } else if (wasActive) {
+            // Beim Deaktivieren den zuletzt aus der Ziel-Hydration errechneten
+            // Schüttwasser-Wert als Override einfrieren, statt ihn auf 0 zu
+            // setzen. Der Wert bleibt danach ganz normal frei anpassbar.
+            const waterInput = document.querySelector('#remainingContainer [data-key="override:Schuettwasser"]');
+            const frozenValue = waterInput ? parseFloat(waterInput.value.replace(',', '.')) : NaN;
+            if (!isNaN(frozenValue)) {
+                weightOverrides['Schüttwasser'] = frozenValue;
+            }
+            calculateEngine();
+        } else {
+            calculateEngine();
+        }
+    }
+
+    // Wird ausgelöst, wenn der Nutzer direkt an der Ziel-Hydration dreht. Das
+    // ist die einzige Aktion, die das Schüttwasser fix auf die eingestellte
+    // Hydration zurücksetzt: ein manuell überschriebenes Schüttwasser wird
+    // verworfen, damit sich die Wassermenge wieder exakt am Ziel ausrichtet.
+    // Greift nur, wenn die Ziel-Hydration aktiviert wurde - sonst ist das Feld
+    // ohnehin gesperrt.
+    function onTargetHydrationChanged() {
+        if (!targetHydrationActive) { calculateEngine(); return; }
+        delete weightOverrides['Schüttwasser'];
         calculateEngine();
     }
 
@@ -1591,6 +2211,7 @@
         document.getElementById('catPizza').className = catId === 2 ? 'active' : '';
 
         const weightLabel = document.getElementById('weightLabel');
+        const targetWeightActiveWrapper = document.getElementById('targetWeightActiveWrapper');
         const targetWeight = document.getElementById('targetWeight');
         const pieceWeightInput = document.getElementById('targetPieceWeight');
 
@@ -1611,11 +2232,25 @@
             pieceWeightInput.value = defaultPieceWeight[2];
         }
 
+        // "Fix vorgeben" ergibt nur bei einem Zielgewicht (Brot) wirklich Sinn -
+        // ein exaktes Gewicht will man treffen. Bei Brötchen/Pizza ist die
+        // Anzahl eher eine Planungsgröße als ein hartes Ziel (die tatsächlich
+        // erreichbare Stückzahl inkl. Restteig zeigt ohnehin das Dashboard) -
+        // dort bleibt das Feld daher immer frei editierbar, ganz ohne
+        // Aktivierungs-Schalter.
+        if (targetWeightActiveWrapper) targetWeightActiveWrapper.style.display = catId === 0 ? 'inline-flex' : 'none';
+        if (catId === 0) {
+            resetTargetWeightActivation();
+        } else {
+            targetWeightActive = false;
+            targetWeight.disabled = false;
+        }
+        resetTargetHydrationActivation();
         document.querySelectorAll('.pizza-only').forEach(el => el.style.display = catId === 2 ? 'flex' : 'none');
 
-        if (!templates[category].find(t => t.id === selectedTemplateId)) {
-            selectedTemplateId = templates[category][0].id;
-        }
+        // Kein Rezept automatisch vorwählen - jede Kategorie startet blanko,
+        // bis der Nutzer bewusst eine Vorlage antippt (siehe applyTemplate()).
+        selectedTemplateId = null;
         renderTemplateGallery();
         applyTemplate();
         renderSavedRecipes();
@@ -1638,6 +2273,12 @@
             if (isActive) el.classList.add('fade-view');
             document.getElementById('tabBtn' + key.charAt(0).toUpperCase() + key.slice(1)).className = 'tab-bar-btn' + (isActive ? ' active' : '');
         });
+        // Das Hydration/Rohteig-Dashboard betrifft nur die Zutaten-Zusammenstellung
+        // (Rezept-Tab) - in Backen/Werkzeuge/Tagebuch geht es um andere Dinge und
+        // das Dashboard hätte dort keinen Bezug zum Bildschirminhalt.
+        const dashboardEl = document.getElementById('dashboardCard');
+        if (dashboardEl) dashboardEl.style.display = (tabName === 'recipe') ? 'block' : 'none';
+
         if (tabName === 'tools') {
             renderCostCalculator();
             renderAllergens();
@@ -1668,6 +2309,7 @@
 
         if (currentTemplate) {
             document.getElementById('targetHydration').value = currentTemplate.hydr;
+            activateTargetHydration();
 
             // Zusatzzutaten (Butter, Milch, Öl, Zucker, Saaten ...) werden als Bäcker-Prozent
             // vom tatsächlichen Mehlgewicht hinterlegt, nicht als fixer Faktor × Zielgewicht/Stückzahl -
@@ -1688,8 +2330,76 @@
                     });
                 }
             });
+
+            // Triebmittel-Vorschlag der Vorlage übernehmen (bleibt frei änderbar).
+            const suggestion = TEMPLATE_SUGGESTED_LEAVEN[templateId];
+            templateSuggestedLeaven = suggestion || { type: 'frischhefe' };
+            setLeavenType(suggestion ? suggestion.type : 'frischhefe', suggestion ? suggestion.pct : undefined);
+        } else {
+            // Kein Rezept ausgewählt -> Blanko-Zustand: kein Triebmittel, alles bei 0.
+            templateSuggestedLeaven = null;
+            setLeavenType('none');
         }
         calculateEngine();
+    }
+
+    // Wechselt das Triebmittel (Frischhefe/Trockenhefe/Sauerteig/Starter/Poolish)
+    // im Brotbasics-Dropdown. Komplett unabhängig von der Rezept-Vorlage - kann
+    // jederzeit frei umgestellt werden, auch nachträglich bei einem geladenen
+    // Rezept. suggestedPct ist optional (z.B. von einer Vorlage vorgeschlagen);
+    // ohne Angabe greift ein sinnvoller Default.
+    function setLeavenType(type, suggestedPct) {
+        leavenType = type;
+        const select = document.getElementById('leavenTypeSelect');
+        const pctInput = document.getElementById('triebmittelPctInput');
+        const pctUnit = document.getElementById('triebmittelPctUnit');
+        if (select) select.value = type;
+
+        const isPreferment = (type === 'sauerteig' || type === 'starter' || type === 'poolish');
+        const isYeast = (type === 'frischhefe' || type === 'trockenhefe');
+        // Bei Pizza übernimmt weiterhin das bewährte Zeit-/Temperatur-Modell die
+        // Hefeberechnung (siehe calculateEngine) - dafür braucht es kein
+        // manuelles Anteils-Feld.
+        const showPct = isPreferment || (isYeast && category !== 2);
+
+        if (pctInput) pctInput.style.display = showPct ? 'inline-block' : 'none';
+        if (pctUnit) pctUnit.style.display = showPct ? 'inline-block' : 'none';
+
+        if (isPreferment && pctInput) {
+            pctInput.value = (suggestedPct !== undefined) ? suggestedPct : LEAVEN_DEFAULT_PCT[type];
+        } else if (isYeast && category !== 2 && pctInput) {
+            pctInput.value = (suggestedPct !== undefined) ? suggestedPct : YEAST_DEFAULT_PCT;
+        }
+    }
+
+    // Prüft den aktuell eingestellten Triebmittel-Anteil auf zwei Arten:
+    // 1) Liegt er innerhalb einer fachlich üblichen Bandbreite (zu wenig treibt
+    //    kaum, zu viel beeinträchtigt Geschmack/Struktur)?
+    // 2) Falls gerade ein Rezept geladen ist, das dieses Triebmittel vorschlägt:
+    //    weicht der aktuelle Wert von der Rezept-Empfehlung ab?
+    function renderTriebmittelWarning(currentPct) {
+        const box = document.getElementById('triebmittelWarning');
+        if (!box) return;
+        const msgs = [];
+
+        if (currentPct !== null) {
+            const range = TRIEBMITTEL_HEALTHY_RANGE[leavenType];
+            if (range) {
+                if (currentPct < range[0]) {
+                    msgs.push(`⚠️ Sehr wenig Triebmittel (${currentPct.toFixed(1)}%) – der Teig könnte kaum aufgehen. Üblich sind ${range[0]}–${range[1]}%.`);
+                } else if (currentPct > range[1]) {
+                    msgs.push(`⚠️ Sehr viel Triebmittel (${currentPct.toFixed(1)}%) – Geschmack oder Struktur könnten leiden. Üblich sind ${range[0]}–${range[1]}%.`);
+                }
+            }
+            if (templateSuggestedLeaven && templateSuggestedLeaven.type === leavenType && templateSuggestedLeaven.pct !== undefined) {
+                if (Math.abs(currentPct - templateSuggestedLeaven.pct) > 0.5) {
+                    msgs.push(`💡 Weicht vom Rezept-Vorschlag ab: Die Vorlage empfiehlt ${templateSuggestedLeaven.pct}%, aktuell eingestellt sind ${currentPct.toFixed(1)}%.`);
+                }
+            }
+        }
+
+        box.style.display = msgs.length ? 'block' : 'none';
+        box.innerHTML = msgs.map(m => `<div class="info-box">${m}</div>`).join('');
     }
 
     function escAttr(str) {
@@ -1749,7 +2459,7 @@
 
     function calculateEngine() {
         const targetHydration = getClampedVal('targetHydration', 65, 40, 130);
-        const useDryYeast = document.getElementById('dryYeastToggle').checked;
+        const useDryYeast = leavenType === 'trockenhefe';
         const saltPct = getClampedVal('saltPct', 2.0, 0.5, 4.0);
         const factorH2O = targetHydration / 100.0;
         const templateId = selectedTemplateId;
@@ -1786,47 +2496,100 @@
             }
         });
 
+        // --- Mehl-Zusammensetzung je Rezept-Vorlage ---
+        // Nur noch Mehlsorte(n) und deren Mischverhältnis - KEIN Bezug mehr zu
+        // Hefe/Sauerteig hier drin, das steuert seit diesem Umbau ausschließlich
+        // das Triebmittel-Dropdown in "Brotbasics" (siehe weiter unten). Ist kein
+        // Rezept ausgewählt (templateId === null, Blanko-Zustand), bleibt die
+        // Mehlliste leer - die App startet dann komplett bei 0.
         let floursConfigs = [];
-        let yeastPct = 0.02;
+        if (templateId && category === 0) {
+            switch (templateId) {
+                case "weiss_hefe": case "weiss_sauer":
+                    floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "bauernbrot":
+                    floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: rawFlour * 0.3 }]; break;
+                case "roggenmisch":
+                    floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: rawFlour * 0.6 }]; break;
+                case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; break;
+                case "baguette": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "toastbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "roggenbrot_rein": floursConfigs = [{ id: "mehl_1", def: "Roggenmehl Type 1150", w: rawFlour }]; break;
+                case "focaccia": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "saatenbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; break;
+            }
+        } else if (templateId && category === 1) {
+            switch (templateId) {
+                case "broetchen_hefe": case "broetchen_sauer":
+                    floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "burger_buns": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "dinkel_broetchen": floursConfigs = [{ id: "mehl_1", def: "Dinkelmehl Type 630", w: rawFlour }]; break;
+                case "ciabatta": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "kaiserbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "milchbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; break;
+                case "mehrkornbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; break;
+            }
+        } else if (templateId && category === 2) {
+            floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
+        }
+
+        // --- Triebmittel: Frischhefe / Trockenhefe / Sauerteig / Starter / Poolish ---
+        // Komplett unabhängig von der Rezept-Vorlage, gesteuert über das Dropdown
+        // in "Brotbasics". "none" (kein Rezept bzw. bewusst kein Triebmittel
+        // gewählt) lässt Hefe UND Sauerteig bei 0.
+        let yeastPct = 0;
         let sourdoughWeight = 0.0;
         let isPureSourdough = false;
+        let leavenFlourShare = 0; // Anteil des Mehls, der als Mehl-Hälfte in den Vorteig wandert (0-1)
+        let currentLeavenPctForWarning = null; // aktuell eingestellter Anteil in %, für Warnhinweise weiter unten
 
-        if (category === 0) {
-            switch (templateId) {
-                case "weiss_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
-                case "weiss_sauer": { let sm = rawFlour * 0.15; sourdoughWeight = sm * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sm }]; yeastPct = 0; isPureSourdough = true; break; }
-                case "bauernbrot": { let smb = (rawFlour * 0.3) * 0.2; sourdoughWeight = smb * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 1050", w: rawFlour * 0.7 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.3) - smb }]; yeastPct = 0; isPureSourdough = true; break; }
-                case "roggenmisch": { let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break; }
-                case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
-                case "baguette": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.005; break;
-                case "toastbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.025; break;
-                case "roggenbrot_rein": { let smrr = rawFlour * 0.25; sourdoughWeight = smrr * 2; floursConfigs = [{ id: "mehl_1", def: "Roggenmehl Type 1150", w: rawFlour - smrr }]; yeastPct = 0; isPureSourdough = true; break; }
-                case "focaccia": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
-                case "saatenbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
-            }
-        } else if (category === 1) {
-            switch (templateId) {
-                case "broetchen_hefe": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "broetchen_sauer": { let sms = rawFlour * 0.1; sourdoughWeight = sms * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour - sms }]; yeastPct = 0; isPureSourdough = true; break; }
-                case "burger_buns": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
-                case "dinkel_broetchen": floursConfigs = [{ id: "mehl_1", def: "Dinkelmehl Type 630", w: rawFlour }]; yeastPct = 0.03; break;
-                case "ciabatta": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.015; break;
-                case "kaiserbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "milchbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
-                case "mehrkornbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; yeastPct = 0.03; break;
-            }
-        } else {
-            floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
+        if (templateId && category === 2 && (leavenType === 'frischhefe' || leavenType === 'trockenhefe')) {
+            // Pizza mit Hefe: Zeit-/Temperatur-Modell, kalibriert an der
+            // bekannten "Modenese-Formel" (Referenztabelle für neapolitanische
+            // Pizza bei ca. 22°C Raumtemperatur, 1kg Mehl): 4 Std. -> 10g,
+            // 8 Std. -> 5g, 12 Std. -> 2,5g, 24 Std. -> 1g Frischhefe (= 1,0% /
+            // 0,5% / 0,25% / 0,1% vom Mehl). Die alte Formel lag hier
+            // durchgängig um das 2- bis 20-fache zu niedrig. Abweichungen von
+            // den Referenz-22°C werden über eine Verdopplung der
+            // Gärgeschwindigkeit pro ca. 9°C angenähert (gängige Bäcker-
+            // Faustregel, kein Laborwert). Der Kühlschrank folgt nicht
+            // derselben Kurve (Hefe wird bei 4-5°C fast inaktiv) und bekommt
+            // eine eigene, einfache Näherung: 24 Std. -> 0,1%, 48 Std. -> 0,05%.
             let fermentHours = getClampedVal('fermentHours', 24, 1, 96);
             let useFridge = document.getElementById('fridgeToggle').checked;
             let roomTemp = getClampedVal('roomTemp', 21, 15, 35);
-            let temp = useFridge ? 4.0 : roomTemp;
-            let yeastPctCalc = useFridge ? (15.0 / (fermentHours * 4.0)) : (2.5 / (fermentHours * (temp - 14.0)));
-            yeastPct = Math.max(0.05, yeastPctCalc) / 100;
+            let yeastPctCalc;
+            if (useFridge) {
+                yeastPctCalc = 2.4 / fermentHours;
+            } else {
+                const adjustedHours = fermentHours * Math.pow(2, (roomTemp - 22) / 9);
+                yeastPctCalc = 10.52 * Math.pow(adjustedHours, -1.4649);
+            }
+            yeastPct = Math.min(6, Math.max(0.02, yeastPctCalc)) / 100;
+        } else if (leavenType === 'frischhefe' || leavenType === 'trockenhefe') {
+            currentLeavenPctForWarning = getClampedVal('triebmittelPctInput', YEAST_DEFAULT_PCT, 0.1, 10);
+            yeastPct = currentLeavenPctForWarning / 100;
+        } else if (leavenType === 'sauerteig' || leavenType === 'starter' || leavenType === 'poolish') {
+            currentLeavenPctForWarning = getClampedVal('triebmittelPctInput', LEAVEN_DEFAULT_PCT[leavenType], 1, 60);
+            leavenFlourShare = currentLeavenPctForWarning / 100;
+            sourdoughWeight = rawFlour * leavenFlourShare * 2;
+            isPureSourdough = (leavenType !== 'poolish');
+            if (leavenType === 'poolish') {
+                // Poolish arbeitet mit kommerzieller Hefe statt Wildhefe: kleine
+                // Resthefe-Menge im Hauptteig, der Vorteig liefert den Großteil
+                // der Triebkraft und vor allem Aroma.
+                yeastPct = 0.005;
+            }
         }
+        // sonst (leavenType === 'none'): alles bleibt 0 - Blanko-Zustand
+        renderTriebmittelWarning(currentLeavenPctForWarning);
 
-        document.getElementById('yeastToggleRow').style.display = yeastPct === 0 ? 'none' : 'flex';
+        // Mehl-Slots proportional um den Vorteig-Anteil reduzieren (die andere
+        // Hälfte des Vorteigs, das Wasser, wird weiter unten separat verrechnet).
+        if (leavenFlourShare > 0 && floursConfigs.length > 0) {
+            floursConfigs = floursConfigs.map(f => ({ ...f, w: f.w * (1 - leavenFlourShare) }));
+        }
 
         let activeFlours = [];
         floursConfigs.forEach(f => {
@@ -1845,6 +2608,11 @@
         let totalActiveFlour = activeFlours.reduce((sum, f) => sum + f.weight, 0) + manualFlours.reduce((sum, f) => sum + f.weight, 0) + sourdoughFlour;
         let totalFlour = totalActiveFlour;
 
+        const blankStateCTA = document.getElementById('blankStateCTA');
+        if (blankStateCTA) {
+            blankStateCTA.style.display = (!selectedTemplateId && totalFlour === 0) ? 'block' : 'none';
+        }
+
         let targetWaterTotal = totalFlour * factorH2O;
         let baseBoundWater = activeFlours.reduce((sum, f) => sum + (f.weight * f.binding), 0);
         let manualBoundWater = manualIngredients.reduce((sum, i) => sum + (i.weight * i.binding), 0);
@@ -1852,7 +2620,12 @@
         let requiredTotalWater = targetWaterTotal + baseBoundWater + manualBoundWater;
         let manualWetWater = manualIngredients.reduce((sum, i) => sum + (i.weight * (i.waterContent / 100)), 0);
 
-        let calculatedTapWater = Math.max(0, requiredTotalWater - manualWetWater - sourdoughWater);
+        // Ist die Ziel-Hydration aktiviert, wird das Schüttwasser dynamisch
+        // darauf ausgerichtet (bisheriges Verhalten). Ist sie deaktiviert, gibt
+        // es keinen automatischen Vorschlag mehr - Wasser ist dann genauso frei
+        // editierbar wie Mehl, und die Ist-Hydration ist ein reiner Messwert aus
+        // dem, was tatsächlich in der Schüssel ist (Mehl + Basics + Extras).
+        let calculatedTapWater = targetHydrationActive ? Math.max(0, requiredTotalWater - manualWetWater - sourdoughWater) : 0;
         let finalTapWater = weightOverrides["Schüttwasser"] !== undefined ? weightOverrides["Schüttwasser"] : Math.round(calculatedTapWater);
 
         let freshYeastWeight = totalFlour * yeastPct;
@@ -1861,26 +2634,44 @@
         let finalYeast = weightOverrides[yeastName] !== undefined ? weightOverrides[yeastName] : parseFloat(finalYeastWeight.toFixed(2));
         let finalSalt = (totalFlour * saltPct / 100).toFixed(1);
 
-        // --- Ergebnis-Hinweis: welche Teigmenge kommt am Ende TATSÄCHLICH raus? ---
+        // --- Zutatenliste der Schüssel (Basis für Dashboard, Kosten, Allergene, Nährwerte) ---
+        let compositionItems = activeFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true }))
+            .concat(manualFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true })))
+            .concat([{ name: 'Schüttwasser', weight: finalTapWater, isFlour: false }]);
+        if (actualSourdoughWeight > 0) compositionItems.push({ name: 'Sauerteig', weight: actualSourdoughWeight, isFlour: false });
+        if (yeastPct > 0) compositionItems.push({ name: yeastName, weight: finalYeast, isFlour: false });
+        compositionItems.push({ name: 'Salz', weight: parseFloat(finalSalt), isFlour: false });
+        manualIngredients.filter(i => !i.isFlour).forEach(i => compositionItems.push({ name: i.name, weight: i.weight, isFlour: false }));
+        lastComposition = { totalFlour: totalFlour, items: compositionItems };
+
+        // --- Dashboard: Rohteig- und Brotgewicht/Stückzahl-Anzeige ---
         // Bewusst aus der echten Summe aller Zutaten in der Schüssel berechnet
-        // (nicht aus der Zielgewicht-Formel) - damit stimmt der Hinweis auch dann,
+        // (nicht aus der Zielgewicht-Formel) - damit stimmt die Anzeige auch dann,
         // wenn Mehl/Wasser/Zusatzzutaten von Hand angepasst wurden und vom
         // ursprünglich geplanten Zielgewicht abweichen.
-        const manualNonFlourWeight = manualIngredients.filter(i => !i.isFlour).reduce((sum, i) => sum + i.weight, 0);
-        const actualRawDoughWeight = totalFlour + finalTapWater + sourdoughWater + finalYeast + parseFloat(finalSalt) + manualNonFlourWeight;
-        const sizingResultBox = document.getElementById('sizingResultBox');
-        if (sizingResultBox) {
+        const actualRawDoughWeight = compositionItems.reduce((sum, i) => sum + i.weight, 0);
+        const dashRawDoughEl = document.getElementById('dashRawDough');
+        const dashFinishedLabelEl = document.getElementById('dashFinishedLabel');
+        const dashFinishedValueEl = document.getElementById('dashFinishedValue');
+        if (dashRawDoughEl) dashRawDoughEl.innerText = Math.round(actualRawDoughWeight) + ' g';
+        let finishedBakedWeight = actualRawDoughWeight; // Fallback für Nährwertberechnung
+        let nutritionPieceWeight = null;
+        if (dashFinishedLabelEl && dashFinishedValueEl) {
             if (category === 0) {
                 const bakeLoss = getClampedVal('bakeLossPct', 15, 0, 30);
-                const finishedWeight = actualRawDoughWeight / (1 + bakeLoss / 100);
-                sizingResultBox.innerHTML = `📦 Aktuell in der Schüssel: <strong>${Math.round(actualRawDoughWeight)}g Rohteig</strong> → ergibt gebacken ca. <strong>${Math.round(finishedWeight)}g</strong> Brot.`;
+                finishedBakedWeight = actualRawDoughWeight / (1 + bakeLoss / 100);
+                dashFinishedLabelEl.innerText = 'Brotgewicht';
+                dashFinishedValueEl.innerText = Math.round(finishedBakedWeight) + ' g';
             } else {
                 const pieceWeight = getClampedVal('targetPieceWeight', defaultPieceWeight[category], 20, 2000);
                 const wholePieces = Math.floor(actualRawDoughWeight / pieceWeight);
                 const leftover = Math.round(actualRawDoughWeight - wholePieces * pieceWeight);
-                sizingResultBox.innerHTML = `📦 Aktuell in der Schüssel: <strong>${Math.round(actualRawDoughWeight)}g Rohteig</strong> → ergibt ca. <strong>${wholePieces} Stück</strong> à ${pieceWeight}g${leftover > 0 ? ` (+ ${leftover}g Restteig übrig)` : ''}.`;
+                dashFinishedLabelEl.innerText = 'Ergibt Stück';
+                dashFinishedValueEl.innerText = wholePieces + (leftover > 0 ? ` (+${leftover}g)` : '');
+                nutritionPieceWeight = pieceWeight;
             }
         }
+        renderNutrition(compositionItems, category, actualRawDoughWeight, finishedBakedWeight, nutritionPieceWeight);
 
         let totalWaterWeight = finalTapWater + manualWetWater + sourdoughWater;
         let totalBoundWaterWeight = baseBoundWater + manualBoundWater;
@@ -1888,30 +2679,31 @@
         let ta = totalFlour > 0 ? Math.round(((totalFlour + totalWaterWeight) / totalFlour) * 100) : 0;
 
         document.getElementById('currentHydration').innerText = currentHydr.toFixed(1) + "%";
-        document.getElementById('currentTA').innerText = "TA: " + ta;
+        document.getElementById('currentTA').innerText = ta;
 
         const elConsistencyText = document.getElementById('consistencyText').querySelector('span') || document.getElementById('consistencyText');
         const elCurrentHydration = document.getElementById('currentHydration');
+        const elConsistencyFeel = document.getElementById('consistencyFeel');
 
         if (category === 2) {
-            if (currentHydr < 60) { elConsistencyText.innerText = "Klassisch fest (Einsteiger)"; elCurrentHydration.style.color = "var(--warn-orange)"; }
-            else if (currentHydr <= 66) { elConsistencyText.innerText = "Neapel Standard (Optimal)"; elCurrentHydration.style.color = "var(--success-green)"; }
-            else { elConsistencyText.innerText = "Alta Idratazione (Sehr luftig)"; elCurrentHydration.style.color = "var(--purple-pro)"; }
+            if (currentHydr < 60) { elConsistencyText.innerText = "Klassisch fest (Einsteiger)"; elCurrentHydration.style.color = "var(--warn-orange)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Fühlt sich fest und gut formbar an, klebt kaum an den Händen."; }
+            else if (currentHydr <= 66) { elConsistencyText.innerText = "Neapel Standard (Optimal)"; elCurrentHydration.style.color = "var(--success-green)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Weich, aber noch gut zu handhaben – leicht klebrig ist normal."; }
+            else { elConsistencyText.innerText = "Alta Idratazione (Sehr luftig)"; elCurrentHydration.style.color = "var(--purple-pro)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Sehr weich und klebrig – nasse Hände beim Formen helfen."; }
         } else {
-            if (currentHydr < 60) { elConsistencyText.innerText = "Fester Teig (Gute Standfestigkeit)"; elCurrentHydration.style.color = "var(--warn-orange)"; }
-            else if (currentHydr <= 68) { elConsistencyText.innerText = "Optimaler Brotteig (Geschmeidig)"; elCurrentHydration.style.color = "var(--success-green)"; }
-            else { elConsistencyText.innerText = "Weicher Teig (Falten empfohlen)"; elCurrentHydration.style.color = "var(--blue-water)"; }
+            if (currentHydr < 60) { elConsistencyText.innerText = "Fester Teig (Gute Standfestigkeit)"; elCurrentHydration.style.color = "var(--warn-orange)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Fühlt sich fest an, lässt sich gut kneten und behält seine Form."; }
+            else if (currentHydr <= 68) { elConsistencyText.innerText = "Optimaler Brotteig (Geschmeidig)"; elCurrentHydration.style.color = "var(--success-green)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Geschmeidig und elastisch, klebt nur noch leicht an den Fingern."; }
+            else { elConsistencyText.innerText = "Weicher Teig (Falten empfohlen)"; elCurrentHydration.style.color = "var(--blue-water)"; if (elConsistencyFeel) elConsistencyFeel.innerText = "Weich und klebrig – normal bei dieser Hydration. Falten statt kneten."; }
         }
 
         const alertsContainer = document.getElementById('dashboardAlerts');
         let idealFlour = targetRohTeig / (1.0 + factorH2O + 0.02);
         let alerts = [];
 
-        if (totalFlour < idealFlour - 5) {
+        if (targetHydrationActive && targetWeightActive && totalFlour < idealFlour - 5) {
             let missing = Math.round(idealFlour - totalFlour);
             alerts.push(`💡 Mehl-Menge angepasst: Dir fehlen noch ${missing}g Mehl zum geplanten Zielgewicht. Wirf ein alternatives Mehl unten in die Schüssel!`);
         }
-        if (finalTapWater <= 0 && requiredTotalWater > manualWetWater + sourdoughWater) {
+        if (targetHydrationActive && finalTapWater <= 0 && requiredTotalWater > manualWetWater + sourdoughWater) {
             alerts.push(`⚠️ Kein Schüttwasser übrig: Deine feuchten Zutaten (z.B. Milch, Joghurt) decken bereits die gesamte Ziel-Hydration ab. Prüfe, ob der Teig nicht zu weich wird.`);
         }
         alertsContainer.innerHTML = alerts.map(a => `<div class="info-box">${a}</div>`).join('');
@@ -1964,8 +2756,8 @@
             document.getElementById('flourContainer').innerHTML = flourHtml || `<div class="empty-state">Keine Mehle in der Schüssel.</div>`;
         });
 
-        // RESTE RENDERN
-        let remHtml = `<div class="row"><div><span>💧 Schüttwasser</span>${qtyMarkup(finalTapWater)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" data-key="override:Schuettwasser" value="${finalTapWater}" oninput="setOverride('Schüttwasser', this.value)"><span class="unit-suffix">g</span></div></div>`;
+        // BROTBASICS RENDERN (nur Schüttwasser, Sauerteig, Hefe, Salz)
+        let remHtml = `<div class="row"><div><span>💧 Schüttwasser</span>${qtyMarkup(finalTapWater)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" data-key="override:Schuettwasser" value="${finalTapWater}" ${targetHydrationActive ? 'disabled' : ''} oninput="setOverride('Schüttwasser', this.value)"><span class="unit-suffix">g</span></div></div>`;
         if (actualSourdoughWeight > 0) {
             remHtml += `<div class="row"><div><span>🫙 Sauerteig</span>${qtyMarkup(actualSourdoughWeight)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" data-key="override:Sauerteig" value="${actualSourdoughWeight}" oninput="setOverride('Sauerteig', this.value)"><span class="unit-suffix">g</span></div></div>`;
         }
@@ -1973,13 +2765,22 @@
             remHtml += `<div class="row"><div><span>🧊 ${yeastName}</span>${qtyMarkup(finalYeast)}</div><div style="white-space: nowrap;"><input type="text" inputmode="decimal" data-key="override:${yeastName}" value="${finalYeast}" oninput="setOverride('${yeastName}', this.value)"><span class="unit-suffix">g</span></div></div>`;
         }
         remHtml += `<div class="row"><div><span>🧂 Salz (${saltPct.toFixed(1)}%)</span></div><strong>${finalSalt} g</strong></div>`;
+        withFocusPreserved(['remainingContainer'], () => {
+            document.getElementById('remainingContainer').innerHTML = remHtml;
+        });
 
-        manualIngredients.filter(i => !i.isFlour).forEach(i => {
+        // WEITERE ZUTATEN RENDERN (alle manuell hinzugefügten Nicht-Mehl-Extras)
+        const nonFlourManuals = manualIngredients.filter(i => !i.isFlour);
+        let extrasHtml = '';
+        nonFlourManuals.forEach(i => {
             let subText = i.binding > 0 ? `Saugt ${Math.round(i.weight * i.binding)}g Wasser` : `Enthält ${Math.round(i.weight * (i.waterContent / 100))}g Wasser`;
-            remHtml += `
+            if (i.name === 'Ei (Größe M)') {
+                subText += ` · ≈ ${(i.weight / EGG_AVERAGE_WEIGHT_G).toFixed(1)} Stück (à ${EGG_AVERAGE_WEIGHT_G}g)`;
+            }
+            extrasHtml += `
                 <div class="row">
                     <div>
-                        <div style="font-weight:600;">${i.name}</div>
+                        <div style="font-weight:600;">${extraIcon(i.name)} ${i.name}</div>
                         <div class="row-details">${subText}</div>
                         ${qtyMarkup(i.weight)}
                     </div>
@@ -1990,24 +2791,177 @@
                 </div>
             `;
         });
-        withFocusPreserved(['remainingContainer'], () => {
-            document.getElementById('remainingContainer').innerHTML = remHtml;
+        withFocusPreserved(['extrasContainer'], () => {
+            document.getElementById('extrasContainer').innerHTML = extrasHtml || `<div class="empty-state">Noch keine weiteren Zutaten hinzugefügt.</div>`;
         });
 
         // --- Snapshot für Werkzeuge (Kalkulation, Allergene, Chargen) ---
-        let compositionItems = activeFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true }))
-            .concat(manualFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true })))
-            .concat([{ name: 'Schüttwasser', weight: finalTapWater, isFlour: false }]);
-        if (actualSourdoughWeight > 0) compositionItems.push({ name: 'Sauerteig', weight: actualSourdoughWeight, isFlour: false });
-        if (yeastPct > 0) compositionItems.push({ name: yeastName, weight: finalYeast, isFlour: false });
-        compositionItems.push({ name: 'Salz', weight: parseFloat(finalSalt), isFlour: false });
-        manualIngredients.filter(i => !i.isFlour).forEach(i => compositionItems.push({ name: i.name, weight: i.weight, isFlour: false }));
-        lastComposition = { totalFlour: totalFlour, items: compositionItems };
         renderCostCalculator();
         renderAllergens();
         renderBatchSplit();
 
         calculatePhase2(displayTargetWeight, isPureSourdough);
+    }
+
+    // ============================================================
+    // NÄHRWERTE (kcal, Kohlenhydrate, Ballaststoffe, Eiweiß, Fett)
+    // ============================================================
+    // Nimmt an: Backen entzieht dem Teig im Wesentlichen nur Wasser (0 kcal) -
+    // die Gesamtkalorien des fertigen Brotes entsprechen daher näherungsweise
+    // der Summe der rohen Zutaten. Pro-Stück-Werte für Brötchen/Pizza sind
+    // exakt (bekanntes Stückgewicht); "pro Scheibe" bei Brot ist eine Annahme
+    // (Standard-Scheibengewicht ASSUMED_SLICE_WEIGHT), da die App keine
+    // Schnittanzahl kennt - das steht auch so im Label.
+    const ASSUMED_SLICE_WEIGHT = 40; // Gramm, typische Scheibe Brot
+
+    function renderNutrition(compositionItems, category, actualRawDoughWeight, finishedBakedWeight, nutritionPieceWeight) {
+        const kcalEl = document.getElementById('nutriKcalTotal');
+        const perPieceLabelEl = document.getElementById('nutriPerPieceLabel');
+        const perPieceValueEl = document.getElementById('nutriKcalPerPiece');
+        const carbsEl = document.getElementById('nutriCarbs');
+        const fiberEl = document.getElementById('nutriFiber');
+        const proteinEl = document.getElementById('nutriProtein');
+        const fatEl = document.getElementById('nutriFat');
+        if (!kcalEl) return;
+
+        let totalKcal = 0, totalCarbs = 0, totalFiber = 0, totalProtein = 0, totalFat = 0;
+        compositionItems.forEach(item => {
+            const data = NUTRITION_DB[item.name] || (item.isFlour ? NUTRITION_FALLBACK_FLOUR : null);
+            if (!data) return; // z.B. unbekannte manuelle Zutat ohne Nährwertangabe - wird ausgelassen statt zu raten
+            const factor = item.weight / 100;
+            totalKcal += data.kcal * factor;
+            totalCarbs += data.carbs * factor;
+            totalFiber += data.fiber * factor;
+            totalProtein += data.protein * factor;
+            totalFat += data.fat * factor;
+        });
+
+        // Gesamtkalorien ändern sich beim Backen kaum (es verdunstet nur Wasser,
+        // 0 kcal) - gelten also für rohen Teig UND fertiges Brot gleichermaßen.
+        kcalEl.innerText = Math.round(totalKcal) + ' kcal';
+        carbsEl.innerText = totalCarbs.toFixed(1);
+        fiberEl.innerText = totalFiber.toFixed(1);
+        proteinEl.innerText = totalProtein.toFixed(1);
+        fatEl.innerText = totalFat.toFixed(1);
+
+        if (category === 0) {
+            // Scheibengewicht bezieht sich auf das FERTIG GEBACKENE Brot - die
+            // Kcal-Dichte muss daher auf Basis des gebackenen Gewichts berechnet
+            // werden (nach dem Backverlust ist dieselbe Kalorienmenge auf weniger
+            // Gramm verteilt = höhere Dichte pro Gramm als im rohen Teig).
+            const kcalPerGramBaked = finishedBakedWeight > 0 ? totalKcal / finishedBakedWeight : 0;
+            perPieceLabelEl.innerText = `Kcal / Scheibe (${ASSUMED_SLICE_WEIGHT}g)`;
+            perPieceValueEl.innerText = Math.round(kcalPerGramBaked * ASSUMED_SLICE_WEIGHT) + ' kcal';
+        } else {
+            // Stückgewicht bei Brötchen/Pizza bezieht sich in diesem Rechner auf
+            // den rohen Teigling (kein separater Backverlust modelliert) - Basis
+            // bleibt daher konsequent der rohe Teig, konsistent zur Stückzahl-
+            // Berechnung im Dashboard.
+            const kcalPerGramRaw = actualRawDoughWeight > 0 ? totalKcal / actualRawDoughWeight : 0;
+            perPieceLabelEl.innerText = category === 1 ? 'Kcal / Brötchen' : 'Kcal / Pizza';
+            perPieceValueEl.innerText = Math.round(kcalPerGramRaw * nutritionPieceWeight) + ' kcal';
+        }
+    }
+
+    // ============================================================
+    // MAKRO-TIPPS: kalorienärmer (Abnehmen) oder eiweißreicher
+    // (Muskelaufbau) backen - unter Beibehaltung der Ziel-Hydration.
+    // ============================================================
+    // Prinzip: die Ziel-Hydration ist als Wasser-% vom MEHLGEWICHT definiert.
+    // Wasserreiche Zutaten (Joghurt, Skyr, Milch, Ei) werden vom Rechner
+    // automatisch mit ihrem Wassergehalt gegen das Schüttwasser verrechnet
+    // (siehe manualWetWater in calculateEngine) - wer also z.B. Skyr
+    // hinzufügt, bekommt automatisch weniger Schüttwasser vorgeschlagen,
+    // und die eingestellte Ziel-Hydration bleibt exakt erhalten. Genau das
+    // macht diese Zutaten zum risikofreien Hebel für Protein-Tuning.
+    let macroTipsMode = 'lowcal'; // 'lowcal' | 'protein'
+
+    const WHOLEGRAIN_SWAP = {
+        "Weizenmehl Type 550 / Tipo 00": "Weizenvollkornmehl",
+        "Weizenmehl Type 1050": "Weizenvollkornmehl",
+        "Dinkelmehl Type 630": "Dinkelvollkornmehl",
+        "Dinkelmehl Type 1050": "Dinkelvollkornmehl",
+        "Roggenmehl Type 815": "Roggenvollkornmehl",
+        "Roggenmehl Type 997": "Roggenvollkornmehl",
+        "Roggenmehl Type 1150": "Roggenvollkornmehl"
+    };
+
+    function openMacroTipsModal() {
+        document.getElementById('macroTipsModal').style.display = 'flex';
+        renderMacroTips();
+    }
+    function closeMacroTipsModal() {
+        document.getElementById('macroTipsModal').style.display = 'none';
+    }
+    function setMacroTipsMode(mode) {
+        macroTipsMode = mode;
+        document.getElementById('macroTipsBtnLowcal').className = mode === 'lowcal' ? 'active' : '';
+        document.getElementById('macroTipsBtnProtein').className = mode === 'protein' ? 'active' : '';
+        renderMacroTips();
+    }
+
+    function renderMacroTips() {
+        const container = document.getElementById('macroTipsContent');
+        if (!container) return;
+        const items = lastComposition.items || [];
+        const flourNames = items.filter(i => i.isFlour).map(i => i.name);
+        const findItem = (name) => items.find(i => i.name === name);
+        const tips = [];
+
+        if (macroTipsMode === 'lowcal') {
+            const heavyExtras = [
+                { name: 'Butter', kcal: NUTRITION_DB['Butter'].kcal },
+                { name: 'Olivenöl', kcal: NUTRITION_DB['Olivenöl'].kcal },
+                { name: 'Zucker', kcal: NUTRITION_DB['Zucker'].kcal },
+                { name: 'Röstzwiebeln', kcal: NUTRITION_DB['Röstzwiebeln'].kcal }
+            ];
+            heavyExtras.forEach(h => {
+                const found = findItem(h.name);
+                if (found && found.weight > 0) {
+                    const kcalContribution = Math.round(found.weight / 100 * h.kcal);
+                    tips.push(`🔻 <strong>${h.name}</strong> im Teig (${Math.round(found.weight)}g, ca. <strong>${kcalContribution} kcal</strong>) – weglassen oder halbieren spart direkt Kalorien, ohne die Hydration zu berühren.`);
+                }
+            });
+            ['Sonnenblumenkerne', 'Leinsamenschrot', 'Chia Samen'].forEach(name => {
+                const found = findItem(name);
+                if (found && found.weight > 0) {
+                    tips.push(`⚖️ <strong>${name}</strong> ist gesund, aber kalorienreich (viel Fett). Für weniger Kalorien: Menge reduzieren oder teilweise durch <strong>Flohsamenschalen</strong> ersetzen (fast kalorienfrei, kleine Menge reicht für Volumen).`);
+                }
+            });
+            if (!findItem('Flohsamenschalen')) {
+                tips.push(`➕ Probier <strong>1–2% Flohsamenschalen</strong> vom Mehlgewicht: liefert Volumen und Sättigung bei so gut wie keinen Kalorien. Die App zieht das nötige Bindewasser automatisch von der Schüttwassermenge ab – deine Ziel-Hydration bleibt exakt gleich.`);
+            }
+            flourNames.forEach(name => {
+                if (WHOLEGRAIN_SWAP[name]) {
+                    tips.push(`🌾 Tausche <strong>${name}</strong> gegen <strong>${WHOLEGRAIN_SWAP[name]}</strong>: mehr Ballaststoffe machen länger satt, bei fast identischer Hydration (die App berücksichtigt die leicht andere Wasserbindung automatisch).`);
+                }
+            });
+            if (tips.length === 0) {
+                tips.push(`✅ Dein Rezept ist bereits schlank – keine auffälligen Kalorienbomben gefunden.`);
+            }
+            tips.push(`📏 Größter Hebel überhaupt bleibt die Portionsgröße: dünnere Scheiben senken die Kcal/Scheibe im Dashboard proportional, ganz ohne Rezeptänderung.`);
+        } else {
+            const proteinBoosts = ['Skyr (0,2% Fett)', 'Griechischer Joghurt (10% Fett)', 'Joghurt (0,2% Fett)', 'Joghurt (3,5% Fett)', 'Vollmilch', 'Ei (Größe M)'];
+            const activeBoosts = proteinBoosts.filter(name => { const f = findItem(name); return f && f.weight > 0; });
+            if (activeBoosts.length === 0) {
+                tips.push(`➕ Ersetze einen Teil deines Schüttwassers durch <strong>Skyr (0,2% Fett)</strong> oder <strong>Griechischen Joghurt (10%)</strong>: beide sind wasserreich, die App reduziert automatisch das restliche Schüttwasser – deine Ziel-Hydration bleibt exakt gleich, du bekommst nur zusätzliches Eiweiß dazu.`);
+            } else {
+                tips.push(`👍 Du hast mit <strong>${activeBoosts.join(', ')}</strong> bereits eine eiweißreiche Zutat im Teig. Für noch mehr Eiweiß: Menge weiter erhöhen – das Schüttwasser reduziert sich automatisch entsprechend.`);
+            }
+            flourNames.forEach(name => {
+                if (WHOLEGRAIN_SWAP[name]) {
+                    tips.push(`🌾 Tausche <strong>${name}</strong> gegen <strong>${WHOLEGRAIN_SWAP[name]}</strong>: etwas mehr Eiweiß pro 100g Mehl, gleiche Hydration.`);
+                }
+            });
+            const seedOptions = ['Sonnenblumenkerne', 'Chia Samen', 'Leinsamenschrot'];
+            const missingSeeds = seedOptions.filter(name => { const f = findItem(name); return !f || f.weight === 0; });
+            if (missingSeeds.length > 0) {
+                tips.push(`➕ <strong>${missingSeeds[0]}</strong> (30–50g) bringt zusätzliches Eiweiß und gesunde Fette – kostet auch Kalorien, für den Muskelaufbau meist willkommen.`);
+            }
+            tips.push(`💪 Profi-Move für Stammkunden: <strong>Weizenkleber (Vitalkleber)</strong> lässt sich unter "Eigene Mehlprofile" als zusätzliches Mehl mit hohem Eiweißanteil hinterlegen. Schon 5–8% vom Mehlgewicht bringen spürbar mehr Eiweiß.`);
+        }
+
+        container.innerHTML = '<ul class="macro-tips-list">' + tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
     }
 
     function setFlourOverride(slotId, val) {
@@ -2040,14 +2994,18 @@
     function addManualIngredient() {
         const pName = document.getElementById('presetPicker').value;
         const rawStr = document.getElementById('manualWeightInput').value;
-        const pWeight = parseFloat(rawStr.replace(',', '.'));
-        if (!pWeight || isNaN(pWeight) || pWeight <= 0) {
-            showToast('Bitte eine gültige Grammzahl > 0 eingeben.');
+        const pAmount = parseFloat(rawStr.replace(',', '.'));
+        const isEgg = pName === 'Ei (Größe M)';
+        if (!pAmount || isNaN(pAmount) || pAmount <= 0) {
+            showToast(isEgg ? 'Bitte eine gültige Stückzahl > 0 eingeben.' : 'Bitte eine gültige Grammzahl > 0 eingeben.');
             return;
         }
 
         const preset = getAllPresets().find(p => p.name === pName);
         if (preset) {
+            // Ei wird bewusst in Stück eingegeben (Durchschnittsgewicht Größe M),
+            // intern aber wie jede andere Zutat konsequent in Gramm geführt.
+            const pWeight = isEgg ? pAmount * EGG_AVERAGE_WEIGHT_G : pAmount;
             let existing = manualIngredients.find(i => i.name === preset.name);
             if (existing) {
                 existing.weight += pWeight;
@@ -2059,21 +3017,78 @@
         }
     }
 
+    // Pendant zu addManualIngredient(), aber dediziert für den "+"-Button direkt
+    // im Mehl-Bereich: fügt eine zusätzliche Mehlsorte als weiteren, frei
+    // benannten Posten hinzu (landet wie jedes andere Mehl in flourContainer
+    // und zählt normal zur Hydrationsberechnung).
+    // Blendet die Mehl-Hinzufügen-Zeile ein/aus. Standardmäßig versteckt - taucht
+    // erst auf, wenn der "+"-Button neben "Mehl in der Rührschüssel" gedrückt wird.
+    function toggleFlourAddRow() {
+        const section = document.getElementById('flourAddSection');
+        if (!section) return;
+        const isHidden = section.style.display === 'none' || !section.style.display;
+        section.style.display = isHidden ? 'block' : 'none';
+    }
+
+    // Gleiches Prinzip für "Weitere Zutaten".
+    function toggleExtraAddRow() {
+        const section = document.getElementById('extraAddSection');
+        if (!section) return;
+        const isHidden = section.style.display === 'none' || !section.style.display;
+        section.style.display = isHidden ? 'block' : 'none';
+    }
+
+    function addFlourIngredient() {
+        const pName = document.getElementById('flourAddPicker').value;
+        const rawStr = document.getElementById('flourAddWeightInput').value;
+        const pWeight = parseFloat(rawStr.replace(',', '.'));
+        if (!pWeight || isNaN(pWeight) || pWeight <= 0) {
+            showToast('Bitte eine gültige Grammzahl > 0 eingeben.');
+            return;
+        }
+
+        const preset = getAllPresets().find(p => p.name === pName && p.isFlour);
+        if (preset) {
+            let existing = manualIngredients.find(i => i.name === preset.name);
+            if (existing) {
+                existing.weight += pWeight;
+            } else {
+                manualIngredients.push({ name: preset.name, weight: pWeight, waterContent: preset.waterContent, isFlour: true, binding: preset.binding });
+            }
+            document.getElementById('flourAddWeightInput').value = "";
+            calculateEngine();
+        }
+    }
+
     // ============================================================
     // PHASE 2: GÄRUNG, OFEN, RÜCKWÄRTS-PLANER
     // ============================================================
     function calculatePhase2(targetWeight, isPureSourdough) {
         const useFridge = document.getElementById('fridgeToggle').checked;
+        const useMixedProof = document.getElementById('mixedProofToggle') ? document.getElementById('mixedProofToggle').checked : false;
+        const useAutolyse = document.getElementById('autolyseToggle') ? document.getElementById('autolyseToggle').checked : false;
         const ovenType = parseInt(document.getElementById('ovenType')?.value || 0);
         const heatingType = parseInt(document.getElementById('heatingType')?.value || 0);
         const vesselType = parseInt(document.getElementById('vesselType')?.value || 0);
         const preheated = document.getElementById('preheatToggle').checked;
+        const isPoolish = leavenType === 'poolish';
+
+        // Autolyse-Zeile ein-/ausblenden (Vorbereitung vor Salz/Hefe-Zugabe).
+        const autolyseRow = document.getElementById('autolyseFahrplanRow');
+        if (autolyseRow) autolyseRow.style.display = useAutolyse ? 'block' : 'none';
 
         // Numerische Mittelwert-Schätzungen (für Rückwärts-Planer) parallel zu den Textausgaben.
         let stockHoursNum = 1, stueckHoursNum = 1;
 
         if (category === 0) {
-            if (isPureSourdough) {
+            if (isPoolish) {
+                // Poolish arbeitet mit kommerzieller Hefe statt Wildhefe - reift
+                // deutlich planbarer und schneller als ein Sauerteig-Ansatz.
+                document.getElementById('outStockgare').innerText = "12-16 Std. Poolish reifen (Raumtemp.) + 1-1,5 Std. Hauptteig-Stockgare";
+                document.getElementById('outStueckgare').innerText = "45-60 Min. im Gärkorb";
+                stockHoursNum = 14 + 1.25;
+                stueckHoursNum = 0.9;
+            } else if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. Raumtemp. + 12-18 Std. Kühlschrank" : "3 - 5 Std. bei Raumtemperatur (Dehnen/Falten)";
                 document.getElementById('outStueckgare').innerText = useFridge ? "1,5 Std. Akklimatisierung bei Raumtemp." : "2 - 3 Std. stabilisiert im Gärkorb";
                 stockHoursNum = useFridge ? (2 + 15) : 4;
@@ -2085,7 +3100,12 @@
                 stueckHoursNum = useFridge ? 1 : 1.5;
             }
         } else if (category === 1) {
-            if (isPureSourdough) {
+            if (isPoolish) {
+                document.getElementById('outStockgare').innerText = "12-14 Std. Poolish reifen (Raumtemp.) + 45 Min. Hauptteig-Stockgare";
+                document.getElementById('outStueckgare').innerText = "30-45 Min. geformt auf Blech";
+                stockHoursNum = 12.75;
+                stueckHoursNum = 0.6;
+            } else if (isPureSourdough) {
                 document.getElementById('outStockgare').innerText = useFridge ? "2 Std. anspringen lassen" : "2,5 Std. bei Raumtemperatur";
                 document.getElementById('outStueckgare').innerText = useFridge ? "12-16 Std. fertig geformt im Kühlschrank" : "1,5 Std. geschliffen auf Blech";
                 stockHoursNum = useFridge ? 2 : 2.5;
@@ -2107,6 +3127,20 @@
             stueckHoursNum = stueck;
         }
 
+        // Gemischte Gärführung: rein informativer Zusatz-Hinweis (kurz anspringen
+        // lassen, dann über Nacht kalt) - ändert bewusst nicht die errechneten
+        // Kernzeiten, da die zugrunde liegende Hefe-/Sauerteig-Formel weiterhin
+        // auf dem einfachen Kühlschrank-Ja/Nein-Modell basiert.
+        if (useMixedProof && (category === 0 || category === 1)) {
+            document.getElementById('outStueckgare').innerText += ' · Tipp: 1-2 Std. anspringen lassen, dann bis zu 12 Std. kalt stellen';
+        }
+
+        // Autolyse-Zeit zu den Gärzeiten hinzurechnen (grobe Schätzung für den
+        // Rückwärtsplaner, ca. 45 Min. zusätzlich).
+        if (useAutolyse) {
+            stockHoursNum += 0.75;
+        }
+
         let bakeMinutes = 20;
 
         if (category === 2 && ovenType === 1) {
@@ -2117,6 +3151,7 @@
             lastEstimatedHours = stockHoursNum + stueckHoursNum + (bakeMinutes / 60) + 0.5;
             lastStageBreakdown = { stockMin: stockHoursNum * 60, stueckMin: stueckHoursNum * 60, bakeMin: bakeMinutes };
             updateTimeline();
+            renderBakingMiniDashboard();
             return;
         }
 
@@ -2146,6 +3181,22 @@
         lastEstimatedHours = stockHoursNum + stueckHoursNum + (targetTime / 60) + 0.5;
         lastStageBreakdown = { stockMin: stockHoursNum * 60, stueckMin: stueckHoursNum * 60, bakeMin: targetTime };
         updateTimeline();
+        renderBakingMiniDashboard();
+    }
+
+    // Kompaktes Mini-Dashboard oben im Backen-Tab - zeigt die Kennzahlen, die
+    // man dort auf einen Blick braucht (Back-Temperatur, Backzeit, Gesamtzeit),
+    // statt sie unter den Einstellungen zu verstecken. Ersetzt das globale
+    // Hydration-Dashboard, das in diesem Tab keinen Bezug zum Inhalt hätte.
+    function renderBakingMiniDashboard() {
+        const tempOut = document.getElementById('outTemp');
+        const timeOut = document.getElementById('outTime');
+        const miniTemp = document.getElementById('miniBakeTemp');
+        const miniTime = document.getElementById('miniBakeTime');
+        const miniTotal = document.getElementById('miniTotalTime');
+        if (miniTemp && tempOut) miniTemp.innerText = tempOut.innerText;
+        if (miniTime && timeOut) miniTime.innerText = timeOut.innerText;
+        if (miniTotal) miniTotal.innerText = (lastEstimatedHours > 0 ? lastEstimatedHours.toFixed(1) : '–') + ' Std';
     }
 
     function updateTimeline() {
@@ -2325,7 +3376,9 @@
             targetPieceWeight: getFloatVal('targetPieceWeight', defaultPieceWeight[category] || 85),
             bakeLossPct: getFloatVal('bakeLossPct', 15),
             saltPct: getFloatVal('saltPct', 2.0),
-            dryYeast: document.getElementById('dryYeastToggle').checked,
+            leavenType: leavenType,
+            leavenPct: getFloatVal('triebmittelPctInput', 20),
+            yeastPct: getFloatVal('triebmittelPctInput', 2.0),
             fridge: document.getElementById('fridgeToggle').checked,
             flourOverridesBySlot: flourOverridesBySlot,
             weightOverrides: weightOverrides,
@@ -2452,12 +3505,14 @@
             if (r.targetPieceWeight) document.getElementById('targetPieceWeight').value = r.targetPieceWeight;
             if (r.bakeLossPct !== undefined) document.getElementById('bakeLossPct').value = r.bakeLossPct;
             if (r.saltPct !== undefined) document.getElementById('saltPct').value = r.saltPct;
-            document.getElementById('dryYeastToggle').checked = r.dryYeast;
+            setLeavenType(r.leavenType || 'none', r.leavenType === 'frischhefe' || r.leavenType === 'trockenhefe' ? r.yeastPct : r.leavenPct);
+            templateSuggestedLeaven = (r.templateId && TEMPLATE_SUGGESTED_LEAVEN[r.templateId]) || null;
             document.getElementById('fridgeToggle').checked = r.fridge;
             flourOverridesBySlot = r.flourOverridesBySlot || {};
             weightOverrides = r.weightOverrides || {};
             customFlourNames = r.customFlourNames || { mehl_1: "", mehl_2: "" };
             manualIngredients = r.manualIngredients || [];
+            activateTargetHydration(false);
             showToast(`"${r.name}" geladen.`);
         }
         isLoadingRecipe = false;
@@ -2513,6 +3568,20 @@
     }
     function closeGlossary() { document.getElementById('glossaryModal').style.display = 'none'; }
 
+    // Kurzerklärung für Anfänger: was die Triebmittel-Optionen bedeuten und
+    // warum die Prozentzahl daneben wichtig ist. Nutzt dasselbe Modal wie das
+    // Glossar, aber mit eigenem, etwas längerem Text inkl. Formatierung.
+    function explainTriebmittel() {
+        document.getElementById('glossaryTerm').innerText = '🌾 Triebmittel – kurz erklärt';
+        document.getElementById('glossaryText').innerHTML =
+            '<strong>Frischhefe / Trockenhefe:</strong> schnell, zuverlässig, mild im Geschmack – guter Einstieg.<br><br>' +
+            '<strong>Sauerteig (reif):</strong> Wildhefe + Milchsäurebakterien, kräftiger Geschmack, braucht mehr Zeit.<br><br>' +
+            '<strong>Starter / Anstellgut:</strong> kleinere Menge nach demselben Prinzip wie Sauerteig, mildere Note.<br><br>' +
+            '<strong>Poolish:</strong> flüssiger Vorteig mit wenig Hefe, reift über Nacht, bringt Aroma und Lockerheit.<br><br>' +
+            'Die Prozentzahl daneben zeigt, wie viel vom <em>gesamten</em> Mehl in dieses Triebmittel wandert (Bäcker-%): mehr Prozent = kräftigerer Geschmack, aber auch mehr Reifezeit nötig.';
+        document.getElementById('glossaryModal').style.display = 'flex';
+    }
+
     // ============================================================
     // ALLERGENE (EU-Kennzeichnung, aus aktueller Rezeptur abgeleitet)
     // ============================================================
@@ -2521,12 +3590,17 @@
         "Weizenmehl Type 1050": ["Glutenhaltiges Getreide"],
         "Weizenvollkornmehl": ["Glutenhaltiges Getreide"],
         "Dinkelmehl Type 630": ["Glutenhaltiges Getreide"],
+        "Dinkelmehl Type 1050": ["Glutenhaltiges Getreide"],
         "Dinkelvollkornmehl": ["Glutenhaltiges Getreide"],
+        "Roggenmehl Type 815": ["Glutenhaltiges Getreide"],
+        "Roggenmehl Type 997": ["Glutenhaltiges Getreide"],
         "Roggenmehl Type 1150": ["Glutenhaltiges Getreide"],
         "Roggenvollkornmehl": ["Glutenhaltiges Getreide"],
         "Sauerteig": ["Glutenhaltiges Getreide"],
         "Joghurt (3,5% Fett)": ["Milch/Laktose"],
-        "Skyr": ["Milch/Laktose"],
+        "Joghurt (0,2% Fett)": ["Milch/Laktose"],
+        "Griechischer Joghurt (10% Fett)": ["Milch/Laktose"],
+        "Skyr (0,2% Fett)": ["Milch/Laktose"],
         "Vollmilch": ["Milch/Laktose"],
         "Butter": ["Milch/Laktose"],
         "Ei (Größe M)": ["Eier"],
@@ -2809,6 +3883,33 @@
         document.getElementById('accItem' + i).classList.toggle('open');
     }
 
+    // Zeigt denselben Problemlöser-Inhalt wie Werkzeuge -> Problemlöser, aber
+    // direkt aus dem Hauptbildschirm erreichbar - Anfänger sollen nicht erst
+    // in einen anderen Tab wechseln müssen, wenn der Teig gerade Probleme macht.
+    function openQuickHelpModal() {
+        const container = document.getElementById('quickHelpContent');
+        if (container) {
+            container.innerHTML = TROUBLESHOOT_DATA.map((item, i) => `
+                <div class="accordion-item" id="quickAccItem${i}">
+                    <button type="button" class="accordion-header" onclick="document.getElementById('quickAccItem${i}').classList.toggle('open')">
+                        <span>${item.problem}</span>
+                        <span class="accordion-chevron">▾</span>
+                    </button>
+                    <div class="accordion-body">${item.solution}</div>
+                </div>
+            `).join('');
+        }
+        document.getElementById('quickHelpModal').style.display = 'flex';
+    }
+    function closeQuickHelpModal() { document.getElementById('quickHelpModal').style.display = 'none'; }
+
+    // Sanftes Scrollen zur Rezept-Vorlagen-Galerie, ausgelöst über den
+    // Blanko-Zustand-CTA im Dashboard.
+    function scrollToTemplateGallery() {
+        const gallery = document.getElementById('templateGallery');
+        if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     // ============================================================
     // SAUERTEIG-TAGEBUCH
     // ============================================================
@@ -2946,12 +4047,17 @@
     // GEFÜHRTER BACKMODUS
     // ============================================================
     function startGuidedMode() {
-        const stages = [
+        const useAutolyse = document.getElementById('autolyseToggle') && document.getElementById('autolyseToggle').checked;
+        const stages = [];
+        if (useAutolyse) {
+            stages.push({ key: 'autolyse', title: 'Autolyse', icon: '🕐', minutes: 45 });
+        }
+        stages.push(
             { key: 'stock', title: 'Stockgare', icon: '🥣', minutes: lastStageBreakdown.stockMin },
             { key: 'form', title: 'Formen (manuell)', icon: '✋', minutes: 0 },
             { key: 'stueck', title: 'Stückgare', icon: '⏳', minutes: lastStageBreakdown.stueckMin },
             { key: 'bake', title: 'Backen', icon: '🔥', minutes: lastStageBreakdown.bakeMin }
-        ];
+        );
         guidedState = { stages, currentIndex: 0, remainingSec: stages[0].minutes * 60, timerId: null };
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
