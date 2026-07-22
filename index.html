@@ -3,7 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Back-Assistent Pro v0.3.0</title>
+<title>Back-Assistent Pro v0.5.0</title>
+
+<!-- PWA: Installierbarkeit + Homescreen-Verhalten -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a5a2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Back-Assistent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
 <style>
     :root {
         --cream-bg: #f7f6f2;
@@ -175,8 +185,8 @@
         font-weight: bold;
         background: var(--gray-input);
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
+        width: 26px;
+        height: 26px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -473,6 +483,199 @@
 
     .toggle-switch-row { display: flex; align-items: center; gap: 8px; }
     input[type="checkbox"] { transform: scale(1.25); accent-color: var(--baker-brown); }
+
+    /* Rezept-Bildergalerie */
+    .template-gallery {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 2px 8px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+    .template-gallery::-webkit-scrollbar { height: 4px; }
+    .template-gallery::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
+    .template-card {
+        flex: 0 0 auto;
+        width: 108px;
+        background: var(--gray-input);
+        border: 2px solid transparent;
+        border-radius: var(--radius-md);
+        padding: 10px 8px;
+        text-align: center;
+        cursor: pointer;
+        scroll-snap-align: start;
+        transition: border-color .15s ease, transform .1s ease, background .15s ease;
+        font-family: inherit;
+    }
+    .template-card:active { transform: scale(0.96); }
+    .template-card.selected {
+        border-color: var(--baker-brown);
+        background: rgba(138, 90, 43, 0.1);
+    }
+    .template-card-icon { width: 52px; height: 52px; margin: 0 auto 6px; }
+    .recipe-icon-svg { width: 100%; height: 100%; display: block; }
+    .template-card-name {
+        font-size: 12px; font-weight: 700; color: var(--text-primary);
+        line-height: 1.25; margin-bottom: 2px;
+    }
+    .template-card-desc {
+        font-size: 10px; color: var(--text-secondary); line-height: 1.25;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* Schritt-für-Schritt Anleitung */
+    .steps-recipe-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .steps-recipe-header .recipe-icon-svg { width: 44px; height: 44px; }
+    .steps-recipe-header .template-card-icon { width: 44px; height: 44px; flex-shrink: 0; }
+    .steps-recipe-name { font-weight: 800; font-size: 15px; color: var(--text-primary); }
+    .steps-recipe-desc { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+
+    .steps-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    .steps-list-item { display: flex; gap: 10px; align-items: flex-start; }
+    .steps-list-num {
+        flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+        background: var(--baker-brown); color: #fff; font-size: 12px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .steps-list-title { font-weight: 700; font-size: 13.5px; color: var(--text-primary); margin-bottom: 2px; }
+    .steps-list-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
+    .steps-empty {
+        font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+        background: var(--gray-input); border-radius: var(--radius-sm); padding: 12px 14px;
+    }
+
+    /* Bottom Tab-Bar */
+    body { padding-bottom: 0; }
+    .app-container { padding-bottom: 88px; }
+    .tab-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--card-white);
+        border-top: 1px solid var(--card-border);
+        display: flex;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+        z-index: 900;
+        box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+    }
+    .tab-bar-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 6px 2px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-family: inherit;
+        border-radius: 10px;
+        transition: color .15s ease, background .15s ease;
+    }
+    .tab-bar-btn .tab-icon { font-size: 20px; line-height: 1; }
+    .tab-bar-btn .tab-label { font-size: 10px; font-weight: 700; }
+    .tab-bar-btn.active { color: var(--baker-brown); background: rgba(138,90,43,0.08); }
+    .tab-bar-btn:active { transform: scale(0.94); }
+    .tab-badge {
+        position: absolute; margin-left: 14px; margin-top: -4px;
+        background: var(--alert-red); color: #fff; font-size: 9px; font-weight: 800;
+        border-radius: 8px; min-width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; padding: 0 3px;
+    }
+
+    /* Schwierigkeitsgrad-Badge */
+    .difficulty-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px;
+        padding: 2px 7px; border-radius: 20px; margin-top: 4px;
+    }
+    .difficulty-Einsteiger { background: rgba(46,125,50,0.14); color: var(--success-green); }
+    .difficulty-Fortgeschritten { background: rgba(201,114,10,0.14); color: var(--warn-orange); }
+    .difficulty-Profi { background: rgba(211,47,47,0.14); color: var(--alert-red); }
+
+    /* Glossar-Begriffe */
+    .glossary-term {
+        color: var(--baker-brown); text-decoration: underline dotted;
+        text-underline-offset: 2px; cursor: pointer; font-weight: 700;
+    }
+
+    /* Chips (Allergene etc.) */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chip {
+        font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 20px;
+        background: var(--gray-input); color: var(--text-primary); border: 1px solid var(--card-border);
+    }
+    .chip.warn { background: rgba(211,47,47,0.1); color: var(--alert-red); border-color: transparent; }
+
+    /* Accordion (Problemlöser) */
+    .accordion-item { border-bottom: 1px solid var(--divider); }
+    .accordion-item:last-child { border-bottom: none; }
+    .accordion-header {
+        width: 100%; background: none; border: none; text-align: left;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 2px; cursor: pointer; font-family: inherit;
+        font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+    }
+    .accordion-chevron { transition: transform .2s ease; color: var(--text-secondary); flex-shrink: 0; margin-left: 8px; }
+    .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body {
+        display: none; padding: 0 2px 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;
+    }
+    .accordion-item.open .accordion-body { display: block; }
+
+    /* Diary / Achievements */
+    .badge-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .achievement-badge {
+        flex: 1; min-width: 78px; text-align: center; padding: 10px 6px; border-radius: var(--radius-md);
+        background: var(--gray-input); opacity: 0.35; transition: opacity .2s ease;
+    }
+    .achievement-badge.unlocked { opacity: 1; background: rgba(138,90,43,0.1); }
+    .achievement-badge .ach-icon { font-size: 22px; }
+    .achievement-badge .ach-label { font-size: 10px; font-weight: 700; margin-top: 3px; }
+
+    .diary-entry { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--divider); gap: 8px; }
+    .diary-entry:last-child { border-bottom: none; }
+    .diary-entry-date { font-size: 12px; font-weight: 700; }
+    .diary-entry-note { font-size: 11.5px; color: var(--text-secondary); margin-top: 1px; }
+
+    .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+    .status-dot.ok { background: var(--success-green); }
+    .status-dot.warn { background: var(--warn-orange); }
+    .status-dot.late { background: var(--alert-red); }
+
+    /* Guided Baking Mode */
+    .guided-stage-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .guided-stage {
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md);
+        background: var(--gray-input); opacity: 0.5;
+    }
+    .guided-stage.active { opacity: 1; background: rgba(138,90,43,0.12); border: 1.5px solid var(--baker-brown); }
+    .guided-stage.done { opacity: 0.6; }
+    .guided-stage-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+    .guided-stage-title { font-weight: 700; font-size: 13px; }
+    .guided-stage-time { font-size: 11px; color: var(--text-secondary); }
+    .guided-timer { font-size: 32px; font-weight: 800; text-align: center; color: var(--baker-brown-dark); letter-spacing: -1px; margin: 6px 0; }
+
+    /* Shared Recipes Notice */
+    .privacy-notice {
+        background: rgba(21,101,192,0.08); border-left: 3px solid var(--blue-water);
+        padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.4; margin-bottom: 10px;
+    }
+
+    /* Kalkulation table */
+    .calc-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--divider); }
+    .calc-row:last-child { border-bottom: none; }
+    .calc-row-name { flex: 1; font-size: 13px; min-width: 0; }
+    .calc-row input { width: 72px; }
+
+    @media print {
+        .tab-bar, .segmented-control, .btn-plus, .delete-btn, .info-icon-btn, .modal, .toast,
+        #stepsSection .steps-recipe-header ~ *, .btn-ghost, .btn-secondary, .no-print { display: none !important; }
+        body { background: #fff; padding: 0; }
+        .section, .dashboard { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+        input { border: none !important; background: none !important; font-weight: 700 !important; color: #000 !important; }
+    }
 </style>
 </head>
 <body>
@@ -480,7 +683,7 @@
 <div class="app-container">
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.3.0</div>
+        <div class="version-badge">v0.5.0</div>
     </div>
 
     <!-- CATEGORY PICKER -->
@@ -488,12 +691,6 @@
         <button type="button" id="catBrot" class="active" onclick="changeCategory(0)">🍞 Brot</button>
         <button type="button" id="catBroetchen" onclick="changeCategory(1)">🥐 Brötchen</button>
         <button type="button" id="catPizza" onclick="changeCategory(2)">🍕 Pizza</button>
-    </div>
-
-    <!-- PHASE PICKER -->
-    <div class="segmented-control">
-        <button type="button" id="phaseTeig" class="active" onclick="changePhase(0)">🥣 1. Teig & Zutaten</button>
-        <button type="button" id="phaseBacken" onclick="changePhase(1)">🔥 2. Gare & Backen</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -516,13 +713,19 @@
         <div id="dashboardAlerts" style="margin-top: 4px;"></div>
     </div>
 
+    <!-- SCHRITT-FÜR-SCHRITT ANLEITUNG (separater, phasenunabhängiger Bereich) -->
+    <div class="section" id="stepsSection">
+        <div class="section-title">📋 Schritt-für-Schritt Anleitung</div>
+        <div id="stepsContent"></div>
+    </div>
+
     <!-- PHASE 1: TEIG & ZUTATEN -->
     <div id="phase1Views">
         <div class="section">
             <div class="section-title">Rezept-Konfigurator</div>
-            <div class="row">
-                <label for="templatePicker">Rezept-Vorlage</label>
-                <select id="templatePicker" onchange="applyTemplate()"></select>
+            <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
+                <label style="font-size:11px; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Rezept-Vorlage</label>
+                <div class="template-gallery" id="templateGallery" role="listbox" aria-label="Rezept-Vorlage auswählen"></div>
             </div>
             <div class="row" id="totalWeightRow">
                 <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
@@ -578,6 +781,11 @@
                 <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()" aria-label="Rezept speichern">💾</button>
             </div>
             <textarea id="newRecipeNotes" placeholder="Notiz (optional) – z.B. 'etwas mehr Salz, Ofen läuft heiß'"></textarea>
+            <div class="row" style="border-top: 1px solid var(--divider); margin-top: 4px; padding-top: 10px;">
+                <label for="shareTeamToggle" style="font-size:13px;">🌍 Zusätzlich in Team-Bibliothek teilen</label>
+                <input type="checkbox" id="shareTeamToggle">
+            </div>
+            <button type="button" class="btn-ghost no-print" style="width:100%; margin-top:8px;" onclick="window.print()">🖨️ Rezept drucken / als PDF sichern</button>
         </div>
     </div>
 
@@ -667,11 +875,8 @@
                 <input type="text" inputmode="decimal" id="ddtFlourTemp" value="20" oninput="updateDDT()">
             </div>
             <div class="row">
-                <label for="ddtFriction">Knetart</label>
-                <select id="ddtFriction" onchange="updateDDT()">
-                    <option value="1">Handknetung</option>
-                    <option value="2" selected>Küchenmaschine</option>
-                </select>
+                <label for="ddtFriction">Kneter-Profil</label>
+                <select id="ddtFriction" onchange="updateDDT()"></select>
             </div>
             <div class="row" id="ddtKneadMinutesRow">
                 <label for="ddtKneadMinutes">Knetdauer (Min.)</label>
@@ -690,18 +895,152 @@
                 <div class="small" id="ddtResultSub">Ziel-Temperatur für dein Schüttwasser</div>
             </div>
             <div id="ddtWarning"></div>
+            <div class="section-subtitle" style="margin-top:8px;">Weitere Kneter-Profile lassen sich unter 🧰 Werkzeuge → Maschinenprofile anlegen.</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">⛰️ Höhenanpassung</div>
+            <div class="section-subtitle">Richtwerte für Backen über 900 m Höhe – niedrigerer Luftdruck lässt Teig schneller gehen und Wasser schneller verdunsten. Bitte als Orientierung verstehen, nicht als Garantie.</div>
+            <div class="row">
+                <label for="altitudeInput">Höhe über Meeresspiegel (m)</label>
+                <input type="text" inputmode="decimal" id="altitudeInput" value="0" oninput="updateAltitude()">
+            </div>
+            <div id="altitudeResult"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">👩‍🍳 Geführter Backmodus</div>
+            <div class="section-subtitle">Führt dich mit Timern durch Stockgare, Formen, Stückgare und Backen. Benachrichtigungen funktionieren, solange dieser Tab/Browser geöffnet bleibt.</div>
+            <div id="guidedModeContent">
+                <button type="button" class="btn-plus" style="width:100%;" onclick="startGuidedMode()">▶️ Backmodus starten</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <button type="button" class="btn-plus" style="width:100%;" onclick="markAsBaked()">✅ Fertig gebacken!</button>
         </div>
     </div>
 
-    <!-- REZEPT VERWALTUNG -->
-    <div class="section">
-        <div class="section-title">Eigene Rezepte in der Backstube</div>
-        <input type="text" id="recipeSearch" class="search-box" placeholder="Rezepte durchsuchen…" oninput="renderSavedRecipes()">
-        <div id="savedRecipesContainer">
-            <div class="skeleton-row"></div>
-            <div class="skeleton-row"></div>
+    <!-- TAB: WERKZEUGE (Profis: Kalkulation, Allergene, Skalierung, Profile) -->
+    <div id="tabToolsView" style="display:none;">
+        <div class="section">
+            <div class="section-title">💰 Kalkulation</div>
+            <div class="section-subtitle">Preise pro Kilo hinterlegen – wird zusammen mit dem Bäckerprofil gespeichert.</div>
+            <div id="calcContainer"></div>
+            <div class="row">
+                <label for="marginPct">Gewünschte Marge (%)</label>
+                <input type="text" inputmode="decimal" id="marginPct" value="30" oninput="renderCostCalculator()">
+            </div>
+            <div class="result-box" id="calcResult"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">⚠️ Allergenkennzeichnung</div>
+            <div class="section-subtitle">Automatisch aus der aktuellen Rezeptur abgeleitet (EU-Kennzeichnungspflicht). Ohne Gewähr – bitte bei Fremdprodukten/Zusätzen selbst prüfen.</div>
+            <div id="allergenContainer" class="chip-row"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📦 Produktionsmenge & Chargen</div>
+            <div class="section-subtitle">Teilt die aktuelle Rezeptur in gleich große Kneter-Chargen auf.</div>
+            <div class="row">
+                <label for="batchCapacity">Kneter-Kapazität (kg Mehl)</label>
+                <input type="text" inputmode="decimal" id="batchCapacity" value="5" oninput="renderBatchSplit()">
+            </div>
+            <div class="result-box" id="batchResult"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🔧 Maschinenprofile</div>
+            <div class="section-subtitle">Eigene Kneter mit individueller Reibungswärme (°C pro Min.) für den DDT-Rechner anlegen.</div>
+            <div id="machineProfileContainer"></div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="newMachineName" placeholder="Name, z.B. Spiralkneter" style="text-align:left; width:100%; font-weight:500;">
+                <input type="text" inputmode="decimal" id="newMachineRate" placeholder="°C/Min" style="width:70px;">
+                <button type="button" class="btn-plus" onclick="addMachineProfile()" aria-label="Profil hinzufügen">+</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🌾 Eigene Mehlprofile</div>
+            <div class="section-subtitle">Eigene Mehle mit individueller Wasseraufnahme für alle Mehl-Dropdowns.</div>
+            <div id="flourProfileContainer"></div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="newFlourName" placeholder="Name, z.B. Mühle XY Type 812" style="text-align:left; width:100%; font-weight:500;">
+                <input type="text" inputmode="decimal" id="newFlourBinding" placeholder="Bindung" style="width:70px;">
+                <button type="button" class="btn-plus" onclick="addFlourProfile()" aria-label="Mehlprofil hinzufügen">+</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🩺 Problemlöser</div>
+            <div class="section-subtitle">Häufige Teigprobleme antippen für Ursache & Lösung.</div>
+            <div id="troubleshootContainer"></div>
         </div>
     </div>
+
+    <!-- TAB: TAGEBUCH (Sauerteig + Statistik) -->
+    <div id="tabDiaryView" style="display:none;">
+        <div class="section">
+            <div class="section-title">🫙 Sauerteig-Tagebuch</div>
+            <div id="starterStatusBox" class="result-box"></div>
+            <button type="button" class="btn-plus" style="width:100%; margin-top:10px;" onclick="logStarterFeeding()">🥄 Jetzt gefüttert</button>
+            <div class="row" style="margin-top:4px;">
+                <label for="starterIntervalHours">Fütterungsintervall (Std.)</label>
+                <input type="text" inputmode="decimal" id="starterIntervalHours" value="24" oninput="renderStarterDiary()">
+            </div>
+            <div class="row">
+                <label for="notifyToggle">Browser-Erinnerung aktivieren</label>
+                <input type="checkbox" id="notifyToggle" onchange="toggleNotifications()">
+            </div>
+            <div id="starterHistoryContainer" style="margin-top:6px;"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🏆 Backstatistik</div>
+            <div class="result-box"><div class="big" id="bakeCountDisplay">0</div><div class="small">Rezepte als "fertig gebacken" markiert</div></div>
+            <div class="badge-grid" id="achievementGrid"></div>
+        </div>
+    </div>
+
+    <!-- TAB: REZEPTE (eigene + geteilte) -->
+    <div id="tabRecipesView" style="display:none;">
+        <div class="section">
+            <div class="section-title">Eigene Rezepte in der Backstube</div>
+            <input type="text" id="recipeSearch" class="search-box" placeholder="Rezepte durchsuchen…" oninput="renderSavedRecipes()">
+            <div id="savedRecipesContainer">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🌍 Geteilte Team-Rezepte</div>
+            <div class="privacy-notice">Rezepte in diesem Bereich sind für <strong>alle Nutzer dieser App</strong> sichtbar und bearbeitbar – teile hier nur Rezepte, die auch öffentlich sein dürfen.</div>
+            <div id="sharedRecipesContainer">
+                <div class="skeleton-row"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM TAB-BAR -->
+<div class="tab-bar">
+    <button type="button" class="tab-bar-btn active" id="tabBtnRecipe" onclick="switchTab('recipe')">
+        <span class="tab-icon">🥣</span><span class="tab-label">Rezept</span>
+    </button>
+    <button type="button" class="tab-bar-btn" id="tabBtnBaking" onclick="switchTab('baking')">
+        <span class="tab-icon">🔥</span><span class="tab-label">Backen</span>
+    </button>
+    <button type="button" class="tab-bar-btn" id="tabBtnTools" onclick="switchTab('tools')">
+        <span class="tab-icon">🧰</span><span class="tab-label">Werkzeuge</span>
+    </button>
+    <button type="button" class="tab-bar-btn" id="tabBtnDiary" onclick="switchTab('diary')">
+        <span class="tab-icon">📓</span><span class="tab-label">Tagebuch</span>
+    </button>
+    <button type="button" class="tab-bar-btn" id="tabBtnRecipes" onclick="switchTab('recipes')">
+        <span class="tab-icon">📚</span><span class="tab-label">Rezepte</span>
+    </button>
 </div>
 
 <!-- PRO-TIPP MODAL -->
@@ -725,27 +1064,78 @@
     </div>
 </div>
 
+<!-- GLOSSAR-MODAL -->
+<div class="modal" id="glossaryModal" onclick="closeGlossary()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title" id="glossaryTerm">Begriff</div>
+        <p id="glossaryText" style="font-size: 14px; line-height: 1.5; margin: 14px 0;"></p>
+        <button type="button" class="btn-plus" onclick="closeGlossary()" style="width:100%;">Verstanden!</button>
+    </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
     // ============================================================
     // STORAGE POLYFILL (Fallback für Umgebungen ohne window.storage,
-    // z.B. lokale Vorschau/Tests. In Claude.ai wird die native,
-    // persistente window.storage API verwendet.)
+    // z.B. selbst gehostet als installierte PWA außerhalb von Claude.ai.
+    // Dort wird die native, persistente window.storage API verwendet;
+    // hier läuft es über localStorage, damit Daten auch offline und
+    // über App-Neustarts hinweg erhalten bleiben.
+    // WICHTIG: "shared: true" (Team-Bibliothek) ist hier NUR eine lokale
+    // Namensraum-Trennung, kein echtes Teilen zwischen Geräten – ohne
+    // eigenen Server ist geräteübergreifendes Teilen nicht möglich.
     // ============================================================
     (function ensureStorage() {
         if (window.storage) return;
-        const mem = new Map();
+        const LS_PREFIX = 'backassistent:';
+        function fullKey(key, shared) { return LS_PREFIX + (shared ? 'shared:' : 'local:') + key; }
         window.storage = {
-            async get(key) { return mem.has(key) ? { key, value: mem.get(key), shared: false } : null; },
-            async set(key, value) { mem.set(key, value); return { key, value, shared: false }; },
-            async delete(key) { const existed = mem.delete(key); return { key, deleted: existed, shared: false }; },
-            async list(prefix) {
-                const keys = [...mem.keys()].filter(k => !prefix || k.startsWith(prefix));
-                return { keys, prefix, shared: false };
+            async get(key, shared) {
+                let raw;
+                try { raw = localStorage.getItem(fullKey(key, shared)); }
+                catch (e) { return null; }
+                return raw === null ? null : { key, value: raw, shared: !!shared };
+            },
+            async set(key, value, shared) {
+                try { localStorage.setItem(fullKey(key, shared), value); }
+                catch (e) { return null; }
+                return { key, value, shared: !!shared };
+            },
+            async delete(key, shared) {
+                const k = fullKey(key, shared);
+                let existed = false;
+                try { existed = localStorage.getItem(k) !== null; localStorage.removeItem(k); }
+                catch (e) { return null; }
+                return { key, deleted: existed, shared: !!shared };
+            },
+            async list(prefix, shared) {
+                const base = LS_PREFIX + (shared ? 'shared:' : 'local:');
+                const keys = [];
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && k.startsWith(base)) {
+                            const short = k.slice(base.length);
+                            if (!prefix || short.startsWith(prefix)) keys.push(short);
+                        }
+                    }
+                } catch (e) { /* localStorage evtl. blockiert (z.B. privater Modus) */ }
+                return { keys, prefix, shared: !!shared };
             }
         };
     })();
+
+    // ============================================================
+    // SERVICE WORKER (Offline-Fähigkeit, nur wenn per HTTPS/localhost
+    // gehostet – im file://-Modus oder in der Claude.ai-Vorschau wird
+    // dieser Block übersprungen)
+    // ============================================================
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(() => { /* Offline-Cache ist ein Bonus, kein Hard-Requirement */ });
+        });
+    }
 
     // ============================================================
     // HILFSFUNKTIONEN
@@ -816,72 +1206,363 @@
         { name: "Röstzwiebeln", waterContent: 2, isFlour: false, binding: 0.05 }
     ];
 
+    // ============================================================
+    // REZEPT-ICONS (eigenständige, generierte SVG-Illustrationen)
+    // ============================================================
+    const ICON_TONES = {
+        light: '#e3b579',
+        medium: '#c48a44',
+        dark: '#8a5a2b',
+        verydark: '#5c3a1a'
+    };
+
+    function renderRecipeIcon(spec) {
+        if (!spec) return '';
+        const fill = ICON_TONES[spec.tone] || ICON_TONES.medium;
+        const stroke = '#5c3a1a';
+        let body = '';
+        switch (spec.shape) {
+            case 'round': body = `<ellipse cx="32" cy="36" rx="23" ry="17" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'oval': body = `<ellipse cx="32" cy="34" rx="26" ry="14" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'baguette': body = `<rect x="3" y="27" width="58" height="14" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="2.5" transform="rotate(-8 32 34)"/>`; break;
+            case 'tin': body = `<path d="M10 46 V26 Q10 12 32 12 Q54 12 54 26 V46 Z" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'flatbread': body = `<rect x="6" y="24" width="52" height="22" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'roll': body = `<circle cx="32" cy="34" r="17" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'bun': body = `<ellipse cx="32" cy="35" rx="19" ry="14" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            case 'pizza': body = `<circle cx="32" cy="32" r="25" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`; break;
+            default: body = `<circle cx="32" cy="32" r="20" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
+        }
+        const marksHtml = (spec.marks || []).map(m => renderIconMark(m)).join('');
+        return `<svg viewBox="0 0 64 64" class="recipe-icon-svg" aria-hidden="true">${body}${marksHtml}</svg>`;
+    }
+
+    function renderIconMark(m) {
+        const dark = '#5c3a1a';
+        switch (m.type) {
+            case 'slash': {
+                const n = m.count || 1;
+                let lines = '';
+                for (let i = 0; i < n; i++) {
+                    const x = n > 1 ? 20 + i * (24 / (n - 1)) : 32;
+                    lines += `<line x1="${x - 4}" y1="${m.diag ? 24 : 30}" x2="${x + 4}" y2="${m.diag ? 42 : 20}" stroke="${dark}" stroke-width="1.6" stroke-linecap="round"/>`;
+                }
+                return lines;
+            }
+            case 'cross':
+                return `<line x1="18" y1="30" x2="46" y2="42" stroke="${dark}" stroke-width="1.6" stroke-linecap="round"/><line x1="46" y1="30" x2="18" y2="42" stroke="${dark}" stroke-width="1.6" stroke-linecap="round"/>`;
+            case 'seeds': {
+                const n = m.dense ? 14 : 8;
+                let dots = '';
+                for (let i = 0; i < n; i++) {
+                    const cx = 14 + ((i * 37) % 36) + (i % 3);
+                    const cy = 26 + ((i * 13) % 18);
+                    dots += `<circle cx="${cx}" cy="${cy}" r="1.3" fill="${dark}"/>`;
+                }
+                return dots;
+            }
+            case 'kaiser':
+                return [0, 72, 144, 216, 288].map(a => `<line x1="32" y1="34" x2="${(32 + 13 * Math.cos(a * Math.PI / 180)).toFixed(1)}" y2="${(34 + 13 * Math.sin(a * Math.PI / 180)).toFixed(1)}" stroke="${dark}" stroke-width="1.6" stroke-linecap="round"/>`).join('');
+            case 'shine':
+                return `<ellipse cx="24" cy="26" rx="7" ry="4" fill="rgba(255,255,255,0.45)"/>`;
+            case 'sauce':
+                return `<circle cx="32" cy="32" r="19" fill="#c1442e" opacity="0.55"/><circle cx="24" cy="26" r="2.4" fill="#f3e4c8"/><circle cx="38" cy="30" r="2.2" fill="#f3e4c8"/><circle cx="30" cy="40" r="2.1" fill="#f3e4c8"/><circle cx="42" cy="20" r="1.6" fill="#3f7d3a"/>`;
+            case 'dimples': {
+                let dots = '';
+                for (let i = 0; i < 10; i++) {
+                    const cx = 14 + ((i * 29) % 38);
+                    const cy = 28 + ((i * 11) % 14);
+                    dots += `<circle cx="${cx}" cy="${cy}" r="1.6" fill="rgba(0,0,0,0.18)"/>`;
+                }
+                return dots;
+            }
+            case 'rosemary':
+                return `<line x1="46" y1="22" x2="52" y2="16" stroke="#3f7d3a" stroke-width="1.4"/><circle cx="48" cy="20" r="1" fill="#3f7d3a"/><circle cx="50" cy="18" r="1" fill="#3f7d3a"/>`;
+            case 'holes': {
+                let dots = '';
+                [[20, 30], [34, 26], [44, 34], [26, 40]].forEach(p => {
+                    dots += `<ellipse cx="${p[0]}" cy="${p[1]}" rx="2.2" ry="1.6" fill="rgba(0,0,0,0.15)"/>`;
+                });
+                return dots;
+            }
+            default: return '';
+        }
+    }
+
     const templates = {
         0: [
-            { id: "weiss_hefe", name: "Weißbrot (Hefe)", hydr: 65, extras: [] },
-            { id: "weiss_sauer", name: "Weißbrot (Sauerteig)", hydr: 68, extras: [] },
-            { id: "bauernbrot", name: "Bauernbrot (Weizen/Roggen)", hydr: 70, extras: [] },
-            { id: "roggenmisch", name: "Roggenmischbrot (Sauerteig)", hydr: 75, extras: [] },
-            { id: "dinkel_vollkorn", name: "Dinkel-Vollkornbrot", hydr: 72, extras: [] },
-            { id: "baguette", name: "Baguette (Poolish)", hydr: 68, extras: [] }
+            { id: "weiss_hefe", name: "Weißbrot (Hefe)", desc: "Klassiker mit knuspriger Kruste", hydr: 65, extras: [],
+                icon: { shape: "oval", tone: "light", marks: [{ type: "slash", count: 3 }] }, steps: [] },
+            { id: "weiss_sauer", name: "Weißbrot (Sauerteig)", desc: "Mild-säuerlich, längere Reifung", hydr: 68, extras: [],
+                icon: { shape: "oval", tone: "medium", marks: [{ type: "slash", count: 1 }] },
+                steps: [
+                    { title: "Sauerteig anfüttern", description: "Sauerteig 4–8 Std. vor dem Kneten füttern, bis er sich sichtbar vergrößert hat und blubbert. Schwimmt ein Klecks im Wasserglas, ist er startklar." }
+                ] },
+            { id: "bauernbrot", name: "Bauernbrot (Weizen/Roggen)", desc: "Herzhafte Mischung, kräftige Kruste", hydr: 70, extras: [],
+                icon: { shape: "round", tone: "medium", marks: [{ type: "cross" }] },
+                steps: [
+                    { title: "Sauerteig anfüttern", description: "Sauerteig rechtzeitig aktivieren (siehe Hinweis bei Sauerteigbroten)." },
+                    { title: "Kurze Autolyse", description: "Mehle mit einem Teil des Wassers 30 Min. ohne Salz & Sauerteig vermischen und ruhen lassen – verbessert Kruste und Krume." },
+                    { title: "Sauerteig & Salz einarbeiten", description: "Nach der Autolyse Sauerteig und Salz zugeben und fertig kneten." }
+                ] },
+            { id: "roggenmisch", name: "Roggenmischbrot (Sauerteig)", desc: "Kräftiger Roggenanteil, sehr saftig", hydr: 75, extras: [],
+                icon: { shape: "round", tone: "dark", marks: [{ type: "cross" }] },
+                steps: [
+                    { title: "Sauerteig anfüttern", description: "Sauerteig aktivieren, siehe Hinweis bei Sauerteigbroten." },
+                    { title: "Nur kurz kneten", description: "Roggenteig entwickelt kein Klebergerüst wie Weizen – 3–4 Minuten Verrühren reicht, längeres Kneten bringt nichts." },
+                    { title: "Mit nassen Händen formen", description: "Der Teig ist sehr klebrig – Hände und Arbeitsfläche mit Wasser statt Mehl befeuchten." }
+                ] },
+            { id: "dinkel_vollkorn", name: "Dinkel-Vollkornbrot", desc: "Vollkornbrot mit mildem Nussaroma", hydr: 72, extras: [],
+                icon: { shape: "round", tone: "medium", marks: [{ type: "seeds" }] },
+                steps: [
+                    { title: "Schonend kneten", description: "Dinkel hat ein empfindlicheres Klebergerüst als Weizen – nur kurz und sanft kneten, sonst reißt der Teig." }
+                ] },
+            { id: "baguette", name: "Baguette (Poolish)", desc: "Französischer Klassiker mit Vorteig", hydr: 68, extras: [],
+                icon: { shape: "baguette", tone: "light", marks: [{ type: "slash", count: 5, diag: true }] },
+                steps: [
+                    { title: "Poolish am Vorabend ansetzen", description: "Gleiche Teile Mehl und Wasser (ca. 20% der Rezeptmenge) mit einer Prise Hefe vermengen und 12–16 Std. abgedeckt bei Raumtemperatur reifen lassen." },
+                    { title: "Poolish einkneten", description: "Am Backtag das reife Poolish mit restlichem Mehl, Wasser, Salz und etwas frischer Hefe zum Hauptteig verkneten." },
+                    { title: "Einschneiden vor dem Backen", description: "Teiglinge kurz vor dem Backen mit einer Rasierklinge/Backlame diagonal einschneiden (die typische „Grigne“)." },
+                    { title: "Mit Schwaden backen", description: "Für die knusprige Kruste zu Backbeginn kräftig schwaden (Dampf zugeben)." }
+                ] },
+            { id: "toastbrot", name: "Toastbrot", desc: "Weiches Kastenbrot fürs Sandwich", hydr: 62, extras: [
+                { name: "Butter", pct: 6 }, { name: "Vollmilch", pct: 30 }, { name: "Zucker", pct: 5 }
+            ],
+                icon: { shape: "tin", tone: "light", marks: [] },
+                steps: [
+                    { title: "Teig entgasen & aufrollen", description: "Nach der Stockgare den Teig flach drücken und straff zu einer Rolle formen – das sorgt für gleichmäßige Krume." },
+                    { title: "In die Kastenform legen", description: "Die Rolle mit dem Schluss nach unten in eine gefettete Kastenform (ca. 25 cm) legen." },
+                    { title: "Stückgare bis knapp über den Rand", description: "Gehen lassen, bis der Teig 1–2 cm über den Formrand reicht." },
+                    { title: "Mit Milch bestreichen", description: "Vor dem Backen mit etwas Milch bestreichen – ergibt die typisch goldene, weiche Kruste." }
+                ] },
+            { id: "roggenbrot_rein", name: "Reines Roggenbrot", desc: "100% Roggen, saftig & lange haltbar", hydr: 80, extras: [],
+                icon: { shape: "flatbread", tone: "verydark", marks: [] },
+                steps: [
+                    { title: "Sauerteig gut anfüttern", description: "Bei reinem Roggenbrot ist ein triebkräftiger Sauerteig entscheidend, da keine Hefe zum Einsatz kommt." },
+                    { title: "Nur verrühren, nicht kneten", description: "Roggenteig braucht kein Kneten – Zutaten mit einem stabilen Löffel oder einer Teigkarte kurz und kräftig verrühren." },
+                    { title: "Mit nassen Händen einfüllen", description: "Den klebrigen Teig mit angefeuchteten Händen direkt in Kastenform oder Gärkorb geben." },
+                    { title: "Lange Stückgare einplanen", description: "Reine Roggenbrote brauchen oft 3–4 Std. Stückgare, bis sich feine Risse an der Oberfläche zeigen." },
+                    { title: "Nicht einschneiden", description: "Im Gegensatz zu Weizenbrot wird Roggenbrot vor dem Backen NICHT eingeschnitten." }
+                ] },
+            { id: "focaccia", name: "Focaccia", desc: "Italienisches Fladenbrot mit Olivenöl", hydr: 78, extras: [
+                { name: "Olivenöl", pct: 10 }
+            ],
+                icon: { shape: "flatbread", tone: "light", marks: [{ type: "dimples" }, { type: "rosemary" }] },
+                steps: [
+                    { title: "Weichen Teig ins Blech geben", description: "Den sehr weichen Teig nicht auswellen, sondern direkt in ein großzügig geöltes Backblech gleiten lassen." },
+                    { title: "Ruhen & entspannen lassen", description: "30–45 Min. abgedeckt ruhen lassen, damit sich der Teig von selbst im Blech verteilt." },
+                    { title: "Dellen eindrücken", description: "Mit geölten Fingern kräftig Dellen in die gesamte Oberfläche drücken – das charakteristische Focaccia-Muster." },
+                    { title: "Belegen & würzen", description: "Mit reichlich Olivenöl beträufeln und mit grobem Salz sowie Kräutern (z. B. Rosmarin) bestreuen." }
+                ] },
+            { id: "saatenbrot", name: "Saaten-Vollkornbrot", desc: "Sonnenblumen- & Kürbiskerne", hydr: 74, extras: [
+                { name: "Sonnenblumenkerne", pct: 15 }
+            ],
+                icon: { shape: "round", tone: "medium", marks: [{ type: "seeds", dense: true }] },
+                steps: [
+                    { title: "Kerne einweichen", description: "Sonnenblumen- oder Kürbiskerne 15–30 Min. in warmem Wasser einweichen, damit sie dem Teig später kein Wasser entziehen." },
+                    { title: "Abgetropft unterkneten", description: "Die gut abgetropften Kerne erst gegen Ende des Knetens unterheben, damit die Kruste nicht durchstoßen wird." }
+                ] }
         ],
         1: [
-            { id: "broetchen_hefe", name: "Klassische Brötchen (Hefe)", hydr: 60, extras: [] },
-            { id: "broetchen_sauer", name: "Sauerteig-Brötchen", hydr: 65, extras: [] },
-            { id: "burger_buns", name: "Burger Buns (Brioche-Style)", hydr: 62, extras: [
-                { name: "Butter", factor: 6 },
-                { name: "Zucker", factor: 3 },
-                { name: "Vollmilch", factor: 45 }
-            ] },
-            { id: "laugen", name: "Laugengebäck (Fest)", hydr: 55, extras: [] },
-            { id: "dinkel_broetchen", name: "Dinkel-Brötchen", hydr: 65, extras: [] },
-            { id: "ciabatta", name: "Ciabatta-Brötchen (Weich)", hydr: 80, extras: [] }
+            { id: "broetchen_hefe", name: "Klassische Brötchen (Hefe)", desc: "Klassische Frühstücksbrötchen", hydr: 60, extras: [],
+                icon: { shape: "roll", tone: "light", marks: [{ type: "slash", count: 1 }] }, steps: [] },
+            { id: "broetchen_sauer", name: "Sauerteig-Brötchen", desc: "Mit Sauerteig für mehr Aroma", hydr: 65, extras: [],
+                icon: { shape: "roll", tone: "medium", marks: [{ type: "slash", count: 1 }] },
+                steps: [
+                    { title: "Sauerteig anfüttern", description: "Sauerteig 4–8 Std. vorher aktivieren, siehe Hinweis bei Sauerteigbroten." }
+                ] },
+            { id: "burger_buns", name: "Burger Buns (Brioche-Style)", desc: "Fluffig-weich im Brioche-Stil", hydr: 62, extras: [
+                { name: "Butter", pct: 10 },
+                { name: "Zucker", pct: 6 },
+                { name: "Vollmilch", pct: 30 }
+            ],
+                icon: { shape: "bun", tone: "medium", marks: [{ type: "seeds" }] },
+                steps: [
+                    { title: "Butter erst spät zugeben", description: "Butter erst einarbeiten, wenn sich bereits ein Klebergerüst gebildet hat (nach ca. 5 Min. Kneten) – sonst wird der Teig nicht elastisch genug." },
+                    { title: "Mit Ei bestreichen", description: "Vor dem Backen mit verquirltem Ei bestreichen für Glanz und Farbe, optional mit Sesam bestreuen." }
+                ] },
+            { id: "laugen", name: "Laugengebäck (Fest)", desc: "Herzhaftes Laugengebäck", hydr: 55, extras: [],
+                icon: { shape: "bun", tone: "verydark", marks: [{ type: "cross" }, { type: "shine" }] },
+                steps: [
+                    { title: "Teiglinge anfrösteln", description: "Geformte Teiglinge vor dem Laugenbad 15–20 Min. offen im Kühlschrank anfrösteln lassen – so bleibt die Lauge besser auf der Oberfläche." },
+                    { title: "Laugenbad – Sicherheit beachten!", description: "Kurz (ca. 20–30 Sek.) durch ein 3%iges Natronlaugenbad ziehen. Unbedingt Handschuhe und Schutzbrille tragen, Lauge nie mit bloßen Händen berühren. Milde Alternative: Backpulver-Sud (weniger intensive Kruste, aber deutlich ungefährlicher)." },
+                    { title: "Einschneiden & salzen", description: "Nach dem Laugenbad einmal längs einschneiden und mit grobem Salz bestreuen." }
+                ] },
+            { id: "dinkel_broetchen", name: "Dinkel-Brötchen", desc: "Milde Brötchen aus Dinkelmehl", hydr: 65, extras: [],
+                icon: { shape: "roll", tone: "medium", marks: [{ type: "slash", count: 1 }] },
+                steps: [
+                    { title: "Schonend kneten", description: "Dinkel nur kurz kneten, da das Klebergerüst empfindlicher ist als bei Weizen." }
+                ] },
+            { id: "ciabatta", name: "Ciabatta-Brötchen (Weich)", desc: "Rustikal-luftig, große Poren", hydr: 80, extras: [],
+                icon: { shape: "flatbread", tone: "light", marks: [{ type: "holes" }] },
+                steps: [
+                    { title: "Dehnen & Falten statt Kneten", description: "Der sehr feuchte Teig wird nicht klassisch geknetet, sondern alle 30 Min. 3–4× im Gefäß gedehnt und gefaltet, um Struktur aufzubauen." },
+                    { title: "Sanft teilen & nicht entgasen", description: "Beim Formen den Teig möglichst wenig entgasen, damit die großporige Krume erhalten bleibt – mit viel Mehl arbeiten, da der Teig sehr klebrig ist." }
+                ] },
+            { id: "kaiserbroetchen", name: "Kaiserbrötchen", desc: "Klassiker mit Stern-Muster", hydr: 58, extras: [],
+                icon: { shape: "roll", tone: "light", marks: [{ type: "kaiser" }] },
+                steps: [
+                    { title: "Rundwirken", description: "Teiglinge straff rundwirken." },
+                    { title: "Kaiser-Falttechnik", description: "Von Hand oder mit Kaiserstempel 5× eindrücken/einschlagen, sodass ein sternförmiges Muster entsteht." },
+                    { title: "Mit Muster nach unten gehen lassen", description: "Zur Stückgare mit der gemusterten Seite nach UNTEN auf die bemehlte Arbeitsfläche legen." },
+                    { title: "Vor dem Backen wenden", description: "Kurz vor dem Backen vorsichtig wenden, sodass das Muster wieder oben liegt." }
+                ] },
+            { id: "milchbroetchen", name: "Milchbrötchen", desc: "Süßliche, weiche Milchbrötchen", hydr: 58, extras: [
+                { name: "Vollmilch", pct: 35 }, { name: "Butter", pct: 6 }, { name: "Zucker", pct: 6 }
+            ],
+                icon: { shape: "bun", tone: "light", marks: [{ type: "shine" }] },
+                steps: [
+                    { title: "Zu Kugeln formen", description: "Nach der Stockgare gleichmäßige Kugeln formen und mit Abstand aufs Blech setzen." },
+                    { title: "Mit Ei bestreichen", description: "Vor dem Backen mit verquirltem Ei bestreichen – für die typisch glänzende, weiche Kruste." }
+                ] },
+            { id: "mehrkornbroetchen", name: "Mehrkornbrötchen", desc: "Kräftig mit Saatenmischung", hydr: 68, extras: [
+                { name: "Sonnenblumenkerne", pct: 12 }
+            ],
+                icon: { shape: "roll", tone: "medium", marks: [{ type: "seeds", dense: true }] },
+                steps: [
+                    { title: "In Wasser tauchen & wälzen", description: "Geformte Teiglinge vor der Stückgare kurz in Wasser tauchen und danach in einer Saatenmischung (z. B. Sonnenblumen-, Sesam-, Leinsamen) wälzen." }
+                ] }
         ],
         2: [
-            { id: "napoli", name: "Neapolitanisch (Pizzaofen)", hydr: 62, extras: [] },
-            { id: "newyork", name: "New York Style (Haushaltsofen)", hydr: 65, extras: [
-                { name: "Olivenöl", factor: 6 },
-                { name: "Zucker", factor: 3 }
-            ] },
-            { id: "pan", name: "Pfannenpizza / Detroit", hydr: 70, extras: [
-                { name: "Olivenöl", factor: 12 }
-            ] },
-            { id: "teglia", name: "Römische Blechpizza (Teglia)", hydr: 75, extras: [
-                { name: "Olivenöl", factor: 8 }
-            ] }
+            { id: "napoli", name: "Neapolitanisch (Pizzaofen)", desc: "Klassisch, sehr luftiger Rand", hydr: 62, extras: [],
+                icon: { shape: "pizza", tone: "light", marks: [{ type: "sauce" }] },
+                steps: [
+                    { title: "Von Hand ausziehen", description: "Teigling nicht ausrollen, sondern mit den Fingerspitzen von innen nach außen vorsichtig zu einem Rand ausziehen – der Rand (Cornicione) bleibt unberührt und bläht im Ofen auf." }
+                ] },
+            { id: "newyork", name: "New York Style (Haushaltsofen)", desc: "Dünn, knusprig, faltbar", hydr: 65, extras: [
+                { name: "Olivenöl", pct: 3 },
+                { name: "Zucker", pct: 2 }
+            ],
+                icon: { shape: "pizza", tone: "medium", marks: [{ type: "sauce" }] }, steps: [] },
+            { id: "pan", name: "Pfannenpizza / Detroit", desc: "Dick, saftig, krosse Unterseite", hydr: 70, extras: [
+                { name: "Olivenöl", pct: 6 }
+            ],
+                icon: { shape: "pizza", tone: "medium", marks: [{ type: "sauce" }] },
+                steps: [
+                    { title: "In der Pfanne gehen lassen", description: "Teigling direkt in die geölte Pfanne/Form legen und dort die komplette Stückgare durchführen – so entsteht die charakteristische Form." }
+                ] },
+            { id: "teglia", name: "Römische Blechpizza (Teglia)", desc: "Locker-luftige Kruste", hydr: 75, extras: [
+                { name: "Olivenöl", pct: 5 }
+            ],
+                icon: { shape: "pizza", tone: "light", marks: [{ type: "sauce" }] },
+                steps: [
+                    { title: "Falttechnik statt Kneten", description: "Bei der hohen Hydration den Teig mehrfach dehnen & falten statt klassisch zu kneten – für eine offene, luftige Krume." }
+                ] }
         ]
     };
 
     const defaultPieceWeight = { 1: 85, 2: 280 };
 
+    // Schwierigkeitsgrad automatisch aus der Anzahl/Art der Sonderschritte ableiten
+    Object.keys(templates).forEach(catKey => {
+        templates[catKey].forEach(t => {
+            const n = (t.steps || []).length;
+            t.difficulty = n === 0 ? 'Einsteiger' : n <= 2 ? 'Fortgeschritten' : 'Profi';
+        });
+    });
+
     // GLOBALER LIVE STATE
     let category = 0;
-    let phase = 0;
+    let activeTab = 'recipe';
+    let selectedTemplateId = templates[0][0].id;
     let manualIngredients = [];
     let flourOverridesBySlot = {};
     let weightOverrides = {};
     let customFlourNames = { mehl_1: "", mehl_2: "" };
     let isLoadingRecipe = false;
     let recipeCache = [];
+    let sharedRecipeCache = [];
     let displayUnit = 'grams'; // 'grams' | 'percent'
     let lastEstimatedHours = 0;
+    let lastStageBreakdown = { stockMin: 0, stueckMin: 0, bakeMin: 0 };
+    let lastComposition = { totalFlour: 0, items: [] };
+    let machineProfiles = [];
+    let flourProfiles = [];
+    let ingredientPrices = {};
+    let starterEntries = [];
+    let bakeCount = 0;
+    let notifyEnabled = false;
+    let guidedState = null;
+    let ownerId = null;
 
-    window.onload = function() {
+    // ============================================================
+    // GERÄTE-/BESITZER-ID (für Owner-Absicherung geteilter Rezepte)
+    // ============================================================
+    async function getOrCreateOwnerId() {
+        try {
+            const res = await window.storage.get('device:ownerId');
+            if (res && res.value) return res.value;
+        } catch (e) { /* noch keine ID vorhanden */ }
+        const newId = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'own-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        try { await window.storage.set('device:ownerId', newId); } catch (e) { /* bestenfalls für diese Sitzung */ }
+        return newId;
+    }
+
+    window.onload = async function() {
+        ownerId = await getOrCreateOwnerId();
         populateDropdowns();
-        buildTemplateDropdown();
+        renderTemplateGallery();
         applyTemplate();
-        loadRecipesFromStorage();
+        await Promise.all([
+            loadRecipesFromStorage(),
+            loadSharedRecipesFromStorage(),
+            loadMachineProfiles(),
+            loadFlourProfiles(),
+            loadIngredientPrices(),
+            loadStarterEntries(),
+            loadBakeCount()
+        ]);
+        renderTroubleshoot();
         updateDDT();
+        updateAltitude();
+        calculateEngine();
     };
 
     function populateDropdowns() {
         const picker = document.getElementById('presetPicker');
-        picker.innerHTML = ingredientPresets.map(p => `<option value="${p.name}">+ ${p.name}</option>`).join('');
+        picker.innerHTML = getAllPresets().map(p => `<option value="${p.name}">+ ${p.name}</option>`).join('');
     }
 
-    function buildTemplateDropdown() {
-        const picker = document.getElementById('templatePicker');
-        picker.innerHTML = templates[category].map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    function renderTemplateGallery() {
+        const gallery = document.getElementById('templateGallery');
+        gallery.innerHTML = templates[category].map(t => `
+            <button type="button" class="template-card ${t.id === selectedTemplateId ? 'selected' : ''}" onclick="selectTemplate('${t.id}')" role="option" aria-selected="${t.id === selectedTemplateId}">
+                <div class="template-card-icon">${renderRecipeIcon(t.icon)}</div>
+                <div class="template-card-name">${t.name}</div>
+                <div class="template-card-desc">${t.desc || ''}</div>
+            </button>
+        `).join('');
+        renderStepsSection();
+    }
+
+    function selectTemplate(id, opts) {
+        opts = opts || {};
+        selectedTemplateId = id;
+        renderTemplateGallery();
+        if (!opts.silent) applyTemplate();
+    }
+
+    function renderStepsSection() {
+        const container = document.getElementById('stepsContent');
+        if (!container) return;
+        const t = templates[category].find(x => x.id === selectedTemplateId);
+        if (!t) { container.innerHTML = ''; return; }
+        let html = `<div class="steps-recipe-header"><div class="template-card-icon">${renderRecipeIcon(t.icon)}</div><div><div class="steps-recipe-name">${t.name}</div><div class="steps-recipe-desc">${t.desc || ''}</div><span class="difficulty-badge difficulty-${t.difficulty}">${t.difficulty}</span></div></div>`;
+        if (t.steps && t.steps.length > 0) {
+            html += `<ol class="steps-list">` + t.steps.map((s, i) => `
+                <li class="steps-list-item">
+                    <div class="steps-list-num">${i + 1}</div>
+                    <div>
+                        <div class="steps-list-title">${s.title}</div>
+                        <div class="steps-list-desc">${linkifyGlossary(s.description)}</div>
+                    </div>
+                </li>
+            `).join('') + `</ol>`;
+        } else {
+            html += `<div class="steps-empty">✅ Für dieses Rezept reicht die Standard-Zubereitung: Zutaten abwiegen, verkneten, ruhen lassen, backen. Keine Extra-Schritte nötig.</div>`;
+        }
+        container.innerHTML = html;
     }
 
     function setDisplayUnit(unit) {
@@ -920,28 +1601,52 @@
 
         document.querySelectorAll('.pizza-only').forEach(el => el.style.display = catId === 2 ? 'flex' : 'none');
 
-        buildTemplateDropdown();
+        if (!templates[category].find(t => t.id === selectedTemplateId)) {
+            selectedTemplateId = templates[category][0].id;
+        }
+        renderTemplateGallery();
         applyTemplate();
         renderSavedRecipes();
     }
 
-    function changePhase(phaseId) {
-        phase = phaseId;
-        document.getElementById('phaseTeig').className = phaseId === 0 ? 'active' : '';
-        document.getElementById('phaseBacken').className = phaseId === 1 ? 'active' : '';
-        document.getElementById('phase1Views').style.display = phaseId === 0 ? 'block' : 'none';
-        document.getElementById('phase2Views').style.display = phaseId === 1 ? 'block' : 'none';
-        if (phaseId === 1) {
-            document.getElementById('phase2Views').classList.add('fade-view');
-        } else {
-            document.getElementById('phase1Views').classList.add('fade-view');
+    const TAB_VIEWS = {
+        recipe: 'phase1Views',
+        baking: 'phase2Views',
+        tools: 'tabToolsView',
+        diary: 'tabDiaryView',
+        recipes: 'tabRecipesView'
+    };
+
+    function switchTab(tabName) {
+        activeTab = tabName;
+        Object.keys(TAB_VIEWS).forEach(key => {
+            const el = document.getElementById(TAB_VIEWS[key]);
+            const isActive = key === tabName;
+            el.style.display = isActive ? 'block' : 'none';
+            if (isActive) el.classList.add('fade-view');
+            document.getElementById('tabBtn' + key.charAt(0).toUpperCase() + key.slice(1)).className = 'tab-bar-btn' + (isActive ? ' active' : '');
+        });
+        if (tabName === 'tools') {
+            renderCostCalculator();
+            renderAllergens();
+            renderBatchSplit();
+            renderMachineProfileManager();
+            renderFlourProfileManager();
+        }
+        if (tabName === 'diary') {
+            renderStarterDiary();
+            renderAchievements();
+        }
+        if (tabName === 'recipes') {
+            renderSavedRecipes();
+            renderSharedRecipes();
         }
         calculateEngine();
     }
 
     function applyTemplate() {
         if (isLoadingRecipe) return;
-        const templateId = document.getElementById('templatePicker').value;
+        const templateId = selectedTemplateId;
         const currentTemplate = templates[category].find(t => t.id === templateId);
 
         flourOverridesBySlot = {};
@@ -952,16 +1657,22 @@
         if (currentTemplate) {
             document.getElementById('targetHydration').value = currentTemplate.hydr;
 
-            const countFactor = getFloatVal('targetWeight', 1);
+            // Zusatzzutaten (Butter, Milch, Öl, Zucker, Saaten ...) werden als Bäcker-Prozent
+            // vom tatsächlichen Mehlgewicht hinterlegt, nicht als fixer Faktor × Zielgewicht/Stückzahl -
+            // sonst würden z.B. bei einem 1000g-Toastbrot absurde Mengen wie 30kg Milch entstehen.
+            // Das exakte Gewicht wird in calculateEngine() berechnet, sobald das Mehlgewicht feststeht.
             currentTemplate.extras.forEach(ext => {
-                const presetData = ingredientPresets.find(p => p.name === ext.name);
+                const presetData = getAllPresets().find(p => p.name === ext.name);
                 if (presetData) {
                     manualIngredients.push({
                         name: ext.name,
-                        weight: ext.factor * countFactor,
+                        weight: 0,
                         waterContent: presetData.waterContent,
                         isFlour: presetData.isFlour,
-                        binding: presetData.binding
+                        binding: presetData.binding,
+                        fromTemplate: true,
+                        pctOfFlour: ext.pct,
+                        manuallySet: false
                     });
                 }
             });
@@ -970,18 +1681,6 @@
     }
 
     function updateInputs() {
-        if (!isLoadingRecipe) {
-            const templateId = document.getElementById('templatePicker').value;
-            const currentTemplate = templates[category].find(t => t.id === templateId);
-            const countFactor = getFloatVal('targetWeight', 1);
-
-            if (currentTemplate) {
-                currentTemplate.extras.forEach(ext => {
-                    let ing = manualIngredients.find(i => i.name === ext.name);
-                    if (ing) ing.weight = ext.factor * countFactor;
-                });
-            }
-        }
         calculateEngine();
     }
 
@@ -996,7 +1695,7 @@
         const useDryYeast = document.getElementById('dryYeastToggle').checked;
         const saltPct = getClampedVal('saltPct', 2.0, 0.5, 4.0);
         const factorH2O = targetHydration / 100.0;
-        const templateId = document.getElementById('templatePicker').value;
+        const templateId = selectedTemplateId;
 
         // --- Ziel-Rohteig-Gewicht ---
         let targetRohTeig;
@@ -1016,6 +1715,14 @@
         const totalDoughFactor = 1.0 + factorH2O + 0.02;
         const rawFlour = targetRohTeig / totalDoughFactor;
 
+        // Zusatzzutaten aus der Rezeptvorlage (fromTemplate) werden hier als Bäcker-Prozent
+        // vom Mehlgewicht berechnet - außer der Nutzer hat die Menge manuell überschrieben.
+        manualIngredients.forEach(item => {
+            if (item.fromTemplate && item.pctOfFlour !== undefined && !item.manuallySet) {
+                item.weight = Math.round((rawFlour * item.pctOfFlour / 100) * 10) / 10;
+            }
+        });
+
         let floursConfigs = [];
         let yeastPct = 0.02;
         let sourdoughWeight = 0.0;
@@ -1029,6 +1736,10 @@
                 case "roggenmisch": { let smr = (rawFlour * 0.6) * 0.4; sourdoughWeight = smr * 2; floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour * 0.4 }, { id: "mehl_2", def: "Roggenmehl Type 1150", w: (rawFlour * 0.6) - smr }]; yeastPct = 0; isPureSourdough = true; break; }
                 case "dinkel_vollkorn": floursConfigs = [{ id: "mehl_1", def: "Dinkelvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
                 case "baguette": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.005; break;
+                case "toastbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.025; break;
+                case "roggenbrot_rein": { let smrr = rawFlour * 0.25; sourdoughWeight = smrr * 2; floursConfigs = [{ id: "mehl_1", def: "Roggenmehl Type 1150", w: rawFlour - smrr }]; yeastPct = 0; isPureSourdough = true; break; }
+                case "focaccia": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
+                case "saatenbrot": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; yeastPct = 0.02; break;
             }
         } else if (category === 1) {
             switch (templateId) {
@@ -1038,6 +1749,9 @@
                 case "laugen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.02; break;
                 case "dinkel_broetchen": floursConfigs = [{ id: "mehl_1", def: "Dinkelmehl Type 630", w: rawFlour }]; yeastPct = 0.03; break;
                 case "ciabatta": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.015; break;
+                case "kaiserbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
+                case "milchbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }]; yeastPct = 0.03; break;
+                case "mehrkornbroetchen": floursConfigs = [{ id: "mehl_1", def: "Weizenvollkornmehl", w: rawFlour }]; yeastPct = 0.03; break;
             }
         } else {
             floursConfigs = [{ id: "mehl_1", def: "Weizenmehl Type 550 / Tipo 00", w: rawFlour }];
@@ -1054,7 +1768,7 @@
         let activeFlours = [];
         floursConfigs.forEach(f => {
             let activeName = customFlourNames[f.id] || f.def;
-            let presetData = ingredientPresets.find(p => p.name === activeName) || { binding: 0 };
+            let presetData = getAllPresets().find(p => p.name === activeName) || { binding: 0 };
             let finalWeight = flourOverridesBySlot[f.id] !== undefined ? flourOverridesBySlot[f.id] : Math.round(f.w);
             activeFlours.push({ name: activeName, weight: Math.max(0, finalWeight), isFlour: true, binding: presetData.binding, id: f.id });
         });
@@ -1128,7 +1842,7 @@
 
         // MEHL RENDERN
         let flourHtml = activeFlours.map(f => {
-            let optionsHtml = ingredientPresets.filter(p => p.isFlour).map(p => {
+            let optionsHtml = getAllPresets().filter(p => p.isFlour).map(p => {
                 let isSelected = p.name === f.name ? 'selected' : '';
                 return `<option value="${p.name}" ${isSelected}>🌾 ${p.name}</option>`;
             }).join('');
@@ -1192,6 +1906,19 @@
         });
         document.getElementById('remainingContainer').innerHTML = remHtml;
 
+        // --- Snapshot für Werkzeuge (Kalkulation, Allergene, Chargen) ---
+        let compositionItems = activeFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true }))
+            .concat(manualFlours.map(f => ({ name: f.name, weight: f.weight, isFlour: true })))
+            .concat([{ name: 'Schüttwasser', weight: finalTapWater, isFlour: false }]);
+        if (actualSourdoughWeight > 0) compositionItems.push({ name: 'Sauerteig', weight: actualSourdoughWeight, isFlour: false });
+        if (yeastPct > 0) compositionItems.push({ name: yeastName, weight: finalYeast, isFlour: false });
+        compositionItems.push({ name: 'Salz', weight: parseFloat(finalSalt), isFlour: false });
+        manualIngredients.filter(i => !i.isFlour).forEach(i => compositionItems.push({ name: i.name, weight: i.weight, isFlour: false }));
+        lastComposition = { totalFlour: totalFlour, items: compositionItems };
+        renderCostCalculator();
+        renderAllergens();
+        renderBatchSplit();
+
         calculatePhase2(displayTargetWeight, isPureSourdough);
     }
 
@@ -1210,7 +1937,10 @@
     function setManualWeight(name, val) {
         let ing = manualIngredients.find(i => i.name === name);
         let n = parseFloat(val.replace(',', '.'));
-        if (ing) ing.weight = isNaN(n) || n < 0 ? 0 : n;
+        if (ing) {
+            ing.weight = isNaN(n) || n < 0 ? 0 : n;
+            if (ing.fromTemplate) ing.manuallySet = true;
+        }
         calculateEngine();
     }
 
@@ -1228,7 +1958,7 @@
             return;
         }
 
-        const preset = ingredientPresets.find(p => p.name === pName);
+        const preset = getAllPresets().find(p => p.name === pName);
         if (preset) {
             let existing = manualIngredients.find(i => i.name === preset.name);
             if (existing) {
@@ -1297,13 +2027,14 @@
             document.querySelectorAll('.normal-oven').forEach(e => e.style.display = 'none');
             bakeMinutes = 2;
             lastEstimatedHours = stockHoursNum + stueckHoursNum + (bakeMinutes / 60) + 0.5;
+            lastStageBreakdown = { stockMin: stockHoursNum * 60, stueckMin: stueckHoursNum * 60, bakeMin: bakeMinutes };
             updateTimeline();
             return;
         }
 
-        document.querySelectorAll('.normal-oven').forEach(e => e.style.display = phase === 1 ? 'flex' : 'none');
+        document.querySelectorAll('.normal-oven').forEach(e => e.style.display = activeTab === 'baking' ? 'flex' : 'none');
         if (category === 2) {
-            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = (phase === 1 && !useFridge) ? 'flex' : 'none');
+            document.querySelectorAll('.no-fridge').forEach(e => e.style.display = (activeTab === 'baking' && !useFridge) ? 'flex' : 'none');
         } else {
             document.querySelectorAll('.no-fridge').forEach(e => e.style.display = 'none');
         }
@@ -1325,6 +2056,7 @@
         document.getElementById('outTime').innerText = `${targetTime} Min. (${vMode})`;
 
         lastEstimatedHours = stockHoursNum + stueckHoursNum + (targetTime / 60) + 0.5;
+        lastStageBreakdown = { stockMin: stockHoursNum * 60, stueckMin: stueckHoursNum * 60, bakeMin: targetTime };
         updateTimeline();
     }
 
@@ -1358,25 +2090,23 @@
     // ============================================================
     // Reibungswärme (Friction Factor): Beim maschinellen Kneten erwärmt sich der Teig durch
     // die mechanische Reibung im Kneter spürbar - und zwar umso mehr, je länger geknetet wird.
-    // Faustregel aus der Bäckerei-Praxis: ca. 0,5°C Erwärmung pro Minute intensiver Maschinenknetung
-    // (z.B. Spiralkneter bei Pizzateig, der oft 10+ Minuten geknetet wird). Handknetung erwärmt den
-    // Teig kaum spürbar und wird daher weiterhin als fixer, kleiner Wert angenommen.
-    const MACHINE_FRICTION_PER_MINUTE = 0.5;
-    const HAND_FRICTION = 1;
-
+    // Jedes Kneter-Profil (siehe Werkzeuge → Maschinenprofile) hat eine eigene °C/Min-Rate;
+    // Handknetung erwärmt den Teig kaum spürbar und wird als fixer, kleiner Wert angenommen.
     function calculateFriction() {
-        const isMachine = document.getElementById('ddtFriction').value === '2';
-        if (!isMachine) return HAND_FRICTION;
+        const select = document.getElementById('ddtFriction');
+        const profile = machineProfiles.find(p => p.id === select.value) || machineProfiles[machineProfiles.length - 1];
+        if (!profile || profile.fixed) return (profile && profile.fixed) || 1;
         const minutes = getClampedVal('ddtKneadMinutes', 10, 1, 30);
-        return minutes * MACHINE_FRICTION_PER_MINUTE;
+        return minutes * profile.rate;
     }
 
     function updateDDT() {
         const useStarter = document.getElementById('ddtUseStarter').checked;
         document.getElementById('ddtStarterRow').style.display = useStarter ? 'flex' : 'none';
 
-        const isMachine = document.getElementById('ddtFriction').value === '2';
-        document.getElementById('ddtKneadMinutesRow').style.display = isMachine ? 'flex' : 'none';
+        const select = document.getElementById('ddtFriction');
+        const profile = machineProfiles.find(p => p.id === select.value);
+        document.getElementById('ddtKneadMinutesRow').style.display = (profile && !profile.fixed) ? 'flex' : 'none';
 
         const desired = getClampedVal('ddtDesired', 25, 15, 35);
         const room = getClampedVal('ddtRoomTemp', 21, 5, 40);
@@ -1408,7 +2138,7 @@
     }
 
     function triggerProTip() {
-        const templateId = document.getElementById('templatePicker').value;
+        const templateId = selectedTemplateId;
         let text = "";
         if (category === 2) text = "PRO-TIPP: BASSINAGE (Wasserrückhalt)\nBei Pizzateigen mit hoher Hydration solltest du beim Kneten ca. 10-15% des Schüttwassers zurückhalten. Knete den Teig erst komplett aus, bis er stabil ist, und lass dann das restliche Wasser tröpfchenweise einfließen. Das garantiert ein stabiles Glutengerüst, ohne dass der Teig zerfließt!";
         else if (category === 1) text = "PRO-TIPP: BRÖTCHEN-SCHLEIFEN\nFür eine perfekte, glatte Oberfläche und einen kräftigen Ofentrieb musst du die Teiglinge mit leichtem Druck auf einer mehlfreien Arbeitsfläche kreisförmig unter deiner hohlen Hand 'schleifen'. Dadurch entsteht Oberflächenspannung!";
@@ -1497,9 +2227,11 @@
 
         const recipe = {
             id: duplicate ? duplicate.id : Date.now(),
+            ownerId: (duplicate && duplicate.ownerId) ? duplicate.ownerId : ownerId,
             name: name,
             notes: notesInput.value.trim(),
             category: category,
+            templateId: selectedTemplateId,
             targetHydration: getFloatVal('targetHydration', 65),
             targetWeight: getFloatVal('targetWeight', 1000),
             targetPieceWeight: getFloatVal('targetPieceWeight', defaultPieceWeight[category] || 85),
@@ -1522,10 +2254,28 @@
             } else {
                 recipeCache.push(recipe);
             }
+            const shareToggle = document.getElementById('shareTeamToggle');
+            if (shareToggle && shareToggle.checked) {
+                const existingShared = sharedRecipeCache.find(r => r.id === recipe.id);
+                if (existingShared && existingShared.ownerId && existingShared.ownerId !== ownerId) {
+                    showToast('In der Team-Bibliothek existiert bereits ein fremdes Rezept mit dieser ID – nicht überschrieben.');
+                } else {
+                    try {
+                        await window.storage.set('sharedrecipe:' + recipe.id, JSON.stringify(recipe), true);
+                        sharedRecipeCache = sharedRecipeCache.filter(r => r.id !== recipe.id).concat(recipe);
+                        renderSharedRecipes();
+                        showToast('Rezept gespeichert und geteilt.');
+                    } catch (e) {
+                        showToast('Rezept gespeichert, Teilen ist fehlgeschlagen.');
+                    }
+                }
+                shareToggle.checked = false;
+            } else {
+                showToast('Rezept gespeichert.');
+            }
             nameInput.value = "";
             notesInput.value = "";
             renderSavedRecipes();
-            showToast('Rezept gespeichert.');
         } catch (e) {
             showToast('Speichern fehlgeschlagen. Bitte erneut versuchen.');
         } finally {
@@ -1533,11 +2283,82 @@
         }
     }
 
-    function loadRecipe(id) {
+    async function loadSharedRecipesFromStorage() {
+        const container = document.getElementById('sharedRecipesContainer');
+        try {
+            const listResult = await window.storage.list('sharedrecipe:', true);
+            const keys = (listResult && listResult.keys) || [];
+            const recipes = [];
+            for (const key of keys) {
+                try {
+                    const res = await window.storage.get(key, true);
+                    if (res && res.value) recipes.push(JSON.parse(res.value));
+                } catch (e) { /* defekten Eintrag überspringen */ }
+            }
+            sharedRecipeCache = recipes;
+        } catch (e) {
+            sharedRecipeCache = [];
+        }
+        renderSharedRecipes();
+    }
+
+    function renderSharedRecipes() {
+        const container = document.getElementById('sharedRecipesContainer');
+        if (!container) return;
+        const filtered = sharedRecipeCache.filter(r => r.category === category);
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state">Noch keine geteilten Rezepte in dieser Kategorie.</div>`;
+            return;
+        }
+        container.innerHTML = filtered.map(r => {
+            const isOwner = !r.ownerId || r.ownerId === ownerId;
+            const deleteControl = isOwner
+                ? `<button type="button" class="delete-btn" onclick="deleteSharedRecipe(${r.id})" aria-label="${r.name} aus Team-Bibliothek löschen">🗑️</button>`
+                : `<span class="info-icon-btn" style="cursor:default;" title="Nur der Ersteller kann dieses Rezept löschen" aria-label="Nur der Ersteller kann löschen">🔒</span>`;
+            return `
+            <div class="row">
+                <div style="min-width:0;">
+                    <div style="font-weight:700; font-size:14px;">${r.name}</div>
+                    <div style="font-size:11px; color:var(--text-secondary);">Hydration: ${r.targetHydration}%${r.notes ? ' · ' + escapeHtml(r.notes).slice(0, 60) : ''}</div>
+                </div>
+                <div style="white-space: nowrap;">
+                    <button type="button" class="btn-plus" onclick="loadRecipe(${r.id}, true)" style="padding:6px 12px; font-size:12px;">Laden</button>
+                    ${deleteControl}
+                </div>
+            </div>
+        `;
+        }).join('');
+    }
+
+    async function deleteSharedRecipe(id) {
+        const r = sharedRecipeCache.find(item => item.id === id);
+        // Owner-Absicherung: nur der Ersteller (oder, bei Alt-Rezepten ohne
+        // ownerId, jeder) darf löschen. Das ist eine UI-seitige Schranke –
+        // ohne echten Server/Auth kann sie jemand über die Konsole umgehen,
+        // schützt aber vor versehentlichem/casualem Löschen fremder Rezepte
+        // über die normale Bedienung.
+        if (r && r.ownerId && r.ownerId !== ownerId) {
+            showToast('Nur der Ersteller kann dieses Rezept löschen.');
+            return;
+        }
+        const ok = await askConfirm('Für alle löschen?', `"${r ? r.name : 'Dieses Rezept'}" wird aus der Team-Bibliothek entfernt und ist danach für niemanden mehr sichtbar.`);
+        if (!ok) return;
+        try {
+            await window.storage.delete('sharedrecipe:' + id, true);
+            sharedRecipeCache = sharedRecipeCache.filter(item => item.id !== id);
+            renderSharedRecipes();
+            showToast('Aus Team-Bibliothek gelöscht.');
+        } catch (e) {
+            showToast('Löschen fehlgeschlagen.');
+        }
+    }
+
+    function loadRecipe(id, fromShared) {
         isLoadingRecipe = true;
-        let r = recipeCache.find(item => item.id === id);
+        let r = (fromShared ? sharedRecipeCache : recipeCache).find(item => item.id === id);
         if (r) {
             changeCategory(r.category);
+            selectTemplate(r.templateId && templates[r.category].find(t => t.id === r.templateId) ? r.templateId : templates[r.category][0].id, { silent: true });
             document.getElementById('targetHydration').value = r.targetHydration;
             document.getElementById('targetWeight').value = r.targetWeight;
             if (r.targetPieceWeight) document.getElementById('targetPieceWeight').value = r.targetPieceWeight;
@@ -1567,6 +2388,574 @@
         } catch (e) {
             showToast('Löschen fehlgeschlagen. Bitte erneut versuchen.');
         }
+    }
+
+    // ============================================================
+    // GLOSSAR (Tooltips in der Schritt-für-Schritt Anleitung)
+    // ============================================================
+    const GLOSSARY = {
+        "Autolyse": "Kurze Ruhephase, bei der nur Mehl und Wasser (ohne Salz/Hefe/Sauerteig) vermischt werden. Das Mehl kann vorquellen, was Kruste und Krume verbessert.",
+        "Stockgare": "Die erste Ruhephase des Teigs im Ganzen, nach dem Kneten und vor dem Formen.",
+        "Stückgare": "Die zweite Ruhephase, nachdem der Teig geformt (portioniert) wurde – direkt vor dem Backen.",
+        "Klebergerüst": "Das elastische Netzwerk aus Gluten-Eiweißen im Teig, das für Struktur und Gashaltevermögen sorgt.",
+        "Poolish": "Ein flüssiger Vorteig aus gleichen Teilen Mehl und Wasser mit wenig Hefe, der lange vorreift und Aroma sowie Triebkraft liefert.",
+        "Schwaden": "Wasserdampf, der zu Backbeginn in den Ofen gegeben wird, damit die Kruste länger elastisch bleibt und das Brot besser aufgehen kann.",
+        "Bassinage": "Technik, bei der ein Teil des Schüttwassers erst nach dem Hauptkneten langsam zugegeben wird, um sehr feuchte Teige stabiler zu halten.",
+        "Cornicione": "Der unberührte, äußere Rand eines handgezogenen Pizzabodens, der im Ofen luftig aufbläht.",
+        "Reibungswärme": "Wärme, die beim maschinellen Kneten durch Reibung im Teig entsteht und dessen Endtemperatur erhöht.",
+        "TA": "Teigausbeute – Kennzahl der deutschen Bäckerei: (Mehl + Wasser) ×100 / Mehl. TA 165 bedeutet z.B. 65% Hydration.",
+        "Hydration": "Der Wasseranteil im Teig, angegeben in % der Mehlmenge (Bäckerprozent)."
+    };
+
+    function linkifyGlossary(text) {
+        let out = text;
+        Object.keys(GLOSSARY).forEach(term => {
+            const re = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+            if (re.test(out)) {
+                out = out.replace(re, `<span class="glossary-term" onclick="showGlossary('${term}')">${term}</span>`);
+            }
+        });
+        return out;
+    }
+
+    function showGlossary(term) {
+        document.getElementById('glossaryTerm').innerText = term;
+        document.getElementById('glossaryText').innerText = GLOSSARY[term] || '';
+        document.getElementById('glossaryModal').style.display = 'flex';
+    }
+    function closeGlossary() { document.getElementById('glossaryModal').style.display = 'none'; }
+
+    // ============================================================
+    // ALLERGENE (EU-Kennzeichnung, aus aktueller Rezeptur abgeleitet)
+    // ============================================================
+    const ALLERGEN_MAP = {
+        "Weizenmehl Type 550 / Tipo 00": ["Glutenhaltiges Getreide"],
+        "Weizenmehl Type 1050": ["Glutenhaltiges Getreide"],
+        "Weizenvollkornmehl": ["Glutenhaltiges Getreide"],
+        "Dinkelmehl Type 630": ["Glutenhaltiges Getreide"],
+        "Dinkelvollkornmehl": ["Glutenhaltiges Getreide"],
+        "Roggenmehl Type 1150": ["Glutenhaltiges Getreide"],
+        "Roggenvollkornmehl": ["Glutenhaltiges Getreide"],
+        "Sauerteig": ["Glutenhaltiges Getreide"],
+        "Joghurt (3,5% Fett)": ["Milch/Laktose"],
+        "Skyr": ["Milch/Laktose"],
+        "Vollmilch": ["Milch/Laktose"],
+        "Butter": ["Milch/Laktose"],
+        "Ei (Größe M)": ["Eier"],
+        "Sesam": ["Sesam"],
+        "Mandeln (gehackt)": ["Schalenfrüchte (Nüsse)"]
+    };
+
+    function renderAllergens() {
+        const container = document.getElementById('allergenContainer');
+        if (!container) return;
+        const found = new Set();
+        (lastComposition.items || []).forEach(item => {
+            const tags = ALLERGEN_MAP[item.name] || (getAllPresets().find(p => p.name === item.name && p.isFlour) ? ["Glutenhaltiges Getreide"] : null);
+            if (tags) tags.forEach(t => found.add(t));
+        });
+        if (found.size === 0) {
+            container.innerHTML = `<span class="chip">Keine der 14 EU-Hauptallergene erkannt</span>`;
+            return;
+        }
+        container.innerHTML = [...found].map(a => `<span class="chip warn">⚠️ ${a}</span>`).join('');
+    }
+
+    // ============================================================
+    // KALKULATION (Kosten pro Rezept/Stück)
+    // ============================================================
+    async function loadIngredientPrices() {
+        try {
+            const res = await window.storage.get('settings:prices');
+            ingredientPrices = res && res.value ? JSON.parse(res.value) : {};
+        } catch (e) { ingredientPrices = {}; }
+    }
+    async function saveIngredientPrices() {
+        try { await window.storage.set('settings:prices', JSON.stringify(ingredientPrices)); } catch (e) { /* ignore */ }
+    }
+    function setIngredientPrice(name, val) {
+        const n = parseFloat(String(val).replace(',', '.'));
+        ingredientPrices[name] = isNaN(n) || n < 0 ? 0 : n;
+        saveIngredientPrices();
+        renderCostCalculator();
+    }
+
+    function renderCostCalculator() {
+        const container = document.getElementById('calcContainer');
+        const resultBox = document.getElementById('calcResult');
+        if (!container || !resultBox) return;
+        const items = lastComposition.items || [];
+        if (items.length === 0) {
+            container.innerHTML = `<div class="empty-state">Keine Zutaten in der aktuellen Rezeptur.</div>`;
+            resultBox.innerHTML = '';
+            return;
+        }
+        container.innerHTML = items.map(item => `
+            <div class="calc-row">
+                <div class="calc-row-name">${item.name}<div class="row-details">${item.weight} g</div></div>
+                <input type="text" inputmode="decimal" value="${ingredientPrices[item.name] || 0}" oninput="setIngredientPrice('${item.name.replace(/'/g, "\\'")}', this.value)">
+                <span class="unit-suffix">€/kg</span>
+            </div>
+        `).join('');
+
+        const totalCost = items.reduce((sum, item) => sum + (item.weight / 1000) * (ingredientPrices[item.name] || 0), 0);
+        const pieceCount = category === 0 ? 1 : getFloatVal('targetWeight', 1);
+        const costPerPiece = totalCost / Math.max(1, pieceCount);
+        const margin = getClampedVal('marginPct', 30, 0, 300);
+        const salePrice = costPerPiece * (1 + margin / 100);
+
+        resultBox.innerHTML = `
+            <div class="big">${totalCost.toFixed(2)} €</div>
+            <div class="small">Gesamtkosten Zutaten</div>
+            <div style="margin-top:8px; display:flex; justify-content:space-around;">
+                <div><div style="font-weight:800; font-size:16px;">${costPerPiece.toFixed(2)} €</div><div class="small">pro Stück</div></div>
+                <div><div style="font-weight:800; font-size:16px; color:var(--success-green);">${salePrice.toFixed(2)} €</div><div class="small">Verkauf (+${margin}%)</div></div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // PRODUKTIONSMENGE & CHARGEN
+    // ============================================================
+    function renderBatchSplit() {
+        const resultBox = document.getElementById('batchResult');
+        if (!resultBox) return;
+        const totalFlourKg = (lastComposition.totalFlour || 0) / 1000;
+        const capacity = getClampedVal('batchCapacity', 5, 0.5, 100);
+        if (totalFlourKg <= 0) {
+            resultBox.innerHTML = `<div class="small">Keine Rezeptur geladen.</div>`;
+            return;
+        }
+        const batches = Math.max(1, Math.ceil(totalFlourKg / capacity));
+        const perBatchFlour = totalFlourKg / batches;
+        resultBox.innerHTML = `
+            <div class="big">${batches}× Charge${batches > 1 ? 'n' : ''}</div>
+            <div class="small">à ca. ${perBatchFlour.toFixed(2)} kg Mehl (Gesamt: ${totalFlourKg.toFixed(2)} kg)</div>
+        `;
+    }
+
+    // ============================================================
+    // MASCHINENPROFILE (für DDT-Rechner)
+    // ============================================================
+    const BUILTIN_MACHINE_PROFILES = [
+        { id: 'hand', name: 'Handknetung', rate: null, fixed: 1, builtin: true },
+        { id: 'standard', name: 'Standard-Küchenmaschine', rate: 0.5, builtin: true }
+    ];
+
+    async function loadMachineProfiles() {
+        let custom = [];
+        try {
+            const listResult = await window.storage.list('machineProfile:');
+            const keys = (listResult && listResult.keys) || [];
+            for (const key of keys) {
+                try {
+                    const res = await window.storage.get(key);
+                    if (res && res.value) custom.push(JSON.parse(res.value));
+                } catch (e) { /* skip */ }
+            }
+        } catch (e) { /* keep empty */ }
+        machineProfiles = BUILTIN_MACHINE_PROFILES.concat(custom);
+        renderMachineProfileSelect();
+    }
+
+    function renderMachineProfileSelect() {
+        const select = document.getElementById('ddtFriction');
+        if (!select) return;
+        const prevValue = select.value;
+        select.innerHTML = machineProfiles.map(p => `<option value="${p.id}">${p.name}${p.fixed ? '' : ' (' + p.rate + '°C/Min)'}</option>`).join('');
+        if (machineProfiles.find(p => p.id === prevValue)) select.value = prevValue;
+        else select.value = 'standard';
+    }
+
+    function renderMachineProfileManager() {
+        const container = document.getElementById('machineProfileContainer');
+        if (!container) return;
+        container.innerHTML = machineProfiles.map(p => `
+            <div class="row">
+                <div>${p.name}<div class="row-details">${p.fixed ? 'Fixe Reibungswärme: ' + p.fixed + '°C' : p.rate + '°C pro Minute'}</div></div>
+                ${p.builtin ? '' : `<button type="button" class="delete-btn" onclick="deleteMachineProfile('${p.id}')" aria-label="${p.name} löschen">🗑️</button>`}
+            </div>
+        `).join('');
+    }
+
+    async function addMachineProfile() {
+        const nameInput = document.getElementById('newMachineName');
+        const rateInput = document.getElementById('newMachineRate');
+        const name = nameInput.value.trim();
+        const rate = parseFloat(rateInput.value.replace(',', '.'));
+        if (!name || isNaN(rate) || rate < 0) {
+            showToast('Bitte Namen und eine gültige Reibungswärme (°C/Min) angeben.');
+            return;
+        }
+        const profile = { id: 'custom_' + Date.now(), name, rate, builtin: false };
+        try {
+            await window.storage.set('machineProfile:' + profile.id, JSON.stringify(profile));
+            machineProfiles.push(profile);
+            renderMachineProfileSelect();
+            renderMachineProfileManager();
+            nameInput.value = ""; rateInput.value = "";
+            showToast('Maschinenprofil gespeichert.');
+        } catch (e) {
+            showToast('Speichern fehlgeschlagen.');
+        }
+    }
+
+    async function deleteMachineProfile(id) {
+        const ok = await askConfirm('Profil löschen?', 'Dieses Maschinenprofil wird dauerhaft entfernt.');
+        if (!ok) return;
+        try {
+            await window.storage.delete('machineProfile:' + id);
+            machineProfiles = machineProfiles.filter(p => p.id !== id);
+            renderMachineProfileSelect();
+            renderMachineProfileManager();
+            updateDDT();
+            showToast('Profil gelöscht.');
+        } catch (e) {
+            showToast('Löschen fehlgeschlagen.');
+        }
+    }
+
+    // ============================================================
+    // EIGENE MEHLPROFILE
+    // ============================================================
+    function getAllPresets() {
+        return ingredientPresets.concat(flourProfiles);
+    }
+
+    async function loadFlourProfiles() {
+        let custom = [];
+        try {
+            const listResult = await window.storage.list('flourProfile:');
+            const keys = (listResult && listResult.keys) || [];
+            for (const key of keys) {
+                try {
+                    const res = await window.storage.get(key);
+                    if (res && res.value) custom.push(JSON.parse(res.value));
+                } catch (e) { /* skip */ }
+            }
+        } catch (e) { /* keep empty */ }
+        flourProfiles = custom;
+        populateDropdowns();
+    }
+
+    function renderFlourProfileManager() {
+        const container = document.getElementById('flourProfileContainer');
+        if (!container) return;
+        if (flourProfiles.length === 0) {
+            container.innerHTML = `<div class="empty-state">Noch keine eigenen Mehlprofile angelegt.</div>`;
+            return;
+        }
+        container.innerHTML = flourProfiles.map(p => `
+            <div class="row">
+                <div>${p.name}<div class="row-details">Bindung: ${p.binding}</div></div>
+                <button type="button" class="delete-btn" onclick="deleteFlourProfile('${p.id}')" aria-label="${p.name} löschen">🗑️</button>
+            </div>
+        `).join('');
+    }
+
+    async function addFlourProfile() {
+        const nameInput = document.getElementById('newFlourName');
+        const bindingInput = document.getElementById('newFlourBinding');
+        const name = nameInput.value.trim();
+        const binding = parseFloat(bindingInput.value.replace(',', '.'));
+        if (!name || isNaN(binding) || binding < 0) {
+            showToast('Bitte Namen und eine gültige Bindungszahl angeben (z.B. 0.05).');
+            return;
+        }
+        const profile = { id: 'flour_' + Date.now(), name, waterContent: 0, isFlour: true, binding };
+        try {
+            await window.storage.set('flourProfile:' + profile.id, JSON.stringify(profile));
+            flourProfiles.push(profile);
+            populateDropdowns();
+            renderFlourProfileManager();
+            nameInput.value = ""; bindingInput.value = "";
+            showToast('Mehlprofil gespeichert.');
+        } catch (e) {
+            showToast('Speichern fehlgeschlagen.');
+        }
+    }
+
+    async function deleteFlourProfile(id) {
+        const ok = await askConfirm('Mehlprofil löschen?', 'Dieses Mehlprofil wird dauerhaft entfernt.');
+        if (!ok) return;
+        try {
+            await window.storage.delete('flourProfile:' + id);
+            flourProfiles = flourProfiles.filter(p => p.id !== id);
+            populateDropdowns();
+            renderFlourProfileManager();
+            showToast('Mehlprofil gelöscht.');
+        } catch (e) {
+            showToast('Löschen fehlgeschlagen.');
+        }
+    }
+
+    // ============================================================
+    // PROBLEMLÖSER (Troubleshooting)
+    // ============================================================
+    const TROUBLESHOOT_DATA = [
+        { problem: "Teig ist zu klebrig / lässt sich nicht formen", solution: "Meist normal bei hoher Hydration. Hände und Arbeitsfläche mit Wasser statt Mehl befeuchten, nicht zusätzliches Mehl einkneten (verändert die Rezeptur). Dehnen-und-Falten statt Kneten hilft bei sehr feuchten Teigen." },
+        { problem: "Teig geht nicht/kaum auf", solution: "Prüfen: Ist die Hefe frisch/aktiv? War das Wasser zu heiß (>45°C tötet Hefe ab)? Ist die Raumtemperatur zu kühl? Bei Sauerteig: Ist der Starter wirklich aktiv (Schwimmtest machen)? Ggf. länger und wärmer gehen lassen." },
+        { problem: "Teig reißt beim Formen ein", solution: "Klebergerüst noch nicht ausreichend entwickelt – länger kneten oder mehr Dehnen-und-Falten-Runden einbauen. Bei Vollkornmehl ist das normal, da die Kleiepartikel das Gerüst durchtrennen – schonender formen." },
+        { problem: "Brot ist nach dem Backen zu kompakt/dicht", solution: "Häufigste Ursache: zu kurze oder zu lange Gare. Fingerprobe machen: Eindruck sollte sich langsam zurückbilden. Auch möglich: zu wenig Wasser oder zu altes Mehl mit wenig Klebergerüst." },
+        { problem: "Kruste ist zu dick oder zu hart", solution: "Zu lange oder zu heiß gebacken, oder zu wenig Dampf/Schwaden zu Backbeginn. Schwaden hält die Kruste länger elastisch." },
+        { problem: "Brot schmeckt zu sauer", solution: "Typisch bei zu langer/zu warmer Sauerteig-Gare. Kühlere und/oder kürzere Stockgare probieren, oder Anstellgut milder halten (öfter füttern)." },
+        { problem: "Pizza-/Brotteig fühlt sich zu fest/trocken an", solution: "Hydration erhöhen (Ziel-Hydration im Dashboard anpassen) oder prüfen, ob Vollkorn-/Roggenanteile zusätzliches Wasser binden (siehe Bäcker%-Ansicht)." },
+        { problem: "Brötchen laufen im Ofen breit statt hoch", solution: "Meist zu warme/lange Stückgare oder zu wenig Oberflächenspannung beim Formen (straffer rundwirken/schleifen)." }
+    ];
+
+    function renderTroubleshoot() {
+        const container = document.getElementById('troubleshootContainer');
+        if (!container) return;
+        container.innerHTML = TROUBLESHOOT_DATA.map((item, i) => `
+            <div class="accordion-item" id="accItem${i}">
+                <button type="button" class="accordion-header" onclick="toggleAccordion(${i})">
+                    <span>${item.problem}</span>
+                    <span class="accordion-chevron">▾</span>
+                </button>
+                <div class="accordion-body">${item.solution}</div>
+            </div>
+        `).join('');
+    }
+
+    function toggleAccordion(i) {
+        document.getElementById('accItem' + i).classList.toggle('open');
+    }
+
+    // ============================================================
+    // SAUERTEIG-TAGEBUCH
+    // ============================================================
+    async function loadStarterEntries() {
+        try {
+            const listResult = await window.storage.list('starterlog:');
+            const keys = (listResult && listResult.keys) || [];
+            const entries = [];
+            for (const key of keys) {
+                try {
+                    const res = await window.storage.get(key);
+                    if (res && res.value) entries.push(JSON.parse(res.value));
+                } catch (e) { /* skip */ }
+            }
+            starterEntries = entries.sort((a, b) => b.timestamp - a.timestamp);
+        } catch (e) { starterEntries = []; }
+    }
+
+    async function logStarterFeeding() {
+        const entry = { id: Date.now(), timestamp: Date.now() };
+        try {
+            await window.storage.set('starterlog:' + entry.id, JSON.stringify(entry));
+            starterEntries.unshift(entry);
+            renderStarterDiary();
+            showToast('Fütterung eingetragen.');
+        } catch (e) {
+            showToast('Eintragen fehlgeschlagen.');
+        }
+    }
+
+    function renderStarterDiary() {
+        const statusBox = document.getElementById('starterStatusBox');
+        const historyContainer = document.getElementById('starterHistoryContainer');
+        if (!statusBox) return;
+        const intervalH = getClampedVal('starterIntervalHours', 24, 1, 168);
+        if (starterEntries.length === 0) {
+            statusBox.innerHTML = `<div class="small">Noch keine Fütterung eingetragen.</div>`;
+            historyContainer.innerHTML = '';
+            return;
+        }
+        const last = starterEntries[0];
+        const hoursSince = (Date.now() - last.timestamp) / 3600000;
+        const hoursLeft = intervalH - hoursSince;
+        let dotClass = 'ok', statusText = `Nächste Fütterung in ca. ${Math.max(0, hoursLeft).toFixed(1)} Std.`;
+        if (hoursLeft < 0) { dotClass = 'late'; statusText = `Überfällig seit ca. ${Math.abs(hoursLeft).toFixed(1)} Std.!`; }
+        else if (hoursLeft < intervalH * 0.2) { dotClass = 'warn'; statusText = `Bald fällig – noch ca. ${hoursLeft.toFixed(1)} Std.`; }
+
+        statusBox.innerHTML = `<div class="big"><span class="status-dot ${dotClass}"></span>${statusText}</div><div class="small">Letzte Fütterung: ${new Date(last.timestamp).toLocaleString('de-DE')}</div>`;
+
+        historyContainer.innerHTML = starterEntries.slice(0, 10).map(e => `
+            <div class="diary-entry">
+                <div class="diary-entry-date">${new Date(e.timestamp).toLocaleString('de-DE')}</div>
+                <button type="button" class="delete-btn" onclick="deleteStarterEntry(${e.id})" aria-label="Eintrag löschen">🗑️</button>
+            </div>
+        `).join('');
+
+        if (dotClass === 'late' && notifyEnabled) {
+            notifyUser('Sauerteig füttern!', statusText);
+        }
+    }
+
+    async function deleteStarterEntry(id) {
+        try {
+            await window.storage.delete('starterlog:' + id);
+            starterEntries = starterEntries.filter(e => e.id !== id);
+            renderStarterDiary();
+        } catch (e) { showToast('Löschen fehlgeschlagen.'); }
+    }
+
+    function toggleNotifications() {
+        const toggle = document.getElementById('notifyToggle');
+        if (toggle.checked && 'Notification' in window) {
+            Notification.requestPermission().then(perm => {
+                notifyEnabled = perm === 'granted';
+                if (!notifyEnabled) { toggle.checked = false; showToast('Benachrichtigungen wurden nicht erlaubt.'); }
+            });
+        } else {
+            notifyEnabled = false;
+        }
+    }
+
+    function notifyUser(title, body) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try { new Notification(title, { body }); } catch (e) { /* ignore */ }
+        }
+        showToast(title + ' — ' + body);
+    }
+
+    setInterval(() => { if (document.getElementById('starterStatusBox')) renderStarterDiary(); }, 5 * 60 * 1000);
+
+    // ============================================================
+    // BACKSTATISTIK / ERFOLGE
+    // ============================================================
+    const ACHIEVEMENT_LEVELS = [
+        { count: 1, icon: '🌱', label: '1. Backwerk' },
+        { count: 5, icon: '🍞', label: '5 Backwerke' },
+        { count: 10, icon: '🥖', label: '10 Backwerke' },
+        { count: 25, icon: '🏅', label: '25 Backwerke' },
+        { count: 50, icon: '🏆', label: '50 Backwerke' }
+    ];
+
+    async function loadBakeCount() {
+        try {
+            const res = await window.storage.get('stats:bakecount');
+            bakeCount = res && res.value ? (JSON.parse(res.value).count || 0) : 0;
+        } catch (e) { bakeCount = 0; }
+    }
+
+    async function markAsBaked() {
+        bakeCount++;
+        try {
+            await window.storage.set('stats:bakecount', JSON.stringify({ count: bakeCount }));
+            renderAchievements();
+            const justUnlocked = ACHIEVEMENT_LEVELS.find(a => a.count === bakeCount);
+            showToast(justUnlocked ? `🎉 Erfolg freigeschaltet: ${justUnlocked.label}` : 'Danke fürs Backen! Statistik aktualisiert.');
+        } catch (e) {
+            showToast('Konnte nicht gespeichert werden.');
+        }
+    }
+
+    function renderAchievements() {
+        const display = document.getElementById('bakeCountDisplay');
+        const grid = document.getElementById('achievementGrid');
+        if (display) display.innerText = bakeCount;
+        if (!grid) return;
+        grid.innerHTML = ACHIEVEMENT_LEVELS.map(a => `
+            <div class="achievement-badge ${bakeCount >= a.count ? 'unlocked' : ''}">
+                <div class="ach-icon">${a.icon}</div>
+                <div class="ach-label">${a.label}</div>
+            </div>
+        `).join('');
+    }
+
+    // ============================================================
+    // GEFÜHRTER BACKMODUS
+    // ============================================================
+    function startGuidedMode() {
+        const stages = [
+            { key: 'stock', title: 'Stockgare', icon: '🥣', minutes: lastStageBreakdown.stockMin },
+            { key: 'form', title: 'Formen (manuell)', icon: '✋', minutes: 0 },
+            { key: 'stueck', title: 'Stückgare', icon: '⏳', minutes: lastStageBreakdown.stueckMin },
+            { key: 'bake', title: 'Backen', icon: '🔥', minutes: lastStageBreakdown.bakeMin }
+        ];
+        guidedState = { stages, currentIndex: 0, remainingSec: stages[0].minutes * 60, timerId: null };
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        renderGuidedMode();
+        runGuidedTimer();
+    }
+
+    function runGuidedTimer() {
+        if (guidedState.timerId) clearInterval(guidedState.timerId);
+        guidedState.timerId = setInterval(() => {
+            if (!guidedState) return;
+            const stage = guidedState.stages[guidedState.currentIndex];
+            if (stage.minutes > 0) {
+                guidedState.remainingSec = Math.max(0, guidedState.remainingSec - 1);
+                if (guidedState.remainingSec === 0) {
+                    notifyUser(stage.title + ' fertig!', 'Weiter zur nächsten Stufe.');
+                }
+            }
+            renderGuidedMode();
+        }, 1000);
+    }
+
+    function advanceGuidedStage() {
+        if (!guidedState) return;
+        guidedState.currentIndex++;
+        if (guidedState.currentIndex >= guidedState.stages.length) {
+            stopGuidedMode();
+            markAsBaked();
+            return;
+        }
+        guidedState.remainingSec = guidedState.stages[guidedState.currentIndex].minutes * 60;
+        renderGuidedMode();
+    }
+
+    function stopGuidedMode() {
+        if (guidedState && guidedState.timerId) clearInterval(guidedState.timerId);
+        guidedState = null;
+        document.getElementById('guidedModeContent').innerHTML = `<button type="button" class="btn-plus" style="width:100%;" onclick="startGuidedMode()">▶️ Backmodus starten</button>`;
+    }
+
+    function renderGuidedMode() {
+        const container = document.getElementById('guidedModeContent');
+        if (!container || !guidedState) return;
+        const stage = guidedState.stages[guidedState.currentIndex];
+        const mm = Math.floor(guidedState.remainingSec / 60);
+        const ss = guidedState.remainingSec % 60;
+        const timerDisplay = stage.minutes > 0 ? `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` : '–';
+
+        container.innerHTML = `
+            <div class="guided-timer">${timerDisplay}</div>
+            <div style="text-align:center; font-weight:700; margin-bottom:4px;">${stage.icon} ${stage.title}</div>
+            <button type="button" class="btn-plus" style="width:100%;" onclick="advanceGuidedStage()">
+                ${guidedState.currentIndex === guidedState.stages.length - 1 ? '✅ Fertig backen' : 'Weiter →'}
+            </button>
+            <button type="button" class="btn-ghost" style="width:100%; margin-top:8px;" onclick="stopGuidedMode()">Abbrechen</button>
+            <div class="guided-stage-list">
+                ${guidedState.stages.map((s, i) => `
+                    <div class="guided-stage ${i === guidedState.currentIndex ? 'active' : ''} ${i < guidedState.currentIndex ? 'done' : ''}">
+                        <div class="guided-stage-icon">${i < guidedState.currentIndex ? '✅' : s.icon}</div>
+                        <div>
+                            <div class="guided-stage-title">${s.title}</div>
+                            <div class="guided-stage-time">${s.minutes > 0 ? Math.round(s.minutes) + ' Min.' : 'Manueller Schritt'}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // HÖHENANPASSUNG
+    // ============================================================
+    function updateAltitude() {
+        const resultBox = document.getElementById('altitudeResult');
+        if (!resultBox) return;
+        const altitude = getClampedVal('altitudeInput', 0, 0, 5000);
+        if (altitude < 900) {
+            resultBox.innerHTML = `<div class="small">Unter 900 m sind in der Regel keine Anpassungen nötig.</div>`;
+            return;
+        }
+        const steps = Math.floor((altitude - 900) / 300) + 1;
+        const yeastReduction = Math.min(50, steps * 10);
+        const tempIncrease = Math.min(15, steps * 5);
+        resultBox.innerHTML = `
+            <div class="info-box">
+                💡 Richtwerte für ${altitude} m Höhe:<br>
+                • Hefe/Sauerteig um ca. <strong>${yeastReduction}%</strong> reduzieren (Teig geht schneller)<br>
+                • Backtemperatur um ca. <strong>${tempIncrease}°C</strong> erhöhen<br>
+                • Etwas mehr Schüttwasser einplanen (schnellere Verdunstung) – am besten schrittweise annähern
+            </div>
+        `;
     }
 </script>
 </body>
