@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Back-Assistent Pro v0.23.0</title>
+<title>Back-Assistent Pro v0.25.1</title>
 
 <!-- PWA: Installierbarkeit + Homescreen-Verhalten -->
 <link rel="manifest" href="manifest.json">
@@ -142,6 +142,43 @@
         position: sticky;
         top: max(8px, env(safe-area-inset-top, 0px));
         z-index: 500;
+        transition: padding .25s ease;
+    }
+
+    /* Kollabierter Zustand beim Herunterscrollen: nur noch die Hydration
+       bleibt sichtbar, alles Weitere klappt sanft ein statt abrupt zu
+       verschwinden (max-height + opacity, da die tatsächliche Höhe je nach
+       Inhalt variiert). */
+    .dashboard-collapsible {
+        max-height: 700px;
+        opacity: 1;
+        overflow: hidden;
+        transition: max-height .28s ease, opacity .2s ease, margin-top .25s ease;
+    }
+    .dashboard-collapsible-extra {
+        max-height: 200px;
+        opacity: 1;
+        overflow: hidden;
+        transition: max-height .28s ease, opacity .2s ease;
+    }
+    .dashboard.collapsed {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    .dashboard.collapsed .dashboard-collapsible {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+    }
+    .dashboard.collapsed .dashboard-collapsible-extra {
+        max-height: 0;
+        opacity: 0;
+    }
+    .dashboard.collapsed .hydration-display {
+        font-size: 24px;
+    }
+    .dashboard.collapsed .hydration-label {
+        margin-bottom: 0;
     }
 
     .dashboard-stats-grid {
@@ -340,6 +377,30 @@
         justify-content: space-between;
         align-items: center;
         gap: 8px;
+    }
+
+    .section-title.collapsible {
+        cursor: pointer;
+        user-select: none;
+    }
+    .section-chevron {
+        font-size: 11px;
+        color: var(--text-secondary);
+        transition: transform .2s ease;
+        display: inline-block;
+        flex-shrink: 0;
+        margin-left: 6px;
+    }
+    .section-chevron.open { transform: rotate(180deg); }
+    .section-body {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height .3s ease, opacity .2s ease;
+    }
+    .section-body.open {
+        max-height: 2000px;
+        opacity: 1;
     }
 
     .section-subtitle {
@@ -819,7 +880,7 @@
 <div class="app-container">
     <div class="header-area">
         <h1>Back-Assistent Pro</h1>
-        <div class="version-badge">v0.23.0</div>
+        <div class="version-badge">v0.25.1</div>
     </div>
 
     <!-- CATEGORY PICKER -->
@@ -835,14 +896,16 @@
             <div>
                 <div class="hydration-label">Aktuelle Hydration (Ist)</div>
                 <div class="hydration-display" id="currentHydration">65.0%</div>
-                <div class="consistency-text">
-                    <span id="consistencyText">Optimaler Brotteig</span>
-                    <button type="button" class="info-icon-btn" onclick="triggerProTip()" aria-label="Profi-Tipp anzeigen">i</button>
-                    <button type="button" class="info-icon-btn" onclick="openQuickHelpModal()" aria-label="Teig-Problem? Schnelle Hilfe">🩺</button>
+                <div class="dashboard-collapsible-extra" id="dashboardHeaderExtra">
+                    <div class="consistency-text">
+                        <span id="consistencyText">Optimaler Brotteig</span>
+                        <button type="button" class="info-icon-btn" onclick="triggerProTip()" aria-label="Profi-Tipp anzeigen">i</button>
+                        <button type="button" class="info-icon-btn" onclick="openQuickHelpModal()" aria-label="Teig-Problem? Schnelle Hilfe">🩺</button>
+                    </div>
+                    <div class="small" id="consistencyFeel" style="color:var(--text-secondary); margin-top:2px;">Geschmeidig und elastisch, klebt nur noch leicht an den Fingern.</div>
                 </div>
-                <div class="small" id="consistencyFeel" style="color:var(--text-secondary); margin-top:2px;">Geschmeidig und elastisch, klebt nur noch leicht an den Fingern.</div>
             </div>
-            <div class="target-hydration-box">
+            <div class="target-hydration-box dashboard-collapsible-extra" id="targetHydrationBox">
                 <label for="targetHydration">Ziel-Hydration</label>
                 <input type="text" inputmode="decimal" id="targetHydration" value="65" style="text-align:center; width:72px;" disabled oninput="onTargetHydrationChanged()">
                 <button type="button" class="fix-toggle-btn" id="targetHydrationActiveToggle" onclick="toggleTargetHydrationActive()" aria-pressed="false" style="margin-top:6px; justify-content:center; width:72px; padding-left:0; padding-right:0;">
@@ -850,45 +913,47 @@
                 </button>
             </div>
         </div>
-        <div class="dashboard-stats-grid">
-            <div class="dashboard-stat">
-                <div class="dashboard-stat-label">Teigausbeute</div>
-                <div class="dashboard-stat-value" id="currentTA">165</div>
+        <div class="dashboard-collapsible" id="dashboardCollapsible">
+            <div class="dashboard-stats-grid">
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label">Teigausbeute</div>
+                    <div class="dashboard-stat-value" id="currentTA">165</div>
+                </div>
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label">Rohteig</div>
+                    <div class="dashboard-stat-value" id="dashRawDough">– g</div>
+                </div>
+                <div class="dashboard-stat">
+                    <div class="dashboard-stat-label" id="dashFinishedLabel">Brotgewicht</div>
+                    <div class="dashboard-stat-value" id="dashFinishedValue">– g</div>
+                </div>
             </div>
-            <div class="dashboard-stat">
-                <div class="dashboard-stat-label">Rohteig</div>
-                <div class="dashboard-stat-value" id="dashRawDough">– g</div>
-            </div>
-            <div class="dashboard-stat">
-                <div class="dashboard-stat-label" id="dashFinishedLabel">Brotgewicht</div>
-                <div class="dashboard-stat-value" id="dashFinishedValue">– g</div>
-            </div>
-        </div>
-        <div class="nutrition-section">
-            <div class="nutrition-main-row">
-                <div class="nutrition-main-stat">
-                    <div class="dashboard-stat-label" style="white-space:normal; overflow:visible; display:flex; align-items:center; justify-content:center; gap:3px;">
-                        🔥 Kcal gesamt
-                        <button type="button" class="info-icon-btn" onclick="openMacroTipsModal()" aria-label="Tipps: kalorienärmer oder eiweißreicher backen" style="width:15px; height:15px; font-size:9px; flex-shrink:0;">💡</button>
+            <div class="nutrition-section">
+                <div class="nutrition-main-row">
+                    <div class="nutrition-main-stat">
+                        <div class="dashboard-stat-label" style="white-space:normal; overflow:visible; display:flex; align-items:center; justify-content:center; gap:3px;">
+                            🔥 Kcal gesamt
+                            <button type="button" class="info-icon-btn" onclick="openMacroTipsModal()" aria-label="Tipps: kalorienärmer oder eiweißreicher backen" style="width:15px; height:15px; font-size:9px; flex-shrink:0;">💡</button>
+                        </div>
+                        <div class="dashboard-stat-value" id="nutriKcalTotal">– kcal</div>
                     </div>
-                    <div class="dashboard-stat-value" id="nutriKcalTotal">– kcal</div>
+                    <div class="nutrition-main-stat">
+                        <div class="dashboard-stat-label" id="nutriPerPieceLabel">Kcal / Scheibe</div>
+                        <div class="dashboard-stat-value" id="nutriKcalPerPiece">– kcal</div>
+                    </div>
                 </div>
-                <div class="nutrition-main-stat">
-                    <div class="dashboard-stat-label" id="nutriPerPieceLabel">Kcal / Scheibe</div>
-                    <div class="dashboard-stat-value" id="nutriKcalPerPiece">– kcal</div>
+                <div class="nutrition-macro-line">
+                    <span>KH <strong id="nutriCarbs">–</strong> g</span>
+                    <span>davon Ballaststoffe <strong id="nutriFiber">–</strong> g</span>
+                    <span>Eiweiß <strong id="nutriProtein">–</strong> g</span>
+                    <span>Fett <strong id="nutriFat">–</strong> g</span>
                 </div>
             </div>
-            <div class="nutrition-macro-line">
-                <span>KH <strong id="nutriCarbs">–</strong> g</span>
-                <span>davon Ballaststoffe <strong id="nutriFiber">–</strong> g</span>
-                <span>Eiweiß <strong id="nutriProtein">–</strong> g</span>
-                <span>Fett <strong id="nutriFat">–</strong> g</span>
+            <div id="blankStateCTA" style="display:none; margin-top:6px;">
+                <button type="button" class="btn-plus" style="width:100%; font-size:13px;" onclick="scrollToTemplateGallery()">👉 Rezept-Vorlage wählen, um loszulegen</button>
             </div>
+            <div id="dashboardAlerts" style="margin-top: 4px;"></div>
         </div>
-        <div id="blankStateCTA" style="display:none; margin-top:6px;">
-            <button type="button" class="btn-plus" style="width:100%; font-size:13px;" onclick="scrollToTemplateGallery()">👉 Rezept-Vorlage wählen, um loszulegen</button>
-        </div>
-        <div id="dashboardAlerts" style="margin-top: 4px;"></div>
     </div>
 
     <!-- PHASE 1: TEIG & ZUTATEN -->
@@ -958,54 +1023,69 @@
         </div>
 
         <div class="section">
-            <div class="section-title">Rezept-Konfigurator</div>
-            <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
-                <label style="font-size:11px; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Rezept-Vorlage</label>
-                <div class="template-gallery" id="templateGallery" role="listbox" aria-label="Rezept-Vorlage auswählen"></div>
+            <div class="section-title collapsible" onclick="toggleSection('konfigurator')">
+                Rezept-Konfigurator
+                <span class="section-chevron" id="chev_konfigurator">▾</span>
             </div>
-            <div class="row" id="totalWeightRow">
-                <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="text" inputmode="decimal" id="targetWeight" value="1000" disabled oninput="onTargetWeightChanged()" style="width:70px;">
-                    <span id="targetWeightActiveWrapper" style="display:inline-flex;">
-                        <button type="button" class="fix-toggle-btn" id="targetWeightActiveToggle" onclick="toggleTargetWeightActive()" aria-pressed="false">
-                            Fix
-                        </button>
-                    </span>
+            <div class="section-body" id="secBody_konfigurator">
+                <div class="row" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <label style="font-size:11px; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Rezept-Vorlage</label>
+                    <div class="template-gallery" id="templateGallery" role="listbox" aria-label="Rezept-Vorlage auswählen"></div>
                 </div>
-            </div>
-            <div class="row cat-piece-only" id="pieceWeightRow" style="display:none;">
-                <label id="pieceWeightLabel" for="targetPieceWeight">Gewicht / Stück (g)</label>
-                <input type="text" inputmode="decimal" id="targetPieceWeight" value="85" oninput="updateInputs()">
-            </div>
-            <div class="row cat-bread-only" id="bakeLossRow">
-                <label for="bakeLossPct">Backverlust (%)</label>
-                <input type="text" inputmode="decimal" id="bakeLossPct" value="15" oninput="updateInputs()">
-            </div>
-            <div class="row">
-                <label for="saltPct">Salz (%)</label>
-                <input type="text" inputmode="decimal" id="saltPct" value="2.0" oninput="updateInputs()">
+                <div class="row" id="totalWeightRow">
+                    <label id="weightLabel" for="targetWeight">Zielgewicht (g)</label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="text" inputmode="decimal" id="targetWeight" value="1000" disabled oninput="onTargetWeightChanged()" style="width:70px;">
+                        <span id="targetWeightActiveWrapper" style="display:inline-flex;">
+                            <button type="button" class="fix-toggle-btn" id="targetWeightActiveToggle" onclick="toggleTargetWeightActive()" aria-pressed="false">
+                                Fix
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="row cat-piece-only" id="pieceWeightRow" style="display:none;">
+                    <label id="pieceWeightLabel" for="targetPieceWeight">Gewicht / Stück (g)</label>
+                    <input type="text" inputmode="decimal" id="targetPieceWeight" value="85" oninput="updateInputs()">
+                </div>
+                <div class="row cat-bread-only" id="bakeLossRow">
+                    <label for="bakeLossPct">Backverlust (%)</label>
+                    <input type="text" inputmode="decimal" id="bakeLossPct" value="15" oninput="updateInputs()">
+                </div>
+                <div class="row">
+                    <label for="saltPct">Salz (%)</label>
+                    <input type="text" inputmode="decimal" id="saltPct" value="2.0" oninput="updateInputs()">
+                </div>
             </div>
         </div>
 
         <!-- SCHRITT-FÜR-SCHRITT ANLEITUNG -->
         <div class="section" id="stepsSection">
-            <div class="section-title">📋 Schritt-für-Schritt Anleitung</div>
-            <div id="stepsContent"></div>
+            <div class="section-title collapsible" onclick="toggleSection('steps')">
+                📋 Schritt-für-Schritt Anleitung
+                <span class="section-chevron" id="chev_steps">▾</span>
+            </div>
+            <div class="section-body" id="secBody_steps">
+                <div id="stepsContent"></div>
+            </div>
         </div>
 
         <div class="section">
-            <div class="section-title">Rezept in Backstube speichern</div>
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left; width: 100%; font-weight:500;">
-                <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()" aria-label="Rezept speichern">💾</button>
+            <div class="section-title collapsible" onclick="toggleSection('saveRecipe')">
+                Rezept in Backstube speichern
+                <span class="section-chevron" id="chev_saveRecipe">▾</span>
             </div>
-            <textarea id="newRecipeNotes" placeholder="Notiz (optional) – z.B. 'etwas mehr Salz, Ofen läuft heiß'"></textarea>
-            <div class="row" style="border-top: 1px solid var(--divider); margin-top: 4px; padding-top: 10px;">
-                <label for="shareTeamToggle" style="font-size:13px;">🌍 Zusätzlich in Team-Bibliothek teilen</label>
-                <input type="checkbox" id="shareTeamToggle">
+            <div class="section-body" id="secBody_saveRecipe">
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="newRecipeName" placeholder="z.B. Mein Ur-Dinkel" style="text-align: left; width: 100%; font-weight:500;">
+                    <button type="button" class="btn-plus" id="saveRecipeBtn" onclick="saveCurrentRecipe()" aria-label="Rezept speichern">💾</button>
+                </div>
+                <textarea id="newRecipeNotes" placeholder="Notiz (optional) – z.B. 'etwas mehr Salz, Ofen läuft heiß'"></textarea>
+                <div class="row" style="border-top: 1px solid var(--divider); margin-top: 4px; padding-top: 10px;">
+                    <label for="shareTeamToggle" style="font-size:13px;">🌍 Zusätzlich in Team-Bibliothek teilen</label>
+                    <input type="checkbox" id="shareTeamToggle">
+                </div>
+                <button type="button" class="btn-ghost no-print" style="width:100%; margin-top:8px;" onclick="window.print()">🖨️ Rezept drucken / als PDF sichern</button>
             </div>
-            <button type="button" class="btn-ghost no-print" style="width:100%; margin-top:8px;" onclick="window.print()">🖨️ Rezept drucken / als PDF sichern</button>
         </div>
     </div>
 
@@ -1028,140 +1108,170 @@
             </div>
         </div>
         <div class="section">
-            <div class="section-title">Gär- & Ofenparameter</div>
-            <div class="row">
-                <label for="fridgeToggle">Im Kühlschrank (5°C) reifen lassen?</label>
-                <input type="checkbox" id="fridgeToggle" onchange="updateInputs()">
+            <div class="section-title collapsible" onclick="toggleSection('gaerparameter')">
+                Gär- & Ofenparameter
+                <span class="section-chevron" id="chev_gaerparameter">▾</span>
             </div>
-            <div class="row">
-                <label for="mixedProofToggle">🌙 Gemischt: kurz anspringen, dann kalt</label>
-                <input type="checkbox" id="mixedProofToggle" onchange="updateInputs()">
-            </div>
-            <div class="row" id="autolyseRow">
-                <label for="autolyseToggle">🕐 <span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span> einplanen</label>
-                <input type="checkbox" id="autolyseToggle" onchange="updateInputs()">
-            </div>
-            <div class="row pizza-only">
-                <label for="fermentHours">Gehzeit Gesamt (Std)</label>
-                <input type="text" inputmode="decimal" id="fermentHours" value="24" oninput="updateInputs()">
-            </div>
-            <div class="row pizza-only no-fridge">
-                <label for="roomTemp">Raum-Temperatur (°C)</label>
-                <input type="text" inputmode="decimal" id="roomTemp" value="21" oninput="updateInputs()">
-            </div>
-            <div class="row pizza-only">
-                <label for="ovenType">Ofentyp</label>
-                <select id="ovenType" onchange="updateInputs()">
-                    <option value="0">Haushaltsbackofen</option>
-                    <option value="1">Pizzaofen (400°C+)</option>
-                </select>
-            </div>
-            <div class="row normal-oven">
-                <label for="heatingType">Heizart</label>
-                <select id="heatingType" onchange="updateInputs()">
-                    <option value="0">Ober-/Unterhitze</option>
-                    <option value="1">Umluft / Heißluft</option>
-                </select>
-            </div>
-            <div class="row normal-oven">
-                <label for="vesselType">Back-Behältnis</label>
-                <select id="vesselType" onchange="updateInputs()">
-                    <option value="0">Freigeschoben (Stein/Blech)</option>
-                    <option value="1">In Backform / Pfanne</option>
-                </select>
-            </div>
-            <div class="row normal-oven">
-                <label for="preheatToggle">Backofen vollständig vorgeheizt?</label>
-                <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()">
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Zubereitungs-Fahrplan</div>
-            <div id="autolyseFahrplanRow" style="display:none; padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
-                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Vorbereitung</div>
-                <div class="row"><span style="font-size:13px; color:var(--text-secondary);"><span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span>:</span><span id="outAutolyse" style="font-weight:600;">30-60 Min.</span></div>
-                <div class="section-subtitle" style="margin-top:2px;">Nur Mehl + Wasser vermischen und ruhen lassen. Salz und Hefe/Sauerteig erst danach zugeben.</div>
-            </div>
-            <div style="padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
-                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Gärzeiten</div>
-                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
-                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stückgare (Formruhe):</span><span id="outStueckgare" style="font-weight:600;">-</span></div>
-            </div>
-            <div style="padding: 12px 0 4px 0;">
-                <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Backanleitung</div>
-                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Back-Temperatur:</span><span id="outTemp" style="font-weight:600;">-</span></div>
-                <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Empfohlene Backzeit:</span><span id="outTime" style="font-weight:600;">-</span></div>
+            <div class="section-body" id="secBody_gaerparameter">
+                <div class="row">
+                    <label for="fridgeToggle">Im Kühlschrank (5°C) reifen lassen?</label>
+                    <input type="checkbox" id="fridgeToggle" onchange="updateInputs()">
+                </div>
+                <div class="row">
+                    <label for="mixedProofToggle">🌙 Gemischt: kurz anspringen, dann kalt</label>
+                    <input type="checkbox" id="mixedProofToggle" onchange="updateInputs()">
+                </div>
+                <div class="row" id="autolyseRow">
+                    <label for="autolyseToggle">🕐 <span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span> einplanen</label>
+                    <input type="checkbox" id="autolyseToggle" onchange="updateInputs()">
+                </div>
+                <div class="row pizza-only">
+                    <label for="fermentHours">Gehzeit Gesamt (Std)</label>
+                    <input type="text" inputmode="decimal" id="fermentHours" value="24" oninput="updateInputs()">
+                </div>
+                <div class="row pizza-only no-fridge">
+                    <label for="roomTemp">Raum-Temperatur (°C)</label>
+                    <input type="text" inputmode="decimal" id="roomTemp" value="21" oninput="updateInputs()">
+                </div>
+                <div class="row pizza-only">
+                    <label for="ovenType">Ofentyp</label>
+                    <select id="ovenType" onchange="updateInputs()">
+                        <option value="0">Haushaltsbackofen</option>
+                        <option value="1">Pizzaofen (400°C+)</option>
+                    </select>
+                </div>
+                <div class="row normal-oven">
+                    <label for="heatingType">Heizart</label>
+                    <select id="heatingType" onchange="updateInputs()">
+                        <option value="0">Ober-/Unterhitze</option>
+                        <option value="1">Umluft / Heißluft</option>
+                    </select>
+                </div>
+                <div class="row normal-oven">
+                    <label for="vesselType">Back-Behältnis</label>
+                    <select id="vesselType" onchange="updateInputs()">
+                        <option value="0">Freigeschoben (Stein/Blech)</option>
+                        <option value="1">In Backform / Pfanne</option>
+                    </select>
+                </div>
+                <div class="row normal-oven">
+                    <label for="preheatToggle">Backofen vollständig vorgeheizt?</label>
+                    <input type="checkbox" id="preheatToggle" checked onchange="updateInputs()">
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">⏰ Rückwärts-Backplaner</div>
-            <div class="section-subtitle">Basierend auf Gärzeiten, Backzeit und ca. 30 Min. Vorbereitungspuffer.</div>
-            <div class="row">
-                <label for="finishTimeInput">Fertig backen um</label>
-                <input type="time" id="finishTimeInput" value="18:00" oninput="updateTimeline()">
+            <div class="section-title collapsible" onclick="toggleSection('fahrplan')">
+                Zubereitungs-Fahrplan
+                <span class="section-chevron" id="chev_fahrplan">▾</span>
             </div>
-            <div class="result-box" id="timelineResult">
-                <div class="big">-</div>
-                <div class="small">Starte deinen Teig um diese Uhrzeit</div>
+            <div class="section-body" id="secBody_fahrplan">
+                <div id="autolyseFahrplanRow" style="display:none; padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Vorbereitung</div>
+                    <div class="row"><span style="font-size:13px; color:var(--text-secondary);"><span class="glossary-term" onclick="showGlossary('Autolyse')">Autolyse</span>:</span><span id="outAutolyse" style="font-weight:600;">30-60 Min.</span></div>
+                    <div class="section-subtitle" style="margin-top:2px;">Nur Mehl + Wasser vermischen und ruhen lassen. Salz und Hefe/Sauerteig erst danach zugeben.</div>
+                </div>
+                <div style="padding: 4px 0 12px 0; border-bottom: 1px solid var(--divider);">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Gärzeiten</div>
+                    <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stockgare (Teigruhe):</span><span id="outStockgare" style="font-weight:600;">-</span></div>
+                    <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Stückgare (Formruhe):</span><span id="outStueckgare" style="font-weight:600;">-</span></div>
+                </div>
+                <div style="padding: 12px 0 4px 0;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--baker-brown); margin-bottom: 4px;">Backanleitung</div>
+                    <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Back-Temperatur:</span><span id="outTemp" style="font-weight:600;">-</span></div>
+                    <div class="row"><span style="font-size:13px; color:var(--text-secondary);">Empfohlene Backzeit:</span><span id="outTime" style="font-weight:600;">-</span></div>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">🌡️ Wassertemperatur-Rechner (DDT)</div>
-            <div class="section-subtitle">Berechnet die nötige Schüttwasser-Temperatur für eine konstante gewünschte Teigtemperatur.</div>
-            <div class="row">
-                <label for="ddtDesired">Ziel-Teigtemperatur (°C)</label>
-                <input type="text" inputmode="decimal" id="ddtDesired" value="25" oninput="updateDDT()">
+            <div class="section-title collapsible" onclick="toggleSection('rueckwaerts')">
+                ⏰ Rückwärts-Backplaner
+                <span class="section-chevron" id="chev_rueckwaerts">▾</span>
             </div>
-            <div class="row">
-                <label for="ddtRoomTemp">Raumtemperatur (°C)</label>
-                <input type="text" inputmode="decimal" id="ddtRoomTemp" value="21" oninput="updateDDT()">
+            <div class="section-body" id="secBody_rueckwaerts">
+                <div class="section-subtitle">Basierend auf Gärzeiten, Backzeit und ca. 30 Min. Vorbereitungspuffer.</div>
+                <div class="row">
+                    <label for="finishTimeInput">Fertig backen um</label>
+                    <input type="time" id="finishTimeInput" value="18:00" oninput="updateTimeline()">
+                </div>
+                <div class="result-box" id="timelineResult">
+                    <div class="big">-</div>
+                    <div class="small">Starte deinen Teig um diese Uhrzeit</div>
+                </div>
             </div>
-            <div class="row">
-                <label for="ddtFlourTemp">Mehltemperatur (°C)</label>
-                <input type="text" inputmode="decimal" id="ddtFlourTemp" value="20" oninput="updateDDT()">
-            </div>
-            <div class="row">
-                <label for="ddtFriction">Kneter-Profil</label>
-                <select id="ddtFriction" onchange="updateDDT()"></select>
-            </div>
-            <div class="row" id="ddtKneadMinutesRow">
-                <label for="ddtKneadMinutes">Knetdauer (Min.)</label>
-                <input type="text" inputmode="decimal" id="ddtKneadMinutes" value="10" oninput="updateDDT()">
-            </div>
-            <div class="row">
-                <label for="ddtUseStarter">Sauerteig / Vorteig verwendet?</label>
-                <input type="checkbox" id="ddtUseStarter" onchange="updateDDT()">
-            </div>
-            <div class="row" id="ddtStarterRow" style="display:none;">
-                <label for="ddtStarterTemp">Sauerteig-Temperatur (°C)</label>
-                <input type="text" inputmode="decimal" id="ddtStarterTemp" value="21" oninput="updateDDT()">
-            </div>
-            <div class="result-box">
-                <div class="big" id="ddtResult">- °C</div>
-                <div class="small" id="ddtResultSub">Ziel-Temperatur für dein Schüttwasser</div>
-            </div>
-            <div id="ddtWarning"></div>
-            <div class="section-subtitle" style="margin-top:8px;">Weitere Kneter-Profile lassen sich unter 🧰 Werkzeuge → Maschinenprofile anlegen.</div>
         </div>
 
         <div class="section">
-            <div class="section-title">⛰️ Höhenanpassung</div>
-            <div class="section-subtitle">Richtwerte für Backen über 900 m Höhe – niedrigerer Luftdruck lässt Teig schneller gehen und Wasser schneller verdunsten. Bitte als Orientierung verstehen, nicht als Garantie.</div>
-            <div class="row">
-                <label for="altitudeInput">Höhe über Meeresspiegel (m)</label>
-                <input type="text" inputmode="decimal" id="altitudeInput" value="0" oninput="updateAltitude()">
+            <div class="section-title collapsible" onclick="toggleSection('ddt')">
+                🌡️ Wassertemperatur-Rechner (DDT)
+                <span class="section-chevron" id="chev_ddt">▾</span>
             </div>
-            <div id="altitudeResult"></div>
+            <div class="section-body" id="secBody_ddt">
+                <div class="section-subtitle">Berechnet die nötige Schüttwasser-Temperatur für eine konstante gewünschte Teigtemperatur.</div>
+                <div class="row">
+                    <label for="ddtDesired">Ziel-Teigtemperatur (°C)</label>
+                    <input type="text" inputmode="decimal" id="ddtDesired" value="25" oninput="updateDDT()">
+                </div>
+                <div class="row">
+                    <label for="ddtRoomTemp">Raumtemperatur (°C)</label>
+                    <input type="text" inputmode="decimal" id="ddtRoomTemp" value="21" oninput="updateDDT()">
+                </div>
+                <div class="row">
+                    <label for="ddtFlourTemp">Mehltemperatur (°C)</label>
+                    <input type="text" inputmode="decimal" id="ddtFlourTemp" value="20" oninput="updateDDT()">
+                </div>
+                <div class="row">
+                    <label for="ddtFriction">Kneter-Profil</label>
+                    <select id="ddtFriction" onchange="updateDDT()"></select>
+                </div>
+                <div class="row" id="ddtKneadMinutesRow">
+                    <label for="ddtKneadMinutes">Knetdauer (Min.)</label>
+                    <input type="text" inputmode="decimal" id="ddtKneadMinutes" value="10" oninput="updateDDT()">
+                </div>
+                <div class="row">
+                    <label for="ddtUseStarter">Sauerteig / Vorteig verwendet?</label>
+                    <input type="checkbox" id="ddtUseStarter" onchange="updateDDT()">
+                </div>
+                <div class="row" id="ddtStarterRow" style="display:none;">
+                    <label for="ddtStarterTemp">Sauerteig-Temperatur (°C)</label>
+                    <input type="text" inputmode="decimal" id="ddtStarterTemp" value="21" oninput="updateDDT()">
+                </div>
+                <div class="result-box">
+                    <div class="big" id="ddtResult">- °C</div>
+                    <div class="small" id="ddtResultSub">Ziel-Temperatur für dein Schüttwasser</div>
+                </div>
+                <div id="ddtWarning"></div>
+                <div class="section-subtitle" style="margin-top:8px;">Weitere Kneter-Profile lassen sich unter 🧰 Werkzeuge → Maschinenprofile anlegen.</div>
+            </div>
         </div>
 
         <div class="section">
-            <div class="section-title">👩‍🍳 Geführter Backmodus</div>
-            <div class="section-subtitle">Führt dich mit Timern durch Stockgare, Formen, Stückgare und Backen. Benachrichtigungen funktionieren, solange dieser Tab/Browser geöffnet bleibt.</div>
-            <div id="guidedModeContent">
-                <button type="button" class="btn-plus" style="width:100%;" onclick="startGuidedMode()">▶️ Backmodus starten</button>
+            <div class="section-title collapsible" onclick="toggleSection('hoehe')">
+                ⛰️ Höhenanpassung
+                <span class="section-chevron" id="chev_hoehe">▾</span>
+            </div>
+            <div class="section-body" id="secBody_hoehe">
+                <div class="section-subtitle">Richtwerte für Backen über 900 m Höhe – niedrigerer Luftdruck lässt Teig schneller gehen und Wasser schneller verdunsten. Bitte als Orientierung verstehen, nicht als Garantie.</div>
+                <div class="row">
+                    <label for="altitudeInput">Höhe über Meeresspiegel (m)</label>
+                    <input type="text" inputmode="decimal" id="altitudeInput" value="0" oninput="updateAltitude()">
+                </div>
+                <div id="altitudeResult"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title collapsible" onclick="toggleSection('guided')">
+                👩‍🍳 Geführter Backmodus
+                <span class="section-chevron" id="chev_guided">▾</span>
+            </div>
+            <div class="section-body" id="secBody_guided">
+                <div class="section-subtitle">Führt dich mit Timern durch Stockgare, Formen, Stückgare und Backen. Benachrichtigungen funktionieren, solange dieser Tab/Browser geöffnet bleibt.</div>
+                <div id="guidedModeContent">
+                    <button type="button" class="btn-plus" style="width:100%;" onclick="startGuidedMode()">▶️ Backmodus starten</button>
+                </div>
             </div>
         </div>
 
@@ -1924,6 +2034,28 @@
         return newId;
     }
 
+    // Minimiert das Dashboard beim Herunterscrollen, sodass nur noch die
+    // Hydration sichtbar bleibt - Ziel-Hydration-Box, Konsistenz-Text, Stats
+    // und Nährwerte klappen sanft ein. Reine Optik, keine Logikänderung; die
+    // eingeklappten Werte werden im Hintergrund weiter normal berechnet.
+    let dashboardCollapsed = false;
+    window.addEventListener('scroll', () => {
+        const dashboard = document.getElementById('dashboardCard');
+        if (!dashboard || dashboard.style.display === 'none') return;
+        // Hysterese statt eines einzelnen Schwellenwerts: Einklappen erst ab
+        // 70px, Ausklappen erst wieder unter 20px. Ohne diesen "Totbereich"
+        // dazwischen verschiebt sich der Seiteninhalt beim Einklappen des
+        // sticky Dashboards minimal, was die Scroll-Position knapp am
+        // Schwellenwert hin- und herkippen lässt -> Zuck-Schleife.
+        if (!dashboardCollapsed && window.scrollY > 70) {
+            dashboardCollapsed = true;
+            dashboard.classList.add('collapsed');
+        } else if (dashboardCollapsed && window.scrollY < 20) {
+            dashboardCollapsed = false;
+            dashboard.classList.remove('collapsed');
+        }
+    }, { passive: true });
+
     window.onload = async function() {
         ownerId = await getOrCreateOwnerId();
         populateDropdowns();
@@ -2277,7 +2409,13 @@
         // (Rezept-Tab) - in Backen/Werkzeuge/Tagebuch geht es um andere Dinge und
         // das Dashboard hätte dort keinen Bezug zum Bildschirminhalt.
         const dashboardEl = document.getElementById('dashboardCard');
-        if (dashboardEl) dashboardEl.style.display = (tabName === 'recipe') ? 'block' : 'none';
+        if (dashboardEl) {
+            dashboardEl.style.display = (tabName === 'recipe') ? 'block' : 'none';
+            if (tabName === 'recipe') {
+                dashboardCollapsed = window.scrollY > 70;
+                dashboardEl.classList.toggle('collapsed', dashboardCollapsed);
+            }
+        }
 
         if (tabName === 'tools') {
             renderCostCalculator();
@@ -3905,6 +4043,18 @@
 
     // Sanftes Scrollen zur Rezept-Vorlagen-Galerie, ausgelöst über den
     // Blanko-Zustand-CTA im Dashboard.
+    // Generisches Ein-/Ausklappen für Sektionen (Rezept-Konfigurator, Schritt-
+    // für-Schritt-Anleitung, Speichern, Gär-/Ofenparameter etc.). Standardmäßig
+    // eingeklappt - taucht erst auf, wenn der Titel angetippt wird.
+    function toggleSection(id) {
+        const body = document.getElementById('secBody_' + id);
+        const chevron = document.getElementById('chev_' + id);
+        if (!body) return;
+        const willOpen = !body.classList.contains('open');
+        body.classList.toggle('open', willOpen);
+        if (chevron) chevron.classList.toggle('open', willOpen);
+    }
+
     function scrollToTemplateGallery() {
         const gallery = document.getElementById('templateGallery');
         if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'center' });
