@@ -1,7 +1,7 @@
 {
   "name": "Back-Assistent Pro",
   "short_name": "Back-Assistent",
-  "description": "Hydrationsrechner und Back-Optimierungstool für Brote, Brötchen und Pizzateig.",
+  "description": "Hydrationsrechner, Sauerteig-, Gärzeit- und Kalkulationswerkzeug für Brote, Brötchen und Pizzateig.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -28,5 +28,10 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "id": "./",
+  "categories": [
+    "food",
+    "utilities"
   ]
 }
