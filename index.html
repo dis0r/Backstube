@@ -1915,6 +1915,10 @@
         { name: "Haferflocken", waterContent: 0, isFlour: false, binding: 1.0, allergens: [GLUTEN] },
         { name: "Leinsamenschrot", waterContent: 0, isFlour: false, binding: 2.0, allergens: [] },
         { name: "Chia Samen", waterContent: 0, isFlour: false, binding: 2.5, allergens: [] },
+        { name: "Hanfsamen (geschält)", waterContent: 0, isFlour: false, binding: 0.3, allergens: [] },
+        // 50 % Leinsamen braun geschrotet, 25 % Hanfsamen geschält, 25 % Chiasamen.
+        // Bindung gewichtet: 0,5×2,0 + 0,25×0,3 + 0,25×2,5 ≈ 1,7 g Wasser je g.
+        { name: "Omega-3 Mix (Lein/Hanf/Chia)", waterContent: 0, isFlour: false, binding: 1.7, allergens: [] },
         { name: "Flohsamenschalen", waterContent: 0, isFlour: false, binding: 20.0, allergens: [] },
         { name: "Kürbiskerne", waterContent: 0, isFlour: false, binding: 0.5, allergens: [] },
         { name: "Sesam", waterContent: 0, isFlour: false, binding: 0.5, allergens: ["Sesam"] },
@@ -1947,6 +1951,8 @@
         "Sesam": "⚪",
         "Leinsamen (ganz)": "🌰",
         "Chia Samen": "⚫",
+        "Hanfsamen (geschält)": "🌱",
+        "Omega-3 Mix (Lein/Hanf/Chia)": "🧬",
         "Flohsamenschalen": "🌿",
         "Karotten (gerieben)": "🥕",
         "Röstzwiebeln": "🧅",
@@ -2019,6 +2025,8 @@
         "Haferflocken": { kcal: 372, carbs: 59, sugar: 1.0, fiber: 10, protein: 13, fat: 7 },
         "Leinsamenschrot": { kcal: 534, carbs: 2, sugar: 1.5, fiber: 27, protein: 18, fat: 42 },
         "Chia Samen": { kcal: 486, carbs: 8, sugar: 0, fiber: 34, protein: 17, fat: 31 },
+        "Hanfsamen (geschält)": { kcal: 553, carbs: 4.3, sugar: 1.5, fiber: 4, protein: 31, fat: 49 },
+        "Omega-3 Mix (Lein/Hanf/Chia)": { kcal: 527, carbs: 4.1, sugar: 1.1, fiber: 23, protein: 21, fat: 41 },
         "Flohsamenschalen": { kcal: 200, carbs: 17, sugar: 0, fiber: 71, protein: 3, fat: 1 },
         "Walnüsse (gehackt)": { kcal: 654, carbs: 11, sugar: 2.6, fiber: 6.7, protein: 15, fat: 65 },
         "Haselnüsse (gehackt)": { kcal: 628, carbs: 10.5, sugar: 4.3, fiber: 9.7, protein: 15, fat: 61 },
@@ -2504,6 +2512,8 @@
         "Sesam": "🌻 Saaten & Körner",
         "Leinsamen (ganz)": "🌻 Saaten & Körner",
         "Chia Samen": "🌻 Saaten & Körner",
+        "Hanfsamen (geschält)": "🌻 Saaten & Körner",
+        "Omega-3 Mix (Lein/Hanf/Chia)": "🌻 Saaten & Körner",
         "Flohsamenschalen": "🌻 Saaten & Körner",
         "Olivenöl": "🫒 Sonstiges",
         "Zucker": "🫒 Sonstiges",
@@ -3269,7 +3279,7 @@
                     tips.push(`🔻 <strong>${h.name}</strong> im Teig (${Math.round(found.weight)}g, ca. <strong>${kcalContribution} kcal</strong>) – weglassen oder halbieren spart direkt Kalorien, ohne die Hydration zu berühren.`);
                 }
             });
-            ['Sonnenblumenkerne', 'Leinsamenschrot', 'Chia Samen'].forEach(name => {
+            ['Sonnenblumenkerne', 'Leinsamenschrot', 'Chia Samen', 'Hanfsamen (geschält)', 'Omega-3 Mix (Lein/Hanf/Chia)'].forEach(name => {
                 const found = findItem(name);
                 if (found && found.weight > 0) {
                     tips.push(`⚖️ <strong>${name}</strong> ist kalorienreich (viel Fett). Für weniger Kalorien: Menge reduzieren. Flohsamenschalen sind kein Ersatz für Saaten, sondern nur ein Binde-/Sättigungsmittel in kleinsten Mengen.`);
@@ -3300,7 +3310,7 @@
                     tips.push(`🌾 Tausche <strong>${name}</strong> gegen <strong>${WHOLEGRAIN_SWAP[name]}</strong>: etwas mehr Eiweiß pro 100 g Mehl; Ziel-Hydration um ca. 10% anheben.`);
                 }
             });
-            const seedOptions = ['Sonnenblumenkerne', 'Chia Samen', 'Leinsamenschrot'];
+            const seedOptions = ['Omega-3 Mix (Lein/Hanf/Chia)', 'Hanfsamen (geschält)', 'Sonnenblumenkerne', 'Chia Samen', 'Leinsamenschrot'];
             const missingSeeds = seedOptions.filter(name => { const f = findItem(name); return !f || f.weight === 0; });
             if (missingSeeds.length > 0) {
                 tips.push(`➕ <strong>${missingSeeds[0]}</strong> (30–50g) bringt zusätzliches Eiweiß und gesunde Fette – kostet auch Kalorien, für den Muskelaufbau meist willkommen.`);
@@ -3451,6 +3461,8 @@
     const MAX_SHARE_PCT = {
         "Flohsamenschalen": 2,
         "Chia Samen": 15,
+        "Hanfsamen (geschält)": 15,
+        "Omega-3 Mix (Lein/Hanf/Chia)": 15,
         "Leinsamenschrot": 20,
         "Leinsamen (ganz)": 20,
         "Haferflocken": 20,
